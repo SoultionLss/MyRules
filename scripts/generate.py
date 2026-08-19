@@ -63,7 +63,6 @@ def fetch_domains_from_url(url: str) -> Set[str]:
     text = resp.text
     domains = set()
 
-    # 尝试 YAML 解析
     try:
         data = yaml.safe_load(text)
         if isinstance(data, dict) and 'payload' in data:
@@ -83,7 +82,6 @@ def fetch_domains_from_url(url: str) -> Set[str]:
                 if domain:
                     domains.add(domain)
     except Exception:
-        # 按行解析（.list 或 .txt 格式）
         for line in text.splitlines():
             line = line.strip()
             if not line or line.startswith('#'):
@@ -142,6 +140,23 @@ def extract_source_name(url: str) -> str:
     if base.endswith('_list'):
         base = base[:-5]
     return base
+
+def write_rule_file(file_path: Path, content: str, policy: str, total: int, source_names: list):
+    """写入规则文件，添加头部注释"""
+    sources = ', '.join(source_names)
+    header = [
+        "# ============================================================",
+        f"# 规则策略: {policy}",
+        f"# 规则总数: {total} 条",
+        f"# 规则来源: {sources}",
+        "# ============================================================",
+        ""
+    ]
+    header_text = '\n'.join(header)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(header_text)
+        f.write('\n')
+        f.write(content)
 
 def write_readme(policy_dir: Path, policy: str, domains: set, source_names: list):
     """生成 README.md，包含所有平台的导入链接（纯文本，无代码块）"""
@@ -219,6 +234,7 @@ def main():
 
     # ========== 新增：从 Loyalsoldier 仓库拉取规则 ==========
     print("\n📥 从 Loyalsoldier/v2ray-rules-dat 拉取规则...")
+    loyalsoldier_domains = {}
     for filename, policy in LOYALSOLDIER_SOURCES.items():
         if policy is None:
             print(f"   ⏭️ 跳过 {filename}（无预设策略）")
@@ -226,12 +242,12 @@ def main():
         try:
             domains = fetch_loyalsoldier_list(filename)
             print(f"   ✅ {filename} -> {len(domains)} 条，归入策略: {policy}")
-            # 将域名合并到对应策略组
+            # 保存域名以便后续合并
+            if policy not in loyalsoldier_domains:
+                loyalsoldier_domains[policy] = set()
+            loyalsoldier_domains[policy].update(domains)
+            # 添加标记到 groups 以便来源显示
             groups[policy].append(f"Loyalsoldier: {filename}")
-            # 同时存储域名供后续合并使用
-            if not hasattr(main, '_loyalsoldier_domains'):
-                main._loyalsoldier_domains = {}
-            main._loyalsoldier_domains[policy] = domains
         except Exception as e:
             print(f"   ❌ 拉取失败: {filename} - {e}")
 
@@ -244,7 +260,6 @@ def main():
 
         # 处理常规 URL 源
         for url in urls:
-            # 如果是 Loyalsoldier 标记，跳过（已单独处理）
             if url.startswith("Loyalsoldier:"):
                 continue
             try:
@@ -255,8 +270,8 @@ def main():
                 print(f"   ❌ 拉取失败: {url} - {e}")
 
         # 合并 Loyalsoldier 域名
-        if hasattr(main, '_loyalsoldier_domains') and policy in main._loyalsoldier_domains:
-            ls_domains = main._loyalsoldier_domains[policy]
+        if policy in loyalsoldier_domains:
+            ls_domains = loyalsoldier_domains[policy]
             print(f"   ✅ 合并 Loyalsoldier 域名: {len(ls_domains)} 条")
             all_domains.update(ls_domains)
 
@@ -274,26 +289,27 @@ def main():
                 source_names.append("Loyalsoldier")
             else:
                 source_names.append(extract_source_name(url))
-
-        # 去重来源名称
+        # 去重并保留顺序
         source_names = list(dict.fromkeys(source_names))
 
+        total = len(all_domains)
+
         # 1. Surge / Loon / Egern .list
+        list_content = format_surge_domainset(all_domains)
         list_path = policy_dir / f"{policy}.list"
-        with open(list_path, 'w', encoding='utf-8') as f:
-            f.write(format_surge_domainset(all_domains))
+        write_rule_file(list_path, list_content, policy, total, source_names)
         print(f"   ✅ 生成 Surge/Loon/Egern 规则: {list_path}")
 
         # 2. Clash .yaml
+        yaml_content = format_clash_yaml(all_domains, policy)
         yaml_path = policy_dir / f"{policy}.yaml"
-        with open(yaml_path, 'w', encoding='utf-8') as f:
-            f.write(format_clash_yaml(all_domains, policy))
+        write_rule_file(yaml_path, yaml_content, policy, total, source_names)
         print(f"   ✅ 生成 Clash 规则: {yaml_path}")
 
         # 3. v2ray 纯域名 .txt
+        txt_content = format_v2ray_domain_txt(all_domains)
         txt_path = policy_dir / f"{policy}_domain.txt"
-        with open(txt_path, 'w', encoding='utf-8') as f:
-            f.write(format_v2ray_domain_txt(all_domains))
+        write_rule_file(txt_path, txt_content, policy, total, source_names)
         print(f"   ✅ 生成 v2ray 域名列表: {txt_path}")
 
         # 4. README.md
