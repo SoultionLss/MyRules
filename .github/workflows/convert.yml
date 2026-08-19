@@ -27,12 +27,20 @@ jobs:
       - name: Install dependencies
         run: pip install requests pyyaml
 
+      - name: Pull latest changes (to avoid conflicts)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          git pull --rebase origin main
+
       - name: Run conversion script with statistics
         run: |
           cat > convert.py << 'EOF'
           import requests
           import yaml
-          import re
 
           RAW_URL = "https://raw.githubusercontent.com/Accademia/Additional_Rule_For_Clash/main/ChinaMax/ChinaMax_Domain.yaml"
 
@@ -42,7 +50,7 @@ jobs:
               raw_text = resp.text
               lines = raw_text.splitlines()
 
-              # 统计注释行和有效行（非空、非注释）
+              # 统计注释行和有效行
               total_lines = len(lines)
               comment_lines = 0
               empty_lines = 0
@@ -77,7 +85,6 @@ jobs:
               return domains
 
           def write_output(domains):
-              # Surge DOMAIN-SET
               with open("ChinaMax_domain_set.txt", 'w') as f:
                   f.write("# ChinaMax 规则集 - Surge DOMAIN-SET\n")
                   f.write("# 所有域名作为后缀匹配（带 . 前缀）\n")
@@ -85,14 +92,12 @@ jobs:
                       f.write(f".{d}\n")
               print(f"✅ Surge DOMAIN-SET 已保存，共 {len(domains)} 条")
 
-              # Surge RULE-SET
               with open("ChinaMax_rule_set.list", 'w') as f:
                   f.write("# ChinaMax 规则集 - Surge RULE-SET\n")
                   for d in domains:
                       f.write(f"DOMAIN-SUFFIX,{d}\n")
               print(f"✅ Surge RULE-SET 已保存，共 {len(domains)} 条")
 
-              # Egern YAML
               with open("ChinaMax_egern.yaml", 'w') as f:
                   f.write("# ChinaMax 规则集 - Egern YAML\n")
                   f.write("rules:\n")
@@ -129,7 +134,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          git pull --rebase origin main
           git add .
           git diff --staged --quiet || git commit -m "chore: auto-convert ChinaMax rules [skip ci]"
           git push origin main
