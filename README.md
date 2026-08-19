@@ -1,6 +1,5 @@
 # 规则合集自动生成仓库（Auto Rules Collection）
 
-采用 [Repcz/Tool](https://github.com/Repcz/Tool) 同款架构（平台目录 + Rules 规则集 + 主配置自引用 raw 链接），
 由 **GitHub Actions 全自动驱动、零本地操作**：定时从多个公开规则源拉取规则，合并去重后生成规则集并自动提交推送。
 
 ## 特性
