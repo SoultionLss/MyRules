@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # 授予写入权限（关键修复）
+  contents: write
 
 jobs:
   convert:
@@ -23,39 +23,32 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests
+        run: |
+          pip install requests pyyaml   # 新增 pyyaml
 
       - name: Run conversion script
         run: |
           cat > convert.py << 'EOF'
           #!/usr/bin/env python3
-          """
-          将 Accademia/Additional_Rule_For_Clash 的 ChinaMax.yaml
-          转换为 Surge / Egern 支持的格式
-          """
           import requests
+          import yaml
 
           RAW_URL = "https://raw.githubusercontent.com/Accademia/Additional_Rule_For_Clash/main/ChinaMax/ChinaMax.yaml"
 
           def fetch_rules():
               resp = requests.get(RAW_URL, timeout=30)
               resp.raise_for_status()
-              lines = resp.text.splitlines()
-
+              data = yaml.safe_load(resp.text)
+              # 假设数据包含 'payload' 键，值为列表
+              payload = data.get('payload', [])
               domains = []
               suffixes = []
-
-              for line in lines:
-                  line = line.strip()
-                  if line.startswith('DOMAIN,'):
-                      domain = line.split(',', 1)[1].strip()
-                      if domain:
-                          domains.append(domain)
-                  elif line.startswith('DOMAIN-SUFFIX,'):
-                      suffix = line.split(',', 1)[1].strip()
-                      if suffix:
-                          suffixes.append(suffix)
-
+              for item in payload:
+                  if isinstance(item, str):
+                      if item.startswith('DOMAIN,'):
+                          domains.append(item.split(',', 1)[1].strip())
+                      elif item.startswith('DOMAIN-SUFFIX,'):
+                          suffixes.append(item.split(',', 1)[1].strip())
               return domains, suffixes
 
           def write_surge_domain_set(domains, suffixes, filename="ChinaMax_domain_set.txt"):
@@ -93,7 +86,12 @@ jobs:
               try:
                   domains, suffixes = fetch_rules()
               except Exception as e:
-                  print(f"❌ 下载失败: {e}")
+                  print(f"❌ 下载或解析失败: {e}")
+                  # 打印前几行用于调试
+                  resp = requests.get(RAW_URL, timeout=30)
+                  print("文件前5行内容:")
+                  for line in resp.text.splitlines()[:5]:
+                      print(line)
                   return
 
               print(f"   精确匹配: {len(domains)} 条")
