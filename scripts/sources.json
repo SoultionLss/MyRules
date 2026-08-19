@@ -1,0 +1,235 @@
+{
+  "categories": {
+    "Direct": {
+      "label": "国内直连",
+      "policy": "DIRECT",
+      "sources": [
+        {"repo": "xkww3n", "file": "domestic"},
+        {"repo": "xkww3n", "file": "domestic_ip"},
+        {"repo": "xkww3n", "file": "domestic_ip6"},
+        {"repo": "blackmatrix7", "cat": "China"},
+        {"repo": "quixoticheart-ruleset", "file": "cn.yaml"},
+        {"repo": "quixoticheart-ruleset", "file": "cncidr.yaml"}
+      ]
+    },
+    "Reject": {
+      "label": "广告拦截",
+      "policy": "REJECT",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Advertising"},
+        {"repo": "xkww3n", "file": "reject"},
+        {"repo": "quixoticheart-ruleset", "file": "adrules.yaml"}
+      ]
+    },
+    "Netflix": {
+      "label": "Netflix",
+      "policy": "Streaming",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Netflix"},
+        {"repo": "quixoticheart-ruleset", "file": "netflix.yaml"}
+      ]
+    },
+    "Disney": {
+      "label": "Disney+",
+      "policy": "Streaming",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Disney"},
+        {"repo": "quixoticheart-ruleset", "file": "disney.yaml"}
+      ]
+    },
+    "HBO": {
+      "label": "HBO Max",
+      "policy": "Streaming",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "HBO"},
+        {"repo": "quixoticheart-ruleset", "file": "hbo.yaml"}
+      ]
+    },
+    "AppleTV": {
+      "label": "Apple TV+",
+      "policy": "Streaming",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "AppleTV"},
+        {"repo": "quixoticheart-ruleset", "file": "apple-tv.yaml"}
+      ]
+    },
+    "Hulu": {
+      "label": "Hulu",
+      "policy": "Streaming",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Hulu"},
+        {"repo": "quixoticheart-ruleset", "file": "hulu.yaml"}
+      ]
+    },
+    "PrimeVideo": {
+      "label": "Prime Video",
+      "policy": "Streaming",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "PrimeVideo"},
+        {"repo": "quixoticheart-ruleset", "file": "primevideo.yaml"}
+      ]
+    },
+    "Spotify": {
+      "label": "Spotify",
+      "policy": "Spotify",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Spotify"},
+        {"repo": "quixoticheart-ruleset", "file": "spotify.yaml"}
+      ]
+    },
+    "Social": {
+      "label": "社交媒体",
+      "policy": "Social",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Instagram"},
+        {"repo": "blackmatrix7", "cat": "Reddit"},
+        {"repo": "blackmatrix7", "cat": "Twitter"},
+        {"repo": "blackmatrix7", "cat": "Threads"},
+        {"repo": "quixoticheart-ruleset", "file": "socialmedia.yaml"}
+      ]
+    },
+    "Messaging": {
+      "label": "即时通讯",
+      "policy": "Global",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Whatsapp"},
+        {"repo": "blackmatrix7", "cat": "Line"}
+      ]
+    },
+    "Telegram": {
+      "label": "Telegram",
+      "policy": "Telegram",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Telegram"},
+        {"repo": "blackmatrix7", "cat": "TelegramUS"},
+        {"repo": "blackmatrix7", "cat": "TelegramSG"},
+        {"repo": "quixoticheart-custom", "file": "telegram.list"},
+        {"repo": "xkww3n", "file": "telegram"}
+      ]
+    },
+    "YouTube": {
+      "label": "YouTube",
+      "policy": "Global",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "YouTube"},
+        {"repo": "quixoticheart-ruleset", "file": "youtube.yaml"},
+        {"repo": "xkww3n", "file": "youtube"}
+      ]
+    },
+    "Google": {
+      "label": "Google 服务（含 Gemini）",
+      "policy": "Google",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Google"},
+        {"repo": "blackmatrix7", "cat": "Gemini"},
+        {"repo": "quixoticheart-ruleset", "file": "google.yaml"},
+        {"repo": "xkww3n", "file": "google-deepmind"}
+      ]
+    },
+    "AI": {
+      "label": "AI（国际）",
+      "policy": "AI",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "OpenAI"},
+        {"repo": "blackmatrix7", "cat": "Claude"},
+        {"repo": "blackmatrix7", "cat": "Copilot"},
+        {"repo": "quixoticheart-ruleset", "file": "ai.yaml"},
+        {"repo": "xkww3n", "file": "openai"}
+      ]
+    },
+    "AICN": {
+      "label": "AI（国内）",
+      "policy": "AI",
+      "sources": [
+        {"repo": "blackmatrix7", "cat": "Baidu"},
+        {"repo": "blackmatrix7", "cat": "Spark"},
+        {"repo": "blackmatrix7", "cat": "iFlytek"},
+        {"repo": "blackmatrix7", "cat": "DeepSeek", "enabled": false, "note": "上游暂无 DeepSeek 类别，待补充来源"},
+        {"repo": "blackmatrix7", "cat": "Kimi", "enabled": false, "note": "上游暂无 Kimi 类别，待补充来源"}
+      ]
+    }
+  },
+  "platforms": {
+    "egern": {
+      "label": "Egern",
+      "output": "Egern",
+      "main": "Egern.yaml",
+      "template": "templates/egern/Egern.yaml",
+      "rule_fmt": "yaml",
+      "rule_ext": "yaml",
+      "use_shared": true
+    },
+    "surge": {
+      "label": "Surge",
+      "output": "Surge",
+      "main": "Surge.conf",
+      "template": "templates/surge/Surge.conf",
+      "rule_fmt": "list",
+      "rule_ext": "list",
+      "use_shared": true
+    },
+    "loon": {
+      "label": "Loon",
+      "output": "Loon",
+      "main": "Loon.conf",
+      "template": "templates/loon/Loon.conf",
+      "rule_fmt": "list",
+      "rule_ext": "list",
+      "use_shared": true
+    },
+    "shadowrocket": {
+      "label": "Shadowrocket",
+      "output": "Shadowrocket",
+      "main": "Shadowrocket.conf",
+      "template": "templates/shadowrocket/Shadowrocket.conf",
+      "rule_fmt": "list",
+      "rule_ext": "list",
+      "use_shared": true
+    },
+    "quantumultx": {
+      "label": "QuantumultX",
+      "output": "QuantumultX",
+      "main": "QuantumultX.conf",
+      "template": "templates/quantumultx/QuantumultX.conf",
+      "rule_fmt": "qx",
+      "rule_ext": "list",
+      "use_shared": true
+    },
+    "mihomo": {
+      "label": "mihomo",
+      "output": "mihomo",
+      "main": "mihomo.yaml",
+      "template": "templates/clash/mihomo.yaml",
+      "rule_fmt": "list",
+      "rule_ext": "list",
+      "use_shared": true
+    },
+    "stash": {
+      "label": "Stash",
+      "output": "Stash",
+      "main": "Stash.yaml",
+      "template": "templates/clash/mihomo.yaml",
+      "rule_fmt": "list",
+      "rule_ext": "list",
+      "use_shared": true
+    },
+    "surfboard": {
+      "label": "Surfboard",
+      "output": "Surfboard",
+      "main": "Surfboard.conf",
+      "template": "templates/clash/mihomo.yaml",
+      "rule_fmt": "list",
+      "rule_ext": "list",
+      "use_shared": true
+    },
+    "singbox": {
+      "label": "sing-box",
+      "output": "sing-box",
+      "main": "config.json",
+      "template": "templates/singbox/config.json",
+      "rule_fmt": "json",
+      "rule_ext": "json",
+      "use_shared": true
+    }
+  }
+}

@@ -1,0 +1,194 @@
+# Author: 你的名字
+# 由 scripts/generate.py 自动渲染规则段，其他部分可自由编辑
+# 最后更新: {{RULES_TIMESTAMP}}
+#
+# Egern Version >= v2.20.0
+# 官方文档: https://doc.egernapp.com
+# ================
+http_port: 6152
+socks_port: 6153
+vif_only: true
+hijack_dns:
+- '*:53'
+geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb
+asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
+proxy_latency_test_url: http://1.1.1.1/generate_204
+direct_latency_test_url: http://wifi.vivo.com.cn/generate_204
+dns:
+  bootstrap:
+  - system
+  upstreams:
+    Domestic-DNS:
+    - 223.5.5.5
+    - 119.29.29.29
+    Domestic-Encrypted-DNS:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+    Foreign-Encrypted-DNS:
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+  forward:
+  - proxy_rule_set:
+      match: https://github.com/{{OWNER}}/{{REPO}}/raw/{{BRANCH}}/Egern/Rules/Reject.yaml
+      value: REJECT
+      disabled: false
+  - proxy_rule_set:
+      match: https://github.com/{{OWNER}}/{{REPO}}/raw/{{BRANCH}}/Egern/Rules/Direct.yaml
+      value: Domestic-DNS
+      disabled: false
+  - domain_wildcard:
+      match: '*'
+      value: Domestic-Encrypted-DNS
+      disabled: false
+  proxy_nameservers:
+  - 119.29.29.29
+  - 223.5.5.5
+real_ip_domains:
+- '*.prod.cloud.netflix.com'
+- appboot.netflix.com
+- lancache.steamcontent.com
+- '*.stun.playstation.net'
+- '*.logon.battlenet.com.cn'
+- '*.logon.battle.net'
+- stun.l.google.com
+policy_groups:
+- external:
+    name: Manual
+    type: select
+    urls:
+    - http://your-service-provider
+    hidden: false
+- select:
+    name: Global
+    policies:
+    - Manual
+    - HongKong
+    - United States
+    - Singapore
+    - Japan
+    - Taiwan
+- select:
+    name: Streaming
+    policies:
+    - Manual
+    - HongKong
+    - United States
+    - Singapore
+    - Japan
+    - Taiwan
+- select:
+    name: Google
+    policies:
+    - Manual
+    - HongKong
+    - United States
+    - Singapore
+    - Japan
+    - Taiwan
+- select:
+    name: AI
+    policies:
+    - Manual
+    - HongKong
+    - United States
+    - Singapore
+    - Japan
+    - Taiwan
+- select:
+    name: Social
+    policies:
+    - Manual
+    - HongKong
+    - United States
+    - Singapore
+    - Japan
+    - Taiwan
+- select:
+    name: Telegram
+    policies:
+    - Manual
+    - HongKong
+    - United States
+    - Singapore
+    - Japan
+    - Taiwan
+- select:
+    name: Spotify
+    policies:
+    - Manual
+    - HongKong
+    - United States
+    - Singapore
+    - Japan
+    - Taiwan
+- select:
+    name: Game
+    policies:
+    - Manual
+    - HongKong
+    - United States
+    - Singapore
+    - Japan
+    - Taiwan
+- select:
+    name: Emby
+    policies:
+    - Manual
+    flatten: true
+- select:
+    name: Final
+    policies:
+    - Manual
+    - HongKong
+    - United States
+    - Singapore
+    - Japan
+    - Taiwan
+- auto_test:
+    name: HongKong
+    policies:
+    - Manual
+    flatten: true
+    filter: (?i)🇭🇰|香港|(\b(HK|Hong)\b)
+    tolerance: 0
+- auto_test:
+    name: United States
+    policies:
+    - Manual
+    flatten: true
+    filter: (?i)🇺🇸|美国|洛杉矶|圣何塞|(\b(US|United States)\b)
+    tolerance: 0
+- auto_test:
+    name: Singapore
+    policies:
+    - Manual
+    flatten: true
+    filter: (?i)🇸🇬|新加坡|狮|(\b(SG|Singapore)\b)
+    tolerance: 0
+- auto_test:
+    name: Japan
+    policies:
+    - Manual
+    flatten: true
+    filter: (?i)🇯🇵|日本|东京|(\b(JP|Japan)\b)
+    tolerance: 0
+- auto_test:
+    name: Taiwan
+    policies:
+    - Manual
+    flatten: true
+    filter: (?i)🇨🇳|🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)
+    tolerance: 0
+{{RULES}}
+# 兜底规则
+- geoip:
+    match: CN
+    policy: DIRECT
+- default:
+    policy: Final
+mitm:
+  enabled: false
+modules:
+- name: SubStore
+  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/refs/heads/master/config/Egern.yaml
+  enabled: false

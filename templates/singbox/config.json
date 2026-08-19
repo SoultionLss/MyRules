@@ -1,0 +1,115 @@
+{
+  "log": {
+    "level": "info"
+  },
+  "inbounds": [
+    {
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "127.0.0.1",
+      "listen_port": 2080
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    },
+    {
+      "type": "shadowsocks",
+      "tag": "node1",
+      "server": "your-server.example.com",
+      "server_port": 8388,
+      "method": "aes-256-gcm",
+      "password": "your-password"
+    },
+    {
+      "type": "selector",
+      "tag": "global",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    },
+    {
+      "type": "selector",
+      "tag": "streaming",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    },
+    {
+      "type": "selector",
+      "tag": "google",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    },
+    {
+      "type": "selector",
+      "tag": "ai",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    },
+    {
+      "type": "selector",
+      "tag": "social",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    },
+    {
+      "type": "selector",
+      "tag": "telegram",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    },
+    {
+      "type": "selector",
+      "tag": "spotify",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    },
+    {
+      "type": "selector",
+      "tag": "game",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    },
+    {
+      "type": "selector",
+      "tag": "emby",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    },
+    {
+      "type": "selector",
+      "tag": "final",
+      "outbounds": [
+        "node1",
+        "direct"
+      ]
+    }
+  ],
+  "route": {
+    {{RULE_SETS}}
+    {{ROUTE_RULES}}
+  }
+}
