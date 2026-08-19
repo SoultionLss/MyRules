@@ -1,0 +1,34 @@
+# 规则名称: PrimeVideo
+# 规则统计: 31
+
+host,atv-ps.amazon.com
+host,avodmp4s3ww-a.akamaihd.net
+host,d1v5ir2lpwr8os.cloudfront.net
+host,d22qjgkvxw22r6.cloudfront.net
+host,d25xi40x97liuc.cloudfront.net
+host,d27xxe7juh1us6.cloudfront.net
+host,dmqdd6hw24ucf.cloudfront.net
+host,fls-na.amazon.com
+host,images-eu.ssl-images-amazon.com
+host,images-fe.ssl-images-amazon.com
+host,images-na.ssl-images-amazon.com
+host,msh.amazon.co.uk
+host,static.siege-amazon.com
+host,www.amazon.com
+host-suffix,aiv-cdn.net
+host-suffix,aiv-delivery.net
+host-suffix,amazonprimevideo.cn
+host-suffix,amazonprimevideo.com.cn
+host-suffix,amazonprimevideos.com
+host-suffix,amazonvideo.cc
+host-suffix,amazonvideo.com
+host-suffix,media-amazon.com
+host-suffix,prime-video.com
+host-suffix,primevideo.cc
+host-suffix,primevideo.com
+host-suffix,primevideo.info
+host-suffix,primevideo.org
+host-suffix,primevideo.tv
+host-suffix,prod.service.minerva.devices.a2z.com
+host-suffix,pv-cdn.net
+host-keyword,avoddashs

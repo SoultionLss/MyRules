@@ -1,6 +1,6 @@
 # Author: 你的名字
 # 由 scripts/generate.py 自动渲染规则段，其他部分可自由编辑
-# 最后更新: 2026-08-16 04:25 UTC
+# 最后更新: 2026-08-19 10:50 UTC
 #
 # Egern Version >= v2.20.0
 # 官方文档: https://doc.egernapp.com
@@ -29,11 +29,11 @@ dns:
     - https://dns.google/dns-query
   forward:
   - proxy_rule_set:
-      match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Reject.yaml
+      match: https://github.com/{{OWNER}}/{{REPO}}/raw/{{BRANCH}}/Egern/Rules/Reject.yaml
       value: REJECT
       disabled: false
   - proxy_rule_set:
-      match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Direct.yaml
+      match: https://github.com/{{OWNER}}/{{REPO}}/raw/{{BRANCH}}/Egern/Rules/Direct.yaml
       value: Domestic-DNS
       disabled: false
   - domain_wildcard:
@@ -181,52 +181,52 @@ policy_groups:
     tolerance: 0
 rules:
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Direct.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Direct.yaml
     policy: DIRECT
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Reject.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Reject.yaml
     policy: REJECT
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Netflix.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Netflix.yaml
     policy: Streaming
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Disney.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Disney.yaml
     policy: Streaming
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/HBO.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/HBO.yaml
     policy: Streaming
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/AppleTV.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/AppleTV.yaml
     policy: Streaming
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Hulu.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Hulu.yaml
     policy: Streaming
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/PrimeVideo.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/PrimeVideo.yaml
     policy: Streaming
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Spotify.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Spotify.yaml
     policy: Spotify
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Social.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Social.yaml
     policy: Social
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Messaging.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Messaging.yaml
     policy: Global
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Telegram.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Telegram.yaml
     policy: Telegram
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/YouTube.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/YouTube.yaml
     policy: Global
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/Google.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/Google.yaml
     policy: Google
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/AI.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/AI.yaml
     policy: AI
 - rule_set:
-    match: https://github.com/用户名/仓库名/raw/main/Egern/Rules/AICN.yaml
+    match: https://github.com/SoultionLss/MyRules/raw/main/Egern/Rules/AICN.yaml
     policy: AI
 # 兜底规则
 - geoip:
