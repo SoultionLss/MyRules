@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 获取完整历史，便于 rebase
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,8 +25,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install requests pyyaml   # 新增 pyyaml
+        run: pip install requests pyyaml
 
       - name: Run conversion script
         run: |
@@ -39,10 +40,8 @@ jobs:
               resp = requests.get(RAW_URL, timeout=30)
               resp.raise_for_status()
               data = yaml.safe_load(resp.text)
-              # 假设数据包含 'payload' 键，值为列表
               payload = data.get('payload', [])
-              domains = []
-              suffixes = []
+              domains, suffixes = [], []
               for item in payload:
                   if isinstance(item, str):
                       if item.startswith('DOMAIN,'):
@@ -87,16 +86,9 @@ jobs:
                   domains, suffixes = fetch_rules()
               except Exception as e:
                   print(f"❌ 下载或解析失败: {e}")
-                  # 打印前几行用于调试
-                  resp = requests.get(RAW_URL, timeout=30)
-                  print("文件前5行内容:")
-                  for line in resp.text.splitlines()[:5]:
-                      print(line)
                   return
-
               print(f"   精确匹配: {len(domains)} 条")
               print(f"   后缀匹配: {len(suffixes)} 条")
-
               write_surge_domain_set(domains, suffixes)
               write_surge_rule_set(domains, suffixes)
               write_egern_yaml(domains, suffixes)
@@ -115,6 +107,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          
+          # 先拉取远程最新更改，避免冲突
+          git pull --rebase origin main
+          
           git add .
           git diff --staged --quiet || git commit -m "chore: auto-convert ChinaMax rules [skip ci]"
-          git push
+          git push origin main
