@@ -46,15 +46,24 @@ def get_repo_info() -> tuple:
 OWNER, REPO_NAME, BRANCH = get_repo_info()
 FULL_REPO = f"{OWNER}/{REPO_NAME}"
 
+# ==================== Loyalsoldier 规则源 ====================
+LOYALSOLDIER_BASE = "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release"
+LOYALSOLDIER_SOURCES = {
+    "direct-list.txt": "DIRECT",
+    "proxy-list.txt": None,      # 不预设策略，由用户决定
+    "reject-list.txt": "REJECT",
+}
+
 # ==================== 核心工具函数 ====================
 
 def fetch_domains_from_url(url: str) -> Set[str]:
-    """从任意规则源（支持 YAML、list）提取域名集合"""
+    """从任意规则源（支持 YAML、list、txt）提取域名集合"""
     resp = requests.get(url, timeout=30)
     resp.raise_for_status()
     text = resp.text
     domains = set()
 
+    # 尝试 YAML 解析
     try:
         data = yaml.safe_load(text)
         if isinstance(data, dict) and 'payload' in data:
@@ -74,6 +83,7 @@ def fetch_domains_from_url(url: str) -> Set[str]:
                 if domain:
                     domains.add(domain)
     except Exception:
+        # 按行解析（.list 或 .txt 格式）
         for line in text.splitlines():
             line = line.strip()
             if not line or line.startswith('#'):
@@ -86,6 +96,12 @@ def fetch_domains_from_url(url: str) -> Set[str]:
                 domains.add(domain)
 
     return domains
+
+def fetch_loyalsoldier_list(filename: str) -> Set[str]:
+    """从 Loyalsoldier 仓库拉取文本规则列表"""
+    url = f"{LOYALSOLDIER_BASE}/{filename}"
+    print(f"   📥 拉取 Loyalsoldier: {filename}")
+    return fetch_domains_from_url(url)
 
 def format_surge_domainset(domains: Set[str]) -> str:
     """Surge / Loon / Egern 后缀匹配列表，每行 .domain"""
@@ -193,23 +209,56 @@ def main():
     print("📖 解析规则配置文件...")
     rules = parse_rules_yaml(CONFIG_PATH)
 
+    # 按策略分组（从 my_rules.yaml 中读取）
     groups = defaultdict(list)
     for r in rules:
         if r.get('type') == 'rule_set' and 'match' in r:
             groups[r['policy']].append(r['match'])
 
-    print(f"发现 {len(groups)} 个策略组")
+    print(f"发现 {len(groups)} 个策略组（来自 my_rules.yaml）")
 
+    # ========== 新增：从 Loyalsoldier 仓库拉取规则 ==========
+    print("\n📥 从 Loyalsoldier/v2ray-rules-dat 拉取规则...")
+    for filename, policy in LOYALSOLDIER_SOURCES.items():
+        if policy is None:
+            print(f"   ⏭️ 跳过 {filename}（无预设策略）")
+            continue
+        try:
+            domains = fetch_loyalsoldier_list(filename)
+            print(f"   ✅ {filename} -> {len(domains)} 条，归入策略: {policy}")
+            # 将域名合并到对应策略组
+            groups[policy].append(f"Loyalsoldier: {filename}")
+            # 同时存储域名供后续合并使用
+            if not hasattr(main, '_loyalsoldier_domains'):
+                main._loyalsoldier_domains = {}
+            main._loyalsoldier_domains[policy] = domains
+        except Exception as e:
+            print(f"   ❌ 拉取失败: {filename} - {e}")
+
+    print(f"\n总共 {len(groups)} 个策略组（含 Loyalsoldier）")
+
+    # 处理每个策略组
     for policy, urls in groups.items():
         print(f"\n🔄 处理组: {policy} (共 {len(urls)} 个源)")
         all_domains = set()
+
+        # 处理常规 URL 源
         for url in urls:
+            # 如果是 Loyalsoldier 标记，跳过（已单独处理）
+            if url.startswith("Loyalsoldier:"):
+                continue
             try:
                 domains = fetch_domains_from_url(url)
                 print(f"   ✅ {url} -> {len(domains)} 条")
                 all_domains.update(domains)
             except Exception as e:
                 print(f"   ❌ 拉取失败: {url} - {e}")
+
+        # 合并 Loyalsoldier 域名
+        if hasattr(main, '_loyalsoldier_domains') and policy in main._loyalsoldier_domains:
+            ls_domains = main._loyalsoldier_domains[policy]
+            print(f"   ✅ 合并 Loyalsoldier 域名: {len(ls_domains)} 条")
+            all_domains.update(ls_domains)
 
         if not all_domains:
             print(f"   ⚠️ 无域名，跳过")
@@ -218,7 +267,16 @@ def main():
         policy_dir = DIST_DIR / policy
         policy_dir.mkdir(exist_ok=True)
 
-        source_names = [extract_source_name(url) for url in urls]
+        # 生成来源名称列表（仅显示短名称）
+        source_names = []
+        for url in urls:
+            if url.startswith("Loyalsoldier:"):
+                source_names.append("Loyalsoldier")
+            else:
+                source_names.append(extract_source_name(url))
+
+        # 去重来源名称
+        source_names = list(dict.fromkeys(source_names))
 
         # 1. Surge / Loon / Egern .list
         list_path = policy_dir / f"{policy}.list"
