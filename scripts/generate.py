@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import requests
 import yaml
+import re
 from pathlib import Path
 from collections import defaultdict
 from typing import Set, List, Dict
@@ -50,7 +51,7 @@ FULL_REPO = f"{OWNER}/{REPO_NAME}"
 LOYALSOLDIER_BASE = "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release"
 LOYALSOLDIER_SOURCES = {
     "direct-list.txt": "DIRECT",
-    "proxy-list.txt": None,      # 不预设策略，由用户决定
+    "proxy-list.txt": None,
     "reject-list.txt": "REJECT",
 }
 
@@ -131,8 +132,30 @@ def parse_rules_yaml(filepath: Path) -> List[Dict]:
             rules.append(entry)
     return rules
 
-def extract_source_name(url: str) -> str:
-    """从 URL 中提取简洁的来源名称"""
+def extract_repo_name(url: str) -> str:
+    """从 URL 中提取仓库名（owner/repo 格式）"""
+    # 处理 Loyalsoldier 特殊标记
+    if url.startswith("Loyalsoldier:"):
+        return "Loyalsoldier/v2ray-rules-dat"
+
+    # 匹配常见的 GitHub raw / cdn 格式
+    patterns = [
+        # github.com/owner/repo
+        r"github\.com/([^/]+/[^/]+)",
+        # raw.githubusercontent.com/owner/repo
+        r"raw\.githubusercontent\.com/([^/]+/[^/]+)",
+        # cdn.jsdelivr.net/gh/owner/repo
+        r"cdn\.jsdelivr\.net/gh/([^/]+/[^/]+)",
+        # gitlab.com/owner/repo
+        r"gitlab\.com/([^/]+/[^/]+)",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+
+    # 如果无法匹配，返回简短文件名
     filename = url.split('/')[-1]
     base = filename.split('.')[0]
     if base.endswith('_Domain'):
@@ -159,7 +182,7 @@ def write_rule_file(file_path: Path, content: str, policy: str, total: int, sour
         f.write(content)
 
 def write_readme(policy_dir: Path, policy: str, domains: set, source_names: list):
-    """生成 README.md，包含所有平台的导入链接（纯文本，无代码块）"""
+    """生成 README.md，包含所有平台的导入链接"""
     total = len(domains)
     sources = ', '.join(source_names)
 
@@ -232,7 +255,7 @@ def main():
 
     print(f"发现 {len(groups)} 个策略组（来自 my_rules.yaml）")
 
-    # ========== 新增：从 Loyalsoldier 仓库拉取规则 ==========
+    # ========== 从 Loyalsoldier 仓库拉取规则 ==========
     print("\n📥 从 Loyalsoldier/v2ray-rules-dat 拉取规则...")
     loyalsoldier_domains = {}
     for filename, policy in LOYALSOLDIER_SOURCES.items():
@@ -242,11 +265,9 @@ def main():
         try:
             domains = fetch_loyalsoldier_list(filename)
             print(f"   ✅ {filename} -> {len(domains)} 条，归入策略: {policy}")
-            # 保存域名以便后续合并
             if policy not in loyalsoldier_domains:
                 loyalsoldier_domains[policy] = set()
             loyalsoldier_domains[policy].update(domains)
-            # 添加标记到 groups 以便来源显示
             groups[policy].append(f"Loyalsoldier: {filename}")
         except Exception as e:
             print(f"   ❌ 拉取失败: {filename} - {e}")
@@ -282,13 +303,14 @@ def main():
         policy_dir = DIST_DIR / policy
         policy_dir.mkdir(exist_ok=True)
 
-        # 生成来源名称列表（仅显示短名称）
+        # 生成来源名称列表（提取仓库名）
         source_names = []
         for url in urls:
             if url.startswith("Loyalsoldier:"):
-                source_names.append("Loyalsoldier")
+                source_names.append("Loyalsoldier/v2ray-rules-dat")
             else:
-                source_names.append(extract_source_name(url))
+                repo = extract_repo_name(url)
+                source_names.append(repo)
         # 去重并保留顺序
         source_names = list(dict.fromkeys(source_names))
 
