@@ -5,21 +5,28 @@
 - **规则总数**: 703 条
 - **规则来源**: Google
 
-## 导入方式
+## 文件说明
+- `Google.list`  → Surge / Loon / Egern 通用（后缀匹配，每行 .domain）
+- `Google.yaml`  → Clash RULE-SET 格式（payload: 列表）
+- `Google_domain.txt` → v2ray 纯域名列表（每行一个域名）
 
-### Surge (使用 .list)
-- Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Google/Google.list
-- CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Google/Google.list
+## 导入链接
 
-### Clash (使用 .yaml)
-- Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Google/Google.yaml
-- CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Google/Google.yaml
+### Surge / Loon / Egern（使用 .list）
+Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Google/Google.list
+CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Google/Google.list
 
-> 注：Egern 用户也可使用 .yaml，但需自行调整格式（将 payload: 改为 rules:）。
+### Clash（使用 .yaml）
+Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Google/Google.yaml
+CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Google/Google.yaml
+
+### v2ray（使用 _domain.txt）
+Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Google/Google_domain.txt
+CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Google/Google_domain.txt
 
 ## 使用示例
 
-Surge:
+Surge / Loon / Egern:
 在 [Rule] 部分添加：
 RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Google/Google.list, Google
 
@@ -27,11 +34,8 @@ Clash:
 在 rules 部分添加：
 - RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Google/Google.yaml, Google
 
-Egern:
-（需将 YAML 中的 payload: 手动改为 rules:）
-- rule_set:
-    match: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Google/Google.yaml
-    policy: Google
+v2ray:
+在配置文件中的 "domain" 或 "domains" 字段引用该 txt 文件，或将其内容合并。
 
 ## 更新频率
 本规则集每日自动更新（北京时间 20:00），确保与上游保持同步。
