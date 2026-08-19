@@ -2,8 +2,8 @@
 
 ## 基本信息
 - **策略名称**: REJECT
-- **规则总数**: 782 条
-- **规则来源**: Advertising, Advertising
+- **规则总数**: 186782 条
+- **规则来源**: Advertising, Loyalsoldier
 
 ## 文件说明
 - `REJECT.list`  → Surge / Loon / Egern 通用（后缀匹配，每行 .domain）

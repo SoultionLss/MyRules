@@ -2,8 +2,8 @@
 
 ## 基本信息
 - **策略名称**: DIRECT
-- **规则总数**: 123826 条
-- **规则来源**: direct, China, ChinaMax, geosite-cn, geoip-cn
+- **规则总数**: 235256 条
+- **规则来源**: direct, China, ChinaMax, geosite-cn, geoip-cn, Loyalsoldier
 
 ## 文件说明
 - `DIRECT.list`  → Surge / Loon / Egern 通用（后缀匹配，每行 .domain）
