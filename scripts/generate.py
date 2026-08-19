@@ -3,8 +3,15 @@ from collections import defaultdict
 from parser import parse_rules_yaml
 from utils import fetch_domains_from_url, format_surge_domainset, format_egern_yaml, format_clash_yaml
 
-CONFIG_PATH = Path("config/my_rules.yaml")
-OUTPUT_DIR = Path("output")
+# ---------- 路径修正 ----------
+# 获取脚本所在目录（scripts/）
+SCRIPT_DIR = Path(__file__).parent
+# 仓库根目录（scripts/ 的父目录）
+BASE_DIR = SCRIPT_DIR.parent
+
+CONFIG_PATH = BASE_DIR / "config" / "my_rules.yaml"
+OUTPUT_DIR = BASE_DIR / "output"
+# ----------------------------
 
 PLATFORMS = {
     "Surge": {"ext": ".list", "formatter": format_surge_domainset},
