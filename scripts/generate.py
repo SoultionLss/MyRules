@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import shutil
+import subprocess
 import requests
 import yaml
 from pathlib import Path
@@ -14,9 +15,41 @@ BASE_DIR = SCRIPT_DIR.parent
 CONFIG_PATH = BASE_DIR / "config" / "my_rules.yaml"
 DIST_DIR = BASE_DIR / "dist"
 
-# ==================== 仓库信息（请修改） ====================
-REPO_NAME = "SoultionLss/MyRules"   # 替换为你的用户名/仓库名
-BRANCH = "Rules"
+# ==================== 自动获取仓库信息 ====================
+def get_repo_info() -> tuple:
+    """从 git remote 获取仓库的 owner/name 和当前分支"""
+    try:
+        # 获取 remote URL
+        remote_url = subprocess.check_output(
+            ["git", "config", "--get", "remote.origin.url"],
+            cwd=BASE_DIR,
+            stderr=subprocess.DEVNULL,
+            text=True
+        ).strip()
+        # 解析 URL，支持 https 和 git@ 格式
+        if remote_url.startswith("https://"):
+            # https://github.com/owner/repo.git
+            path = remote_url.replace("https://", "").split("/", 1)[1]
+            repo = path.replace(".git", "")
+        elif remote_url.startswith("git@"):
+            # git@github.com:owner/repo.git
+            repo = remote_url.split(":")[1].replace(".git", "")
+        else:
+            raise ValueError("Unknown remote URL format")
+        owner, name = repo.split("/")
+        # 获取当前分支
+        branch = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=BASE_DIR,
+            text=True
+        ).strip()
+        return owner, name, branch
+    except Exception as e:
+        print(f"⚠️ 无法自动获取仓库信息，使用默认值: {e}")
+        return "SoultionLss", "MyRules", "Rules"
+
+OWNER, REPO_NAME, BRANCH = get_repo_info()
+FULL_REPO = f"{OWNER}/{REPO_NAME}"
 
 # ==================== 核心工具函数 ====================
 
@@ -27,7 +60,6 @@ def fetch_domains_from_url(url: str) -> Set[str]:
     text = resp.text
     domains = set()
 
-    # 尝试 YAML 解析
     try:
         data = yaml.safe_load(text)
         if isinstance(data, dict) and 'payload' in data:
@@ -47,7 +79,6 @@ def fetch_domains_from_url(url: str) -> Set[str]:
                 if domain:
                     domains.add(domain)
     except Exception:
-        # 按行解析（.list 或 .txt 格式）
         for line in text.splitlines():
             line = line.strip()
             if not line or line.startswith('#'):
@@ -62,21 +93,17 @@ def fetch_domains_from_url(url: str) -> Set[str]:
     return domains
 
 def format_surge_domainset(domains: Set[str]) -> str:
-    """Surge DOMAIN-SET 格式：每行一个域名，加 . 前缀（后缀匹配）"""
     return '\n'.join(f".{d}" for d in sorted(domains))
 
 def format_clash_yaml(domains: Set[str], policy: str) -> str:
-    """Clash RULE-SET YAML 格式：payload: 列表，每行 DOMAIN-SUFFIX,domain,policy"""
     lines = ["payload:"]
     for d in sorted(domains):
         lines.append(f"  - DOMAIN-SUFFIX,{d},{policy}")
     return '\n'.join(lines)
 
 def parse_rules_yaml(filepath: Path) -> List[Dict]:
-    """解析 config/my_rules.yaml，返回规则条目列表（仅处理 rule_set）"""
     with open(filepath, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f)
-
     rules = []
     for item in data:
         if not isinstance(item, dict):
@@ -85,11 +112,9 @@ def parse_rules_yaml(filepath: Path) -> List[Dict]:
             entry = item['rule_set']
             entry['type'] = 'rule_set'
             rules.append(entry)
-        # 忽略 domain / domain_keyword / domain_regex / user_agent / default
     return rules
 
 def extract_source_name(url: str) -> str:
-    """从 URL 中提取简洁的来源名称"""
     filename = url.split('/')[-1]
     base = filename.split('.')[0]
     if base.endswith('_Domain'):
@@ -99,14 +124,13 @@ def extract_source_name(url: str) -> str:
     return base
 
 def write_readme(policy_dir: Path, policy: str, domains: set, source_names: list):
-    """生成 README.md（无代码块，纯文本说明）"""
     total = len(domains)
     sources = ', '.join(source_names)
 
-    raw_list = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/dist/{policy}/{policy}.list"
-    cdn_list = f"https://cdn.jsdelivr.net/gh/{REPO_NAME}@{BRANCH}/dist/{policy}/{policy}.list"
-    raw_yaml = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/dist/{policy}/{policy}.yaml"
-    cdn_yaml = f"https://cdn.jsdelivr.net/gh/{REPO_NAME}@{BRANCH}/dist/{policy}/{policy}.yaml"
+    raw_list = f"https://raw.githubusercontent.com/{FULL_REPO}/{BRANCH}/dist/{policy}/{policy}.list"
+    cdn_list = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{BRANCH}/dist/{policy}/{policy}.list"
+    raw_yaml = f"https://raw.githubusercontent.com/{FULL_REPO}/{BRANCH}/dist/{policy}/{policy}.yaml"
+    cdn_yaml = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{BRANCH}/dist/{policy}/{policy}.yaml"
 
     content = f"""# {policy} 规则集
 
@@ -153,7 +177,7 @@ Egern:
 # ==================== 主程序 ====================
 
 def main():
-    # 1. 清空旧的 dist
+    # 清空旧的 dist
     if DIST_DIR.exists():
         print(f"🗑️ 删除旧的 dist 目录: {DIST_DIR}")
         shutil.rmtree(DIST_DIR)
@@ -162,15 +186,13 @@ def main():
     print("📖 解析规则配置文件...")
     rules = parse_rules_yaml(CONFIG_PATH)
 
-    # 2. 按策略分组（只保留 rule_set）
-    groups = defaultdict(list)   # policy -> list of urls
+    groups = defaultdict(list)
     for r in rules:
         if r.get('type') == 'rule_set' and 'match' in r:
             groups[r['policy']].append(r['match'])
 
     print(f"发现 {len(groups)} 个策略组")
 
-    # 3. 处理每个策略组
     for policy, urls in groups.items():
         print(f"\n🔄 处理组: {policy} (共 {len(urls)} 个源)")
         all_domains = set()
@@ -186,26 +208,21 @@ def main():
             print(f"   ⚠️ 无域名，跳过")
             continue
 
-        # 创建策略组文件夹
         policy_dir = DIST_DIR / policy
         policy_dir.mkdir(exist_ok=True)
 
-        # 生成来源名称列表
         source_names = [extract_source_name(url) for url in urls]
 
-        # 生成 .list（Surge 格式）
         list_path = policy_dir / f"{policy}.list"
         with open(list_path, 'w', encoding='utf-8') as f:
             f.write(format_surge_domainset(all_domains))
         print(f"   ✅ 生成 Surge 规则: {list_path}")
 
-        # 生成 .yaml（Clash 格式）
         yaml_path = policy_dir / f"{policy}.yaml"
         with open(yaml_path, 'w', encoding='utf-8') as f:
             f.write(format_clash_yaml(all_domains, policy))
         print(f"   ✅ 生成 Clash 规则: {yaml_path}")
 
-        # 生成 README.md
         write_readme(policy_dir, policy, all_domains, source_names)
         print(f"   ✅ 生成 README: {policy_dir / 'README.md'}")
 
