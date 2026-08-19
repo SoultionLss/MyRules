@@ -3,8 +3,11 @@ name: Convert ChinaMax Rules
 
 on:
   schedule:
-    - cron: '30 22 * * *'   # 每天 UTC 22:30 (北京时间次日 6:30)
-  workflow_dispatch:         # 支持手动触发
+    - cron: '30 22 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # 授予写入权限（关键修复）
 
 jobs:
   convert:
@@ -31,7 +34,6 @@ jobs:
           转换为 Surge / Egern 支持的格式
           """
           import requests
-          import re
 
           RAW_URL = "https://raw.githubusercontent.com/Accademia/Additional_Rule_For_Clash/main/ChinaMax/ChinaMax.yaml"
 
@@ -40,8 +42,8 @@ jobs:
               resp.raise_for_status()
               lines = resp.text.splitlines()
 
-              domains = []      # 精确匹配
-              suffixes = []     # 后缀匹配
+              domains = []
+              suffixes = []
 
               for line in lines:
                   line = line.strip()
@@ -109,9 +111,12 @@ jobs:
           python convert.py
 
       - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git add .
           git diff --staged --quiet || git commit -m "chore: auto-convert ChinaMax rules [skip ci]"
           git push
