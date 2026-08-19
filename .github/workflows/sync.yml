@@ -2,7 +2,7 @@ name: Sync and Generate Rules
 
 on:
   schedule:
-    - cron: '0 12 * * *'   # 每天 UTC 12:00
+    - cron: '0 12 * * *'
   workflow_dispatch:
 
 permissions:
@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: Rules   # 明确检出 Rules 分支
+          ref: Rules
 
       - uses: actions/setup-python@v5
         with:
@@ -29,14 +29,13 @@ jobs:
           cd scripts
           python generate.py
 
-      - name: Commit and push
+      - name: Commit and push dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          # 强制添加 output/（即使被 .gitignore 忽略）
-          git add -f output/
+          git add dist/
           git diff --staged --quiet || git commit -m "chore: auto-update rules [skip ci]"
           git push origin Rules
