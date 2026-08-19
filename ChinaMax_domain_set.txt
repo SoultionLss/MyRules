@@ -1,0 +1,4 @@
+# ChinaMax 规则集 - Surge DOMAIN-SET
+# 精确匹配
+
+# 后缀匹配（带 . 前缀）
