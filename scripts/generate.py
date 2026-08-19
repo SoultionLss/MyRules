@@ -19,25 +19,20 @@ DIST_DIR = BASE_DIR / "dist"
 def get_repo_info() -> tuple:
     """从 git remote 获取仓库的 owner/name 和当前分支"""
     try:
-        # 获取 remote URL
         remote_url = subprocess.check_output(
             ["git", "config", "--get", "remote.origin.url"],
             cwd=BASE_DIR,
             stderr=subprocess.DEVNULL,
             text=True
         ).strip()
-        # 解析 URL，支持 https 和 git@ 格式
         if remote_url.startswith("https://"):
-            # https://github.com/owner/repo.git
             path = remote_url.replace("https://", "").split("/", 1)[1]
             repo = path.replace(".git", "")
         elif remote_url.startswith("git@"):
-            # git@github.com:owner/repo.git
             repo = remote_url.split(":")[1].replace(".git", "")
         else:
             raise ValueError("Unknown remote URL format")
         owner, name = repo.split("/")
-        # 获取当前分支
         branch = subprocess.check_output(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
             cwd=BASE_DIR,
@@ -93,17 +88,25 @@ def fetch_domains_from_url(url: str) -> Set[str]:
     return domains
 
 def format_surge_domainset(domains: Set[str]) -> str:
+    """Surge / Loon / Egern 后缀匹配列表，每行 .domain"""
     return '\n'.join(f".{d}" for d in sorted(domains))
 
 def format_clash_yaml(domains: Set[str], policy: str) -> str:
+    """Clash RULE-SET YAML 格式（payload: 列表）"""
     lines = ["payload:"]
     for d in sorted(domains):
         lines.append(f"  - DOMAIN-SUFFIX,{d},{policy}")
     return '\n'.join(lines)
 
+def format_v2ray_domain_txt(domains: Set[str]) -> str:
+    """v2ray 纯域名列表，每行一个域名，不带前缀"""
+    return '\n'.join(sorted(domains))
+
 def parse_rules_yaml(filepath: Path) -> List[Dict]:
+    """解析 config/my_rules.yaml，返回规则条目列表（仅处理 rule_set）"""
     with open(filepath, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f)
+
     rules = []
     for item in data:
         if not isinstance(item, dict):
@@ -115,6 +118,7 @@ def parse_rules_yaml(filepath: Path) -> List[Dict]:
     return rules
 
 def extract_source_name(url: str) -> str:
+    """从 URL 中提取简洁的来源名称"""
     filename = url.split('/')[-1]
     base = filename.split('.')[0]
     if base.endswith('_Domain'):
@@ -124,13 +128,12 @@ def extract_source_name(url: str) -> str:
     return base
 
 def write_readme(policy_dir: Path, policy: str, domains: set, source_names: list):
+    """生成 README.md，包含所有平台的导入链接（纯文本，无代码块）"""
     total = len(domains)
     sources = ', '.join(source_names)
 
-    raw_list = f"https://raw.githubusercontent.com/{FULL_REPO}/{BRANCH}/dist/{policy}/{policy}.list"
-    cdn_list = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{BRANCH}/dist/{policy}/{policy}.list"
-    raw_yaml = f"https://raw.githubusercontent.com/{FULL_REPO}/{BRANCH}/dist/{policy}/{policy}.yaml"
-    cdn_yaml = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{BRANCH}/dist/{policy}/{policy}.yaml"
+    base_url_raw = f"https://raw.githubusercontent.com/{FULL_REPO}/{BRANCH}/dist/{policy}"
+    base_url_cdn = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{BRANCH}/dist/{policy}"
 
     content = f"""# {policy} 规则集
 
@@ -139,33 +142,37 @@ def write_readme(policy_dir: Path, policy: str, domains: set, source_names: list
 - **规则总数**: {total} 条
 - **规则来源**: {sources}
 
-## 导入方式
+## 文件说明
+- `{policy}.list`  → Surge / Loon / Egern 通用（后缀匹配，每行 .domain）
+- `{policy}.yaml`  → Clash RULE-SET 格式（payload: 列表）
+- `{policy}_domain.txt` → v2ray 纯域名列表（每行一个域名）
 
-### Surge (使用 .list)
-- Raw 链接: {raw_list}
-- CDN 加速: {cdn_list}
+## 导入链接
 
-### Clash (使用 .yaml)
-- Raw 链接: {raw_yaml}
-- CDN 加速: {cdn_yaml}
+### Surge / Loon / Egern（使用 .list）
+Raw 链接: {base_url_raw}/{policy}.list
+CDN 加速: {base_url_cdn}/{policy}.list
 
-> 注：Egern 用户也可使用 .yaml，但需自行调整格式（将 payload: 改为 rules:）。
+### Clash（使用 .yaml）
+Raw 链接: {base_url_raw}/{policy}.yaml
+CDN 加速: {base_url_cdn}/{policy}.yaml
+
+### v2ray（使用 _domain.txt）
+Raw 链接: {base_url_raw}/{policy}_domain.txt
+CDN 加速: {base_url_cdn}/{policy}_domain.txt
 
 ## 使用示例
 
-Surge:
+Surge / Loon / Egern:
 在 [Rule] 部分添加：
-RULE-SET, {cdn_list}, {policy}
+RULE-SET, {base_url_cdn}/{policy}.list, {policy}
 
 Clash:
 在 rules 部分添加：
-- RULE-SET, {cdn_yaml}, {policy}
+- RULE-SET, {base_url_cdn}/{policy}.yaml, {policy}
 
-Egern:
-（需将 YAML 中的 payload: 手动改为 rules:）
-- rule_set:
-    match: {cdn_yaml}
-    policy: {policy}
+v2ray:
+在配置文件中的 "domain" 或 "domains" 字段引用该 txt 文件，或将其内容合并。
 
 ## 更新频率
 本规则集每日自动更新（北京时间 20:00），确保与上游保持同步。
@@ -213,16 +220,25 @@ def main():
 
         source_names = [extract_source_name(url) for url in urls]
 
+        # 1. Surge / Loon / Egern .list
         list_path = policy_dir / f"{policy}.list"
         with open(list_path, 'w', encoding='utf-8') as f:
             f.write(format_surge_domainset(all_domains))
-        print(f"   ✅ 生成 Surge 规则: {list_path}")
+        print(f"   ✅ 生成 Surge/Loon/Egern 规则: {list_path}")
 
+        # 2. Clash .yaml
         yaml_path = policy_dir / f"{policy}.yaml"
         with open(yaml_path, 'w', encoding='utf-8') as f:
             f.write(format_clash_yaml(all_domains, policy))
         print(f"   ✅ 生成 Clash 规则: {yaml_path}")
 
+        # 3. v2ray 纯域名 .txt
+        txt_path = policy_dir / f"{policy}_domain.txt"
+        with open(txt_path, 'w', encoding='utf-8') as f:
+            f.write(format_v2ray_domain_txt(all_domains))
+        print(f"   ✅ 生成 v2ray 域名列表: {txt_path}")
+
+        # 4. README.md
         write_readme(policy_dir, policy, all_domains, source_names)
         print(f"   ✅ 生成 README: {policy_dir / 'README.md'}")
 
