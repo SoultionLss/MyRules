@@ -1,7 +1,8 @@
 # ============================================================
 # 规则策略: REJECT
 # 规则总数: 782 条
-# 规则来源: blackmatrix7/ios_rule_script@master
+# 规则来源条目总数: 1 条
+# 规则来源: ios_rule_script@master/rule/Surge/Advertising/Advertising.list
 # ============================================================
 
 .AND,((USER-AGENT,Frodo*),(DOMAIN,119.29.29.29))

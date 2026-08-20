@@ -1,7 +1,8 @@
 # ============================================================
 # 规则策略: GitHub
 # 规则总数: 31 条
-# 规则来源: blackmatrix7/ios_rule_script@master
+# 规则来源条目总数: 1 条
+# 规则来源: ios_rule_script@master/rule/Surge/GitHub/GitHub.list
 # ============================================================
 
 .DOMAIN-KEYWORD,github

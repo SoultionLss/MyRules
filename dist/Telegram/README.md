@@ -3,7 +3,8 @@
 ## 基本信息
 - **策略名称**: Telegram
 - **规则总数**: 46 条
-- **规则来源**: blackmatrix7/ios_rule_script@master
+- **规则来源条目总数**: 1 条
+- **规则来源**: ios_rule_script@master/rule/Surge/Telegram/Telegram.list
 
 ## 文件说明
 - `Telegram.list`  → Surge / Loon / Egern 通用（后缀匹配，每行 .domain）
@@ -13,16 +14,16 @@
 ## 导入链接
 
 ### Surge / Loon / Egern（使用 .list）
-Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Telegram/Telegram.list
-CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Telegram/Telegram.list
+- Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Telegram/Telegram.list
+- CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Telegram/Telegram.list
 
 ### Clash（使用 .yaml）
-Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Telegram/Telegram.yaml
-CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Telegram/Telegram.yaml
+- Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Telegram/Telegram.yaml
+- CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Telegram/Telegram.yaml
 
 ### v2ray（使用 _domain.txt）
-Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Telegram/Telegram_domain.txt
-CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Telegram/Telegram_domain.txt
+- Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Telegram/Telegram_domain.txt
+- CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Telegram/Telegram_domain.txt
 
 ## 使用示例
 

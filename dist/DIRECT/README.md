@@ -2,8 +2,9 @@
 
 ## 基本信息
 - **策略名称**: DIRECT
-- **规则总数**: 123826 条
-- **规则来源**: Loyalsoldier/clash-rules@release, blackmatrix7/ios_rule_script@master
+- **规则总数**: 123828 条
+- **规则来源条目总数**: 2 条
+- **规则来源**: clash-rules@release/direct.txt, ios_rule_script@master/rule/Surge/ChinaMax/ChinaMax.list
 
 ## 文件说明
 - `DIRECT.list`  → Surge / Loon / Egern 通用（后缀匹配，每行 .domain）
@@ -13,16 +14,16 @@
 ## 导入链接
 
 ### Surge / Loon / Egern（使用 .list）
-Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/DIRECT/DIRECT.list
-CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/DIRECT/DIRECT.list
+- Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/DIRECT/DIRECT.list
+- CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/DIRECT/DIRECT.list
 
 ### Clash（使用 .yaml）
-Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/DIRECT/DIRECT.yaml
-CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/DIRECT/DIRECT.yaml
+- Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/DIRECT/DIRECT.yaml
+- CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/DIRECT/DIRECT.yaml
 
 ### v2ray（使用 _domain.txt）
-Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/DIRECT/DIRECT_domain.txt
-CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/DIRECT/DIRECT_domain.txt
+- Raw 链接: https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/DIRECT/DIRECT_domain.txt
+- CDN 加速: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/DIRECT/DIRECT_domain.txt
 
 ## 使用示例
 
