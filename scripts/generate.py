@@ -115,33 +115,20 @@ def parse_rules_yaml(filepath: Path) -> List[Dict]:
 def extract_source_path(url: str) -> str:
     """
     从规则源 URL 中提取可读的路径标识，格式: owner/repo@branch/path/to/file
-    示例:
-      https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt
-      -> Loyalsoldier/clash-rules@release/direct.txt
-
-      https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Advertising/Advertising.list
-      -> blackmatrix7/ios_rule_script@master/rule/Surge/Advertising/Advertising.list
     """
-    # 去掉协议
     if url.startswith('https://'):
         url = url[8:]
 
-    # 处理 raw.githubusercontent.com
     if url.startswith('raw.githubusercontent.com/'):
-        # 格式: raw.githubusercontent.com/owner/repo/branch/path
-        parts = url.split('/', 3)  # 最多切3次，得到 ['raw.githubusercontent.com', 'owner', 'repo', 'branch/path']
+        parts = url.split('/', 3)
         if len(parts) >= 4:
             return f"{parts[1]}/{parts[2]}@{parts[3]}"
 
-    # 处理 cdn.jsdelivr.net/gh/
     if url.startswith('cdn.jsdelivr.net/gh/'):
-        # 格式: cdn.jsdelivr.net/gh/owner/repo@branch/path
         parts = url.split('/', 3)
         if len(parts) >= 4:
-            # parts[3] 已经是 owner/repo@branch/path
             return parts[3]
 
-    # 兜底：返回原 URL（或简化）
     return url
 
 def write_rule_file(file_path: Path, content: str, policy: str, total_domains: int, source_info: list, source_count: int):
