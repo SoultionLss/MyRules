@@ -19,74 +19,76 @@
 
 ## 📂 目录结构
 ```
-MyRules/
-├── .github/workflows/ # GitHub Actions 工作流
-│ └── sync.yml # 每日自动更新任务
-├── config/
-│ └── my_rules.yaml # ⭐ 规则源配置文件（唯一需要编辑的文件）
-├── scripts/
-│ ├── generate.py # 规则生成器
-│ └── config_builder.py # 配置文件生成器
-├── templates/ # 客户端配置模板
-│ ├── Egern.yaml # Egern 核心模板
-│ ├── Surge.conf # Surge 配置文件
-│ ├── Loon.conf # Loon 配置文件
-│ └── Clash.yaml # Clash 配置文件
-├── dist/ # ⭐ 生成的规则文件（自动推送）
-│ ├── DIRECT/ # 每个策略组一个文件夹
-│ │ ├── DIRECT.list # Surge / Loon / Egern 格式
-│ │ ├── DIRECT.yaml # Clash 格式
-│ │ ├── DIRECT_domain.txt # v2ray 纯域名列表
-│ │ └── README.md # 该策略组的使用说明
+dist/
+├── Surge/
+│ └── Rules/
+│ ├── DIRECT/
+│ │ ├── DIRECT.list # Surge/Loon 格式
+│ │ └── README.md # 使用说明
 │ ├── REJECT/
-│ ├── Google/
 │ └── ...
-└── README.md # 本文件
+├── Clash/
+│ └── Rules/
+│ ├── DIRECT/
+│ │ ├── DIRECT.yaml # Clash payload: 格式
+│ │ └── README.md
+│ └── ...
+├── Egern/
+│ └── Rules/
+│ ├── DIRECT/
+│ │ ├── DIRECT.yaml # Egern rules: 格式
+│ │ └── README.md
+│ └── ...
+└── v2ray/
+└── Rules/
+├── DIRECT/
+│ ├── DIRECT_domain.txt # 纯域名列表
+│ └── README.md
+└── ...
 ```
+---
+
+
+每个策略组（如 `DIRECT`、`REJECT`）在四个平台下均有独立文件夹，内含规则文件和 README。
+
 ---
 
 ## 🚀 快速开始
 
 ### 1. 直接使用（推荐）
 
-生成的规则文件位于 `dist/` 目录，每个策略组独立文件夹。你可以在客户端中直接引用以下 CDN 链接：
+直接引用对应平台的规则文件（以 `DIRECT` 策略为例）：
 
-| 客户端 | 规则格式 | 引用示例 |
-|--------|----------|----------|
-| **Surge** | `.list` | `RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/DIRECT/DIRECT.list, DIRECT` |
-| **Egern** | `.list` | `- rule_set: match: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/DIRECT/DIRECT.list policy: DIRECT` |
-| **Clash** | `.yaml` | `- RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/DIRECT/DIRECT.yaml, DIRECT` |
-
-> 💡 将 `DIRECT` 替换为任意策略组名称（如 `REJECT`、`Google`、`YouTube` 等）即可引用对应规则。
+| 客户端 | 规则格式 | CDN 引用示例 |
+|--------|----------|-------------|
+| **Surge / Loon** | `.list` | `RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Surge/Rules/DIRECT/DIRECT.list, DIRECT` |
+| **Clash** | `.yaml` | `- RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Clash/Rules/DIRECT/DIRECT.yaml, DIRECT` |
+| **Egern** | `.yaml` | `- rule_set: match: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Egern/Rules/DIRECT/DIRECT.yaml policy: DIRECT` |
+| **v2ray** | `_domain.txt` | 在 `domain` 字段引用 `https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/v2ray/Rules/DIRECT/DIRECT_domain.txt` |
 
 ### 2. 使用完整配置模板
 
-仓库 `templates/` 目录下提供了各客户端的完整配置文件模板：
-
-- **Surge**：`templates/Surge.conf`
-- **Loon**：`templates/Loon.conf`
-- **Clash**：`templates/Clash.yaml`
-- **Egern**：`templates/Egern.yaml`
-
-下载后填入你的代理节点信息即可直接使用。
+仓库 `templates/` 目录下提供了各客户端的完整配置文件模板，下载后填入代理节点即可使用。
 
 ---
 
 ## ⚙️ 自定义规则源
 
-编辑 `config/my_rules.yaml` 文件，按优先级添加或删除 `rule_set` 条目。
-
-**示例：添加一个新的规则源**
+编辑 `config/my_rules.yaml`，支持简写格式 `source:name`，例如：
 
 ```yaml
 - rule_set:
-    match: https://cdn.jsdelivr.net/gh/用户/仓库@分支/路径/规则.list
-    policy: 策略组名称
-```
-**支持的策略组**（与模板中的策略组一一对应）：
-`DIRECT`、`REJECT`、`Google`、`YouTube`、`GitHub`、`Telegram`、`TikTok`、`Streaming`、`Social`、`HongKongSocial`、`AI`、`Global`、`Microsoft`
-
+    match: blackmatrix7:Google
+    policy: Google
+- rule_set:
+    match: loyalsoldier:direct
+    policy: DIRECT
+- rule_set:
+    match: acl4ssr:Advertising
+    policy: REJECT
+也支持完整 URL（向后兼容）。
 ---
+
 
 ## 📅 更新频率
 
