@@ -14,20 +14,20 @@ permissions:
   contents: write
 
 env:
-  TARGET_REPO: "SoultionLss/Rules"        # 目标规则仓库 (替换为你的)
+  TARGET_REPO: "SoultionLss/Rules"        # 目标规则仓库
   TARGET_BRANCH: "main"                   # 目标分支
-  TARGET_DIR: "rules"                     # 目标仓库中存放规则的目录
+  TARGET_DIR: "rules"                     # 目标目录
 
 jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      # 1. 检出当前仓库（源码仓库）
-      - name: Checkout source repo
+      # 1. 检出包含所有脚本和配置的 Rules 分支
+      - name: Checkout source repo (Rules branch)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main
+          ref: Rules            # 关键修改：检出 Rules 分支
 
       # 2. 设置 Python
       - name: Set up Python
@@ -39,30 +39,36 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml requests
 
-      # 4. 生成规则（在当前仓库生成 dist/）
+      # 4. 生成规则（生成在当前工作区的 dist/）
       - name: Generate rules
         run: |
           cd scripts
           python generate.py
 
-      # 5. 将 dist/ 推送到目标仓库（作为 rules/）
-      - name: Push to target repository
+      # 5. （可选）提交 dist/ 到当前仓库（测试保留）
+      - name: Commit dist to current repo (optional)
         env:
-          TARGET_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}   # 必须配置 Personal Access Token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 克隆目标仓库
-          git clone https://x-access-token:${TARGET_TOKEN}@github.com/${TARGET_REPO}.git target_repo
-          cd target_repo
-          # 切换到目标分支（不存在则创建）
-          git checkout ${TARGET_BRANCH} || git checkout -b ${TARGET_BRANCH}
-          # 清空目标仓库中的原有 rules 目录（保留 .git）
-          rm -rf ${TARGET_DIR}
-          # 复制当前仓库的 dist/ 到目标仓库的 rules/
-          cp -r ../dist ${TARGET_DIR}
-          # 配置 git 用户
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # 添加并提交
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          git add dist/
+          git diff --staged --quiet || git commit -m "chore: auto-update dist [skip ci]"
+          git push origin Rules   # 推送到 Rules 分支
+
+      # 6. 将 dist/ 推送到目标仓库（作为 rules/）
+      - name: Push to target repository
+        env:
+          TARGET_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
+        run: |
+          git clone https://x-access-token:${TARGET_TOKEN}@github.com/${TARGET_REPO}.git target_repo
+          cd target_repo
+          git checkout ${TARGET_BRANCH} || git checkout -b ${TARGET_BRANCH}
+          rm -rf ${TARGET_DIR}
+          cp -r ../dist ${TARGET_DIR}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add ${TARGET_DIR}
           if git diff --staged --quiet; then
             echo "No changes to commit"
