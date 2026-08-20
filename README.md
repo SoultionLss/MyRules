@@ -82,9 +82,10 @@ MyRules/
 - rule_set:
     match: https://cdn.jsdelivr.net/gh/用户/仓库@分支/路径/规则.list
     policy: 策略组名称
+```
 **支持的策略组**（与模板中的策略组一一对应）：
 `DIRECT`、`REJECT`、`Google`、`YouTube`、`GitHub`、`Telegram`、`TikTok`、`Streaming`、`Social`、`HongKongSocial`、`AI`、`Global`、`Microsoft`
-```
+
 ---
 
 ## 📅 更新频率
