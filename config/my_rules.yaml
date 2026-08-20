@@ -51,6 +51,24 @@
     match: https://cdn.jsdelivr.net/gh/QuixoticHeart/rule-set@main/Surge/TikTok.list
     policy: TikTok
 
+# AI
+
+- rule_set:
+    match: OpenAI
+    policy: AI
+    
+- rule_set:
+    match: Claude
+    policy: AI
+
+- rule_set:
+    match: Anthropic
+    policy: AI
+
+- rule_set:
+    match: xAI
+    policy: AI
+
 # =====================================
 # 社交媒体
 # =====================================
