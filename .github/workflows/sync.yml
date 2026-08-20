@@ -1,9 +1,19 @@
 name: Sync and Generate Rules
 
 on:
+  # 新增：当 Rules 分支上的 my_rules.yaml 发生变化时触发
+  push:
+    branches:
+      - Rules
+    paths:
+      - 'config/my_rules.yaml'
+
+  # 保留原有的定时触发（每天 UTC 12:00）
   schedule:
-    - cron: '0 12 * * *'    # 每天 UTC 12:00 自动运行
-  workflow_dispatch:         # 支持手动触发
+    - cron: '0 12 * * *'
+
+  # 保留手动触发
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,48 +22,30 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      # ----------------------------------------------------------
-      # 步骤 1：检出 Rules 分支（所有配置文件都在此分支）
-      # ----------------------------------------------------------
       - name: Checkout Rules branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: Rules          # 直接检出 Rules 分支
+          ref: Rules
 
-      # ----------------------------------------------------------
-      # 步骤 2：设置 Python 环境
-      # ----------------------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # ----------------------------------------------------------
-      # 步骤 3：安装依赖
-      # ----------------------------------------------------------
       - name: Install dependencies
         run: pip install pyyaml requests
 
-      # ----------------------------------------------------------
-      # 步骤 4：生成规则集（dist/）
-      # ----------------------------------------------------------
       - name: Generate rules
         run: |
           cd scripts
           python generate.py
 
-      # ----------------------------------------------------------
-      # 步骤 5：生成配置文件模板（templates/）
-      # ----------------------------------------------------------
       # - name: Generate config templates
       #   run: |
       #     cd scripts
       #     python config_builder.py
 
-      # ----------------------------------------------------------
-      # 步骤 6：提交并推送回 Rules 分支
-      # ----------------------------------------------------------
       - name: Commit and push to Rules branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,10 +53,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          # 强制添加 dist/ 和 templates/（即使被 .gitignore 忽略）
           git add -f dist/
           git add templates/
-          # 检查是否有变更，如有则提交
           git diff --staged --quiet || git commit -m "chore: auto-update rules and templates [skip ci]"
-          # 推送到 Rules 分支（当前分支）
           git push origin Rules
