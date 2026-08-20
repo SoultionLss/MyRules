@@ -3,7 +3,7 @@
 ## 基本信息
 - **策略名称**: YouTube
 - **规则总数**: 190 条
-- **规则来源**: YouTube
+- **规则来源**: blackmatrix7/ios_rule_script@master
 
 ## 文件说明
 - `YouTube.list`  → Surge / Loon / Egern 通用（后缀匹配，每行 .domain）

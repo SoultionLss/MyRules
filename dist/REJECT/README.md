@@ -2,8 +2,8 @@
 
 ## 基本信息
 - **策略名称**: REJECT
-- **规则总数**: 186782 条
-- **规则来源**: Advertising, Loyalsoldier
+- **规则总数**: 187090 条
+- **规则来源**: blackmatrix7/ios_rule_script@master, ACL4SSR/ACL4SSR@master, Loyalsoldier/v2ray-rules-dat
 
 ## 文件说明
 - `REJECT.list`  → Surge / Loon / Egern 通用（后缀匹配，每行 .domain）
