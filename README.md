@@ -5,6 +5,7 @@
 ## 📂 规则文件输出结构
 
 生成的规则文件位于 `output/` 目录，结构如下：
+```
 output/
 ├── Surge/
 │ └── Rules/
@@ -22,6 +23,7 @@ output/
 ├── DIRECT.yaml
 ├── REJECT.yaml
 └── ...
+```
 
 ## 🔧 自定义规则源
 
