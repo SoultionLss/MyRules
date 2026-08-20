@@ -51,6 +51,56 @@
     match: https://cdn.jsdelivr.net/gh/QuixoticHeart/rule-set@main/Surge/TikTok.list
     policy: TikTok
 
+# =====================================
+# 社交媒体
+# =====================================
+- rule_set:
+    match: Instgram
+    policy: Social
+
+- rule_set:
+    match: Threads
+    policy: Social
+
+- rule_set:
+    match: Twitter
+    policy: Social
+    
+- rule_set:
+    match: Reddit
+    policy: Social
+
+# ==========================
+# 流媒体
+# ===========================
+- rule_set:
+      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Netflix/Netflix.list
+      policy: Streaming
+
+  - rule_set:
+      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Disney/Disney.list
+      policy: Streaming
+
+  - rule_set:
+      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/HBO/HBO.list
+      policy: Streaming
+
+  - rule_set:
+      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/PrimeVideo/PrimeVideo.list
+      policy: Streaming
+
+  - rule_set:
+      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Hulu/Hulu.list
+      policy: Streaming
+
+  - rule_set:
+      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Peacock/Peacock.list
+      policy: Streaming
+
+  - rule_set:
+      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Crunchyroll/Crunchyroll.list
+      policy: Streaming
+
 # ============================================
 # 低优先级：国内 IP 段
 # ============================================
