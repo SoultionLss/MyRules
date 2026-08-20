@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
 import shutil
 import subprocess
 import requests
@@ -17,8 +18,18 @@ BASE_DIR = SCRIPT_DIR.parent
 CONFIG_PATH = BASE_DIR / "config" / "my_rules.yaml"
 DIST_DIR = BASE_DIR / "dist"
 
-# ==================== 自动获取仓库信息 ====================
-def get_repo_info() -> tuple:
+# ==================== 目标仓库配置（从环境变量读取） ====================
+def get_target_repo_info():
+    """
+    优先从环境变量 TARGET_REPO 和 TARGET_BRANCH 获取目标仓库信息。
+    若未设置，则回退到当前仓库。
+    """
+    target_repo = os.environ.get("TARGET_REPO")
+    target_branch = os.environ.get("TARGET_BRANCH")
+    if target_repo and target_branch:
+        return target_repo, target_branch
+
+    # 回退到当前仓库
     try:
         remote_url = subprocess.check_output(
             ["git", "config", "--get", "remote.origin.url"],
@@ -33,28 +44,27 @@ def get_repo_info() -> tuple:
             repo = remote_url.split(":")[1].replace(".git", "")
         else:
             raise ValueError("Unknown remote URL format")
-        owner, name = repo.split("/")
         branch = subprocess.check_output(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
             cwd=BASE_DIR,
             text=True
         ).strip()
-        return owner, name, branch
+        return repo, branch
     except Exception as e:
-        print(f"⚠️ 无法自动获取仓库信息，使用默认值: {e}")
-        return "SoultionLss", "MyRules", "Rules"
+        print(f"⚠️ 无法获取仓库信息，使用默认值: {e}")
+        return "SoultionLss/MyRules", "Rules"
 
-OWNER, REPO_NAME, BRANCH = get_repo_info()
-FULL_REPO = f"{OWNER}/{REPO_NAME}"
-AUTHOR = OWNER  # 用于头部注释
+TARGET_REPO, TARGET_BRANCH = get_target_repo_info()
+OWNER = TARGET_REPO.split('/')[0]  # 用于作者字段
 
 # ==================== 规则源 URL 模板（简写自动补全） ====================
 URL_TEMPLATES = {
     "blackmatrix7": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list",
     "loyalsoldier": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/{name}.txt",
     "acl4ssr": "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{name}.list",
+    "repcz": "https://cdn.jsdelivr.net/gh/Repcz/Tool@X/Egern/Rules/{name}.yaml",
     "accademia": "https://cdn.jsdelivr.net/gh/Accademia/Additional_Rule_For_Clash@master/GeositeCN/{name}.yaml",
-    "repcz": "https://raw.githubusercontent.com/Repcz/EgernRules/X/Rules/{name}/{name}.yaml",
+    "repcz_egernrules": "https://raw.githubusercontent.com/Repcz/EgernRules/X/Rules/{name}/{name}.yaml",
 }
 
 def resolve_match(match: str) -> str:
@@ -71,126 +81,7 @@ def resolve_match(match: str) -> str:
     else:
         return URL_TEMPLATES["blackmatrix7"].format(name=match)
 
-# ==================== 规范化清洗函数 ====================
-def normalize_domains(domains: List[str]) -> List[str]:
-    cleaned = []
-    for d in domains:
-        d = d.strip()
-        if not d:
-            continue
-        if '#' in d:
-            d = d.split('#')[0].strip()
-        d = d.rstrip(',;')
-        d = d.lower()
-        for prefix in ['http://', 'https://']:
-            if d.startswith(prefix):
-                d = d[len(prefix):]
-        if '/' in d:
-            d = d.split('/')[0]
-        if d:
-            cleaned.append(d)
-    seen = set()
-    result = []
-    for d in cleaned:
-        if d not in seen:
-            seen.add(d)
-            result.append(d)
-    return result
-
-def clean_surge_domainset(domains: List[str]) -> str:
-    cleaned = []
-    for d in domains:
-        if d.startswith('.'):
-            d = d[1:]
-        for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
-            if d.startswith(prefix):
-                d = d[len(prefix):]
-        if ',' in d:
-            d = d.split(',')[0]
-        d = d.strip().lower()
-        if d and not d.startswith('#'):
-            cleaned.append(f".{d}")
-    seen = set()
-    result = []
-    for d in cleaned:
-        if d not in seen:
-            seen.add(d)
-            result.append(d)
-    return '\n'.join(result)
-
-def clean_clash_yaml(domains: List[str], policy: str) -> str:
-    cleaned = []
-    for d in domains:
-        for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,', 'DOMAIN-KEYWORD,']:
-            if d.startswith(prefix):
-                d = d[len(prefix):]
-        if ',' in d:
-            d = d.split(',')[0]
-        d = d.strip().lower()
-        if d and not d.startswith('#'):
-            cleaned.append(d)
-    seen = set()
-    result = []
-    for d in cleaned:
-        if d not in seen:
-            seen.add(d)
-            result.append(d)
-    lines = ["payload:"]
-    for d in sorted(result):
-        lines.append(f"  - DOMAIN-SUFFIX,{d},{policy}")
-    return '\n'.join(lines)
-
-def clean_egern_yaml(domains: List[str]) -> str:
-    cleaned = []
-    for d in domains:
-        for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
-            if d.startswith(prefix):
-                d = d[len(prefix):]
-        if ',' in d:
-            d = d.split(',')[0]
-        d = d.strip().lower()
-        if d and not d.startswith('#'):
-            cleaned.append(d)
-    seen = set()
-    result = []
-    for d in cleaned:
-        if d not in seen:
-            seen.add(d)
-            result.append(d)
-    lines = ["rules:"]
-    for d in sorted(result):
-        lines.append(f"  - domain_suffix: {d}")
-    return '\n'.join(lines)
-
-def clean_v2ray_txt(domains: List[str]) -> str:
-    cleaned = []
-    for d in domains:
-        d = d.strip()
-        if not d or d.startswith('#'):
-            continue
-        has_prefix = False
-        for prefix in ['domain:', 'full:', 'keyword:', 'regexp:']:
-            if d.lower().startswith(prefix):
-                has_prefix = True
-                break
-        if not has_prefix:
-            for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
-                if d.startswith(prefix):
-                    d = d[len(prefix):]
-            if ',' in d:
-                d = d.split(',')[0]
-            d = d.lower()
-        if d:
-            cleaned.append(d)
-    seen = set()
-    result = []
-    for d in cleaned:
-        if d not in seen:
-            seen.add(d)
-            result.append(d)
-    return '\n'.join(result)
-
-# ==================== 拉取函数 ====================
+# ==================== 拉取和清洗函数 ====================
 def fetch_domains_from_url(url: str) -> Set[str]:
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -229,6 +120,116 @@ def fetch_domains_from_url(url: str) -> Set[str]:
                 domains.add(domain)
     return domains
 
+def normalize_domains(domains: List[str]) -> List[str]:
+    cleaned = []
+    for d in domains:
+        d = d.strip()
+        if not d:
+            continue
+        if '#' in d:
+            d = d.split('#')[0].strip()
+        d = d.rstrip(',;')
+        d = d.lower()
+        for prefix in ['http://', 'https://']:
+            if d.startswith(prefix):
+                d = d[len(prefix):]
+        if '/' in d:
+            d = d.split('/')[0]
+        if d:
+            cleaned.append(d)
+    seen = set()
+    result = []
+    for d in cleaned:
+        if d not in seen:
+            seen.add(d)
+            result.append(d)
+    return result
+
+def clean_surge_domainset(domains: List[str]) -> str:
+    cleaned = []
+    for d in domains:
+        if d.startswith('.'):
+            d = d[1:]
+        for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
+            if d.startswith(prefix):
+                d = d[len(prefix):]
+        if ',' in d:
+            d = d.split(',')[0]
+        d = d.strip().lower()
+        if d and not d.startswith('#'):
+            cleaned.append(f".{d}")
+    seen = set(); result = []
+    for d in cleaned:
+        if d not in seen:
+            seen.add(d); result.append(d)
+    return '\n'.join(result)
+
+def clean_clash_yaml(domains: List[str], policy: str) -> str:
+    cleaned = []
+    for d in domains:
+        for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,', 'DOMAIN-KEYWORD,']:
+            if d.startswith(prefix):
+                d = d[len(prefix):]
+        if ',' in d:
+            d = d.split(',')[0]
+        d = d.strip().lower()
+        if d and not d.startswith('#'):
+            cleaned.append(d)
+    seen = set(); result = []
+    for d in cleaned:
+        if d not in seen:
+            seen.add(d); result.append(d)
+    lines = ["payload:"]
+    for d in sorted(result):
+        lines.append(f"  - DOMAIN-SUFFIX,{d},{policy}")
+    return '\n'.join(lines)
+
+def clean_egern_yaml(domains: List[str]) -> str:
+    cleaned = []
+    for d in domains:
+        for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
+            if d.startswith(prefix):
+                d = d[len(prefix):]
+        if ',' in d:
+            d = d.split(',')[0]
+        d = d.strip().lower()
+        if d and not d.startswith('#'):
+            cleaned.append(d)
+    seen = set(); result = []
+    for d in cleaned:
+        if d not in seen:
+            seen.add(d); result.append(d)
+    lines = ["rules:"]
+    for d in sorted(result):
+        lines.append(f"  - domain_suffix: {d}")
+    return '\n'.join(lines)
+
+def clean_v2ray_txt(domains: List[str]) -> str:
+    cleaned = []
+    for d in domains:
+        d = d.strip()
+        if not d or d.startswith('#'):
+            continue
+        has_prefix = False
+        for prefix in ['domain:', 'full:', 'keyword:', 'regexp:']:
+            if d.lower().startswith(prefix):
+                has_prefix = True
+                break
+        if not has_prefix:
+            for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
+                if d.startswith(prefix):
+                    d = d[len(prefix):]
+            if ',' in d:
+                d = d.split(',')[0]
+            d = d.lower()
+        if d:
+            cleaned.append(d)
+    seen = set(); result = []
+    for d in cleaned:
+        if d not in seen:
+            seen.add(d); result.append(d)
+    return '\n'.join(result)
+
 def extract_source_path(url: str) -> str:
     if url.startswith('https://'):
         url = url[8:]
@@ -256,19 +257,15 @@ def parse_rules_yaml(filepath: Path) -> List[Dict]:
             rules.append(entry)
     return rules
 
-# ==================== 生成平台特定 README ====================
+# ==================== 生成平台特定 README（链接指向目标仓库） ====================
 def write_platform_readme(platform_dir: Path, policy: str, domains: set, source_info: list, source_count: int, platform: str):
     total = len(domains)
     sources = ', '.join(source_info)
-    base_raw = f"https://raw.githubusercontent.com/{FULL_REPO}/{BRANCH}/dist/{platform}/Rules/{policy}"
-    base_cdn = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{BRANCH}/dist/{platform}/Rules/{policy}"
+    # 使用目标仓库生成链接
+    base_raw = f"https://raw.githubusercontent.com/{TARGET_REPO}/{TARGET_BRANCH}/rules/{platform}/Rules/{policy}"
+    base_cdn = f"https://cdn.jsdelivr.net/gh/{TARGET_REPO}@{TARGET_BRANCH}/rules/{platform}/Rules/{policy}"
 
-    ext_map = {
-        "Surge": ".list",
-        "Clash": ".yaml",
-        "Egern": ".yaml",
-        "v2ray": "_domain.txt"
-    }
+    ext_map = {"Surge": ".list", "Clash": ".yaml", "Egern": ".yaml", "v2ray": "_domain.txt"}
     ext = ext_map.get(platform, ".list")
     filename = f"{policy}{ext}"
 
@@ -371,13 +368,12 @@ def main():
             platform_dir = DIST_DIR / plat / "Rules" / policy
             platform_dir.mkdir(parents=True, exist_ok=True)
 
-            # 生成规则内容
             if cfg["extra_args"]:
                 content = cfg["formatter"](normalized, *cfg["extra_args"])
             else:
                 content = cfg["formatter"](normalized)
 
-            # ========== 添加头部注释 ==========
+            # 头部注释
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             header = [
                 "# ============================================================",
@@ -385,7 +381,7 @@ def main():
                 f"# 规则总数: {total_domains} 条",
                 f"# 规则来源条目总数: {source_count} 条",
                 f"# 规则来源: {', '.join(source_info)}",
-                f"# 作者: {AUTHOR}",
+                f"# 作者: {OWNER}",
                 f"# 最后更新: {now}",
                 "# ============================================================",
                 ""
@@ -399,7 +395,7 @@ def main():
                 f.write(full_content)
             print(f"   ✅ 生成 {plat} 规则: {file_path}")
 
-            # 生成该平台 README
+            # 生成该平台的 README（链接指向目标仓库）
             write_platform_readme(platform_dir, policy, set(normalized), source_info, source_count, plat)
 
     print("\n🎉 所有规则生成完成！")
