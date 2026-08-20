@@ -84,10 +84,9 @@ MyRules/
     policy: 策略组名称
 **支持的策略组**（与模板中的策略组一一对应）：
 `DIRECT`、`REJECT`、`Google`、`YouTube`、`GitHub`、`Telegram`、`TikTok`、`Streaming`、`Social`、`HongKongSocial`、`AI`、`Global`、`Microsoft`
-
+```
 ---
 
-```markdown
 ---
 
 ## 📅 更新频率
