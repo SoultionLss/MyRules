@@ -1,3 +1,5 @@
+# 使用说明
+# 1. 在 config/my_rules.yaml 中使用简写格式
 - rule_set:
     match: blackmatrix7:Baidu
     policy: DIRECT
@@ -13,11 +15,13 @@
 - rule_set:
     match: acl4ssr:Advertising
     policy: REJECT
-    
+
+# 2. 也支持默认来源（省略 source:，自动使用 blackmatrix7）
 - rule_set:
     match: DouYin
     policy: DIRECT
-    
+
+# 3. 也支持完整 URL（向后兼容）
 - rule_set:
     match: https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Advertising.list
     policy: REJECT
