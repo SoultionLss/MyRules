@@ -1,3 +1,2 @@
-raw_rules/
+dist/
 __pycache__/
-*.pyc
