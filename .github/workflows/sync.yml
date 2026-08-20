@@ -46,10 +46,10 @@ jobs:
       # ----------------------------------------------------------
       # 步骤 5：生成配置文件模板（templates/）
       # ----------------------------------------------------------
-      - name: Generate config templates
-        run: |
-          cd scripts
-          python config_builder.py
+      # - name: Generate config templates
+      #   run: |
+      #     cd scripts
+      #     python config_builder.py
 
       # ----------------------------------------------------------
       # 步骤 6：提交并推送回 Rules 分支
