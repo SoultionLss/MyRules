@@ -12,16 +12,16 @@
 ## 导入链接
 
 ### Raw 链接
-https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Egern/Rules/Telegram/Telegram.yaml
+https://raw.githubusercontent.com/SoultionLss/Rules/main/rules/Egern/Rules/Telegram/Telegram.yaml
 
 ### CDN 加速
-https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Egern/Rules/Telegram/Telegram.yaml
+https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Egern/Rules/Telegram/Telegram.yaml
 
 ## 使用示例
 
 ### Egern
 - rule_set:
-    match: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Egern/Rules/Telegram/Telegram.yaml
+    match: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Egern/Rules/Telegram/Telegram.yaml
     policy: Telegram
 
 ## 更新频率

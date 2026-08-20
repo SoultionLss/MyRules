@@ -12,15 +12,15 @@
 ## 导入链接
 
 ### Raw 链接
-https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Clash/Rules/REJECT/REJECT.yaml
+https://raw.githubusercontent.com/SoultionLss/Rules/main/rules/Clash/Rules/REJECT/REJECT.yaml
 
 ### CDN 加速
-https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Clash/Rules/REJECT/REJECT.yaml
+https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Clash/Rules/REJECT/REJECT.yaml
 
 ## 使用示例
 
 ### Clash
-- RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Clash/Rules/REJECT/REJECT.yaml, REJECT
+- RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Clash/Rules/REJECT/REJECT.yaml, REJECT
 
 ## 更新频率
 本规则集每日自动更新（北京时间 20:00），确保与上游保持同步。

@@ -12,16 +12,16 @@
 ## 导入链接
 
 ### Raw 链接
-https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Egern/Rules/REJECT/REJECT.yaml
+https://raw.githubusercontent.com/SoultionLss/Rules/main/rules/Egern/Rules/REJECT/REJECT.yaml
 
 ### CDN 加速
-https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Egern/Rules/REJECT/REJECT.yaml
+https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Egern/Rules/REJECT/REJECT.yaml
 
 ## 使用示例
 
 ### Egern
 - rule_set:
-    match: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Egern/Rules/REJECT/REJECT.yaml
+    match: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Egern/Rules/REJECT/REJECT.yaml
     policy: REJECT
 
 ## 更新频率

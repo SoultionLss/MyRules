@@ -12,15 +12,15 @@
 ## 导入链接
 
 ### Raw 链接
-https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Clash/Rules/Telegram/Telegram.yaml
+https://raw.githubusercontent.com/SoultionLss/Rules/main/rules/Clash/Rules/Telegram/Telegram.yaml
 
 ### CDN 加速
-https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Clash/Rules/Telegram/Telegram.yaml
+https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Clash/Rules/Telegram/Telegram.yaml
 
 ## 使用示例
 
 ### Clash
-- RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Clash/Rules/Telegram/Telegram.yaml, Telegram
+- RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Clash/Rules/Telegram/Telegram.yaml, Telegram
 
 ## 更新频率
 本规则集每日自动更新（北京时间 20:00），确保与上游保持同步。

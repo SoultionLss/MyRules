@@ -12,16 +12,16 @@
 ## 导入链接
 
 ### Raw 链接
-https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Egern/Rules/Google/Google.yaml
+https://raw.githubusercontent.com/SoultionLss/Rules/main/rules/Egern/Rules/Google/Google.yaml
 
 ### CDN 加速
-https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Egern/Rules/Google/Google.yaml
+https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Egern/Rules/Google/Google.yaml
 
 ## 使用示例
 
 ### Egern
 - rule_set:
-    match: https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Egern/Rules/Google/Google.yaml
+    match: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Egern/Rules/Google/Google.yaml
     policy: Google
 
 ## 更新频率

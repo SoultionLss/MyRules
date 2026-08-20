@@ -12,15 +12,15 @@
 ## 导入链接
 
 ### Raw 链接
-https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/Surge/Rules/GitHub/GitHub.list
+https://raw.githubusercontent.com/SoultionLss/Rules/main/rules/Surge/Rules/GitHub/GitHub.list
 
 ### CDN 加速
-https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Surge/Rules/GitHub/GitHub.list
+https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Surge/Rules/GitHub/GitHub.list
 
 ## 使用示例
 
 ### Surge
-RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/Surge/Rules/GitHub/GitHub.list, GitHub
+RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/Surge/Rules/GitHub/GitHub.list, GitHub
 
 ## 更新频率
 本规则集每日自动更新（北京时间 20:00），确保与上游保持同步。

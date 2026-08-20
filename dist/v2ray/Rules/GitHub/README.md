@@ -12,10 +12,10 @@
 ## 导入链接
 
 ### Raw 链接
-https://raw.githubusercontent.com/SoultionLss/MyRules/Rules/dist/v2ray/Rules/GitHub/GitHub_domain.txt
+https://raw.githubusercontent.com/SoultionLss/Rules/main/rules/v2ray/Rules/GitHub/GitHub_domain.txt
 
 ### CDN 加速
-https://cdn.jsdelivr.net/gh/SoultionLss/MyRules@Rules/dist/v2ray/Rules/GitHub/GitHub_domain.txt
+https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/rules/v2ray/Rules/GitHub/GitHub_domain.txt
 
 ## 使用示例
 

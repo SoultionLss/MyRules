@@ -4,36 +4,36 @@
 # 规则来源条目总数: 1 条
 # 规则来源: ios_rule_script@master/rule/Surge/Telegram/Telegram.list
 # 作者: SoultionLss
-# 最后更新: 2026-08-20 11:35:33
+# 最后更新: 2026-08-20 11:40:35
 # ============================================================
 
+.or
+.mbrx.app
+.telegram.dog
 .ip-cidr
 .process-name
-.or
-.tg.dev
-.ip-asn
-.comments.app
-.telegram.org
-.contest.com
-.api.imem.app
-.telegram-cdn.org
-.api.swiftgram.app
 .ip-cidr6
-.telega.one
-.mbrx.app
-.quiz.directory
-.t.me
-.telegra.ph
-.telegramdownload.com
-.telegram.space
-.domain-keyword
-.telesco.pe
-.telegram.me
-.graph.org
-.tdesktop.com
-.telegram.dog
-.tx.me
 .stel.com
-.cdn-telegram.org
+.telegramdownload.com
+.api.swiftgram.app
+.quiz.directory
+.telesco.pe
+.ip-asn
+.telegram.org
+.api.imem.app
 .legra.ph
+.tdesktop.com
 .usercontent.dev
+.telegram.me
+.contest.com
+.telegram-cdn.org
+.t.me
+.tg.dev
+.domain-keyword
+.graph.org
+.telega.one
+.telegra.ph
+.telegram.space
+.comments.app
+.cdn-telegram.org
+.tx.me
