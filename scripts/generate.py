@@ -47,11 +47,36 @@ OWNER, REPO_NAME, BRANCH = get_repo_info()
 FULL_REPO = f"{OWNER}/{REPO_NAME}"
 
 # ==================== Loyalsoldier 规则源 ====================
-LOYALSOLDIER_BASE = "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release"
-LOYALSOLDIER_SOURCES = {
+# 1. v2ray-rules-dat
+V2RAY_BASE = "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release"
+V2RAY_SOURCES = {
     "direct-list.txt": "DIRECT",
     "proxy-list.txt": None,
     "reject-list.txt": "REJECT",
+}
+
+# 2. surge-rules
+SURGE_RULES_BASE = "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release"
+# 映射文件名 -> 策略组
+SURGE_RULES_MAP = {
+    "apple.txt": "Global",
+    "google.txt": "Google",
+    "youtube.txt": "YouTube",
+    "github.txt": "GitHub",
+    "telegram.txt": "Telegram",
+    "netflix.txt": "Streaming",
+    "disney.txt": "Streaming",
+    "primevideo.txt": "Streaming",
+    "hbo.txt": "Streaming",
+    "hulu.txt": "Streaming",
+    "pikpak.txt": "DIRECT",
+    "twitter.txt": "Social",
+    "instagram.txt": "Social",
+    "reddit.txt": "Social",
+    "whatsapp.txt": "HongKongSocial",
+    "line.txt": "HongKongSocial",
+    "tiktok.txt": "TikTok",
+    "microsoft.txt": "Microsoft",
 }
 
 # ==================== 核心工具函数 ====================
@@ -94,9 +119,14 @@ def fetch_domains_from_url(url: str) -> Set[str]:
 
     return domains
 
-def fetch_loyalsoldier_list(filename: str) -> Set[str]:
-    url = f"{LOYALSOLDIER_BASE}/{filename}"
-    print(f"   📥 拉取 Loyalsoldier: {filename}")
+def fetch_loyalsoldier_v2ray_list(filename: str) -> Set[str]:
+    url = f"{V2RAY_BASE}/{filename}"
+    print(f"   📥 拉取 Loyalsoldier/v2ray-rules-dat: {filename}")
+    return fetch_domains_from_url(url)
+
+def fetch_loyalsoldier_surge_list(filename: str) -> Set[str]:
+    url = f"{SURGE_RULES_BASE}/{filename}"
+    print(f"   📥 拉取 Loyalsoldier/surge-rules: {filename}")
     return fetch_domains_from_url(url)
 
 def format_surge_domainset(domains: Set[str]) -> str:
@@ -126,8 +156,10 @@ def parse_rules_yaml(filepath: Path) -> List[Dict]:
     return rules
 
 def extract_repo_name(url: str) -> str:
-    if url.startswith("Loyalsoldier:"):
+    if url.startswith("Loyalsoldier:v2ray"):
         return "Loyalsoldier/v2ray-rules-dat"
+    if url.startswith("Loyalsoldier:surge"):
+        return "Loyalsoldier/surge-rules"
 
     patterns = [
         r"github\.com/([^/]+/[^/]+)",
@@ -236,24 +268,40 @@ def main():
 
     print(f"发现 {len(groups)} 个策略组（来自 my_rules.yaml）")
 
+    # ========== 从 Loyalsoldier/v2ray-rules-dat 拉取 ==========
     print("\n📥 从 Loyalsoldier/v2ray-rules-dat 拉取规则...")
-    loyalsoldier_domains = {}
-    for filename, policy in LOYALSOLDIER_SOURCES.items():
+    loyalsoldier_v2ray_domains = {}
+    for filename, policy in V2RAY_SOURCES.items():
         if policy is None:
             print(f"   ⏭️ 跳过 {filename}（无预设策略）")
             continue
         try:
-            domains = fetch_loyalsoldier_list(filename)
+            domains = fetch_loyalsoldier_v2ray_list(filename)
             print(f"   ✅ {filename} -> {len(domains)} 条，归入策略: {policy}")
-            if policy not in loyalsoldier_domains:
-                loyalsoldier_domains[policy] = set()
-            loyalsoldier_domains[policy].update(domains)
-            groups[policy].append(f"Loyalsoldier: {filename}")
+            if policy not in loyalsoldier_v2ray_domains:
+                loyalsoldier_v2ray_domains[policy] = set()
+            loyalsoldier_v2ray_domains[policy].update(domains)
+            groups[policy].append(f"Loyalsoldier:v2ray:{filename}")
         except Exception as e:
             print(f"   ❌ 拉取失败: {filename} - {e}")
 
-    print(f"\n总共 {len(groups)} 个策略组（含 Loyalsoldier）")
+    # ========== 从 Loyalsoldier/surge-rules 拉取 ==========
+    print("\n📥 从 Loyalsoldier/surge-rules 拉取规则...")
+    loyalsoldier_surge_domains = {}
+    for filename, policy in SURGE_RULES_MAP.items():
+        try:
+            domains = fetch_loyalsoldier_surge_list(filename)
+            print(f"   ✅ {filename} -> {len(domains)} 条，归入策略: {policy}")
+            if policy not in loyalsoldier_surge_domains:
+                loyalsoldier_surge_domains[policy] = set()
+            loyalsoldier_surge_domains[policy].update(domains)
+            groups[policy].append(f"Loyalsoldier:surge:{filename}")
+        except Exception as e:
+            print(f"   ❌ 拉取失败: {filename} - {e}")
 
+    print(f"\n总共 {len(groups)} 个策略组（含 Loyalsoldier 源）")
+
+    # 处理每个策略组
     for policy, urls in groups.items():
         print(f"\n🔄 处理组: {policy} (共 {len(urls)} 个源)")
         all_domains = set()
@@ -268,9 +316,16 @@ def main():
             except Exception as e:
                 print(f"   ❌ 拉取失败: {url} - {e}")
 
-        if policy in loyalsoldier_domains:
-            ls_domains = loyalsoldier_domains[policy]
-            print(f"   ✅ 合并 Loyalsoldier 域名: {len(ls_domains)} 条")
+        # 合并 v2ray 域名
+        if policy in loyalsoldier_v2ray_domains:
+            ls_domains = loyalsoldier_v2ray_domains[policy]
+            print(f"   ✅ 合并 Loyalsoldier/v2ray 域名: {len(ls_domains)} 条")
+            all_domains.update(ls_domains)
+
+        # 合并 surge 域名
+        if policy in loyalsoldier_surge_domains:
+            ls_domains = loyalsoldier_surge_domains[policy]
+            print(f"   ✅ 合并 Loyalsoldier/surge 域名: {len(ls_domains)} 条")
             all_domains.update(ls_domains)
 
         if not all_domains:
@@ -280,10 +335,13 @@ def main():
         policy_dir = DIST_DIR / policy
         policy_dir.mkdir(exist_ok=True)
 
+        # 生成来源名称
         source_names = []
         for url in urls:
-            if url.startswith("Loyalsoldier:"):
+            if url.startswith("Loyalsoldier:v2ray"):
                 source_names.append("Loyalsoldier/v2ray-rules-dat")
+            elif url.startswith("Loyalsoldier:surge"):
+                source_names.append("Loyalsoldier/surge-rules")
             else:
                 repo = extract_repo_name(url)
                 source_names.append(repo)
