@@ -22,42 +22,36 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      # 1. 检出包含所有脚本和配置的 Rules 分支
       - name: Checkout source repo (Rules branch)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: Rules            # 关键修改：检出 Rules 分支
+          ref: Rules
 
-      # 2. 设置 Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 3. 安装依赖
       - name: Install dependencies
         run: pip install pyyaml requests
 
-      # 4. 生成规则（生成在当前工作区的 dist/）
       - name: Generate rules
         run: |
           cd scripts
           python generate.py
 
-      # 5. （可选）提交 dist/ 到当前仓库（测试保留）
-      - name: Commit dist to current repo (optional)
+      - name: Commit dist to current repo (test)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          git add dist/
+          git add -f dist/
           git diff --staged --quiet || git commit -m "chore: auto-update dist [skip ci]"
-          git push origin Rules   # 推送到 Rules 分支
+          git push origin Rules
 
-      # 6. 将 dist/ 推送到目标仓库（作为 rules/）
       - name: Push to target repository
         env:
           TARGET_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
