@@ -18,7 +18,6 @@ DIST_DIR = BASE_DIR / "dist"
 
 # ==================== 自动获取仓库信息 ====================
 def get_repo_info() -> tuple:
-    """从 git remote 获取仓库的 owner/name 和当前分支"""
     try:
         remote_url = subprocess.check_output(
             ["git", "config", "--get", "remote.origin.url"],
@@ -58,7 +57,6 @@ LOYALSOLDIER_SOURCES = {
 # ==================== 核心工具函数 ====================
 
 def fetch_domains_from_url(url: str) -> Set[str]:
-    """从任意规则源（支持 YAML、list、txt）提取域名集合"""
     resp = requests.get(url, timeout=30)
     resp.raise_for_status()
     text = resp.text
@@ -97,28 +95,23 @@ def fetch_domains_from_url(url: str) -> Set[str]:
     return domains
 
 def fetch_loyalsoldier_list(filename: str) -> Set[str]:
-    """从 Loyalsoldier 仓库拉取文本规则列表"""
     url = f"{LOYALSOLDIER_BASE}/{filename}"
     print(f"   📥 拉取 Loyalsoldier: {filename}")
     return fetch_domains_from_url(url)
 
 def format_surge_domainset(domains: Set[str]) -> str:
-    """Surge / Loon / Egern 后缀匹配列表，每行 .domain"""
     return '\n'.join(f".{d}" for d in sorted(domains))
 
 def format_clash_yaml(domains: Set[str], policy: str) -> str:
-    """Clash RULE-SET YAML 格式（payload: 列表）"""
     lines = ["payload:"]
     for d in sorted(domains):
         lines.append(f"  - DOMAIN-SUFFIX,{d},{policy}")
     return '\n'.join(lines)
 
 def format_v2ray_domain_txt(domains: Set[str]) -> str:
-    """v2ray 纯域名列表，每行一个域名，不带前缀"""
     return '\n'.join(sorted(domains))
 
 def parse_rules_yaml(filepath: Path) -> List[Dict]:
-    """解析 config/my_rules.yaml，返回规则条目列表（仅处理 rule_set）"""
     with open(filepath, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f)
 
@@ -133,20 +126,13 @@ def parse_rules_yaml(filepath: Path) -> List[Dict]:
     return rules
 
 def extract_repo_name(url: str) -> str:
-    """从 URL 中提取仓库名（owner/repo 格式）"""
-    # 处理 Loyalsoldier 特殊标记
     if url.startswith("Loyalsoldier:"):
         return "Loyalsoldier/v2ray-rules-dat"
 
-    # 匹配常见的 GitHub raw / cdn 格式
     patterns = [
-        # github.com/owner/repo
         r"github\.com/([^/]+/[^/]+)",
-        # raw.githubusercontent.com/owner/repo
         r"raw\.githubusercontent\.com/([^/]+/[^/]+)",
-        # cdn.jsdelivr.net/gh/owner/repo
         r"cdn\.jsdelivr\.net/gh/([^/]+/[^/]+)",
-        # gitlab.com/owner/repo
         r"gitlab\.com/([^/]+/[^/]+)",
     ]
 
@@ -155,7 +141,6 @@ def extract_repo_name(url: str) -> str:
         if match:
             return match.group(1)
 
-    # 如果无法匹配，返回简短文件名
     filename = url.split('/')[-1]
     base = filename.split('.')[0]
     if base.endswith('_Domain'):
@@ -165,7 +150,6 @@ def extract_repo_name(url: str) -> str:
     return base
 
 def write_rule_file(file_path: Path, content: str, policy: str, total: int, source_names: list):
-    """写入规则文件，添加头部注释"""
     sources = ', '.join(source_names)
     header = [
         "# ============================================================",
@@ -182,7 +166,6 @@ def write_rule_file(file_path: Path, content: str, policy: str, total: int, sour
         f.write(content)
 
 def write_readme(policy_dir: Path, policy: str, domains: set, source_names: list):
-    """生成 README.md，包含所有平台的导入链接"""
     total = len(domains)
     sources = ', '.join(source_names)
 
@@ -238,7 +221,6 @@ v2ray:
 # ==================== 主程序 ====================
 
 def main():
-    # 清空旧的 dist
     if DIST_DIR.exists():
         print(f"🗑️ 删除旧的 dist 目录: {DIST_DIR}")
         shutil.rmtree(DIST_DIR)
@@ -247,7 +229,6 @@ def main():
     print("📖 解析规则配置文件...")
     rules = parse_rules_yaml(CONFIG_PATH)
 
-    # 按策略分组（从 my_rules.yaml 中读取）
     groups = defaultdict(list)
     for r in rules:
         if r.get('type') == 'rule_set' and 'match' in r:
@@ -255,7 +236,6 @@ def main():
 
     print(f"发现 {len(groups)} 个策略组（来自 my_rules.yaml）")
 
-    # ========== 从 Loyalsoldier 仓库拉取规则 ==========
     print("\n📥 从 Loyalsoldier/v2ray-rules-dat 拉取规则...")
     loyalsoldier_domains = {}
     for filename, policy in LOYALSOLDIER_SOURCES.items():
@@ -274,12 +254,10 @@ def main():
 
     print(f"\n总共 {len(groups)} 个策略组（含 Loyalsoldier）")
 
-    # 处理每个策略组
     for policy, urls in groups.items():
         print(f"\n🔄 处理组: {policy} (共 {len(urls)} 个源)")
         all_domains = set()
 
-        # 处理常规 URL 源
         for url in urls:
             if url.startswith("Loyalsoldier:"):
                 continue
@@ -290,7 +268,6 @@ def main():
             except Exception as e:
                 print(f"   ❌ 拉取失败: {url} - {e}")
 
-        # 合并 Loyalsoldier 域名
         if policy in loyalsoldier_domains:
             ls_domains = loyalsoldier_domains[policy]
             print(f"   ✅ 合并 Loyalsoldier 域名: {len(ls_domains)} 条")
@@ -303,7 +280,6 @@ def main():
         policy_dir = DIST_DIR / policy
         policy_dir.mkdir(exist_ok=True)
 
-        # 生成来源名称列表（提取仓库名）
         source_names = []
         for url in urls:
             if url.startswith("Loyalsoldier:"):
@@ -311,30 +287,25 @@ def main():
             else:
                 repo = extract_repo_name(url)
                 source_names.append(repo)
-        # 去重并保留顺序
         source_names = list(dict.fromkeys(source_names))
 
         total = len(all_domains)
 
-        # 1. Surge / Loon / Egern .list
         list_content = format_surge_domainset(all_domains)
         list_path = policy_dir / f"{policy}.list"
         write_rule_file(list_path, list_content, policy, total, source_names)
         print(f"   ✅ 生成 Surge/Loon/Egern 规则: {list_path}")
 
-        # 2. Clash .yaml
         yaml_content = format_clash_yaml(all_domains, policy)
         yaml_path = policy_dir / f"{policy}.yaml"
         write_rule_file(yaml_path, yaml_content, policy, total, source_names)
         print(f"   ✅ 生成 Clash 规则: {yaml_path}")
 
-        # 3. v2ray 纯域名 .txt
         txt_content = format_v2ray_domain_txt(all_domains)
         txt_path = policy_dir / f"{policy}_domain.txt"
         write_rule_file(txt_path, txt_content, policy, total, source_names)
         print(f"   ✅ 生成 v2ray 域名列表: {txt_path}")
 
-        # 4. README.md
         write_readme(policy_dir, policy, all_domains, source_names)
         print(f"   ✅ 生成 README: {policy_dir / 'README.md'}")
 
