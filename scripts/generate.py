@@ -8,7 +8,7 @@ import yaml
 import re
 from pathlib import Path
 from collections import defaultdict
-from typing import Set, List, Dict
+from typing import Set, List, Dict, Tuple
 
 # ==================== 路径配置 ====================
 SCRIPT_DIR = Path(__file__).parent
@@ -225,14 +225,17 @@ def main():
     for policy, urls in groups.items():
         print(f"\n🔄 处理组: {policy} (共 {len(urls)} 个源)")
         all_domains = set()
+        successful_urls = []   # 记录成功拉取的 URL，用于后续生成来源列表
 
         for url in urls:
             try:
                 domains = fetch_domains_from_url(url)
                 print(f"   ✅ {url} -> {len(domains)} 条")
                 all_domains.update(domains)
+                successful_urls.append(url)   # 拉取成功，记录 URL
             except Exception as e:
                 print(f"   ❌ 拉取失败: {url} - {e}")
+                # 失败的 URL 不加入 successful_urls
 
         if not all_domains:
             print(f"   ⚠️ 无域名，跳过")
@@ -241,12 +244,12 @@ def main():
         policy_dir = DIST_DIR / policy
         policy_dir.mkdir(exist_ok=True)
 
-        # 生成来源名称（提取仓库名）
+        # 生成来源名称（仅从成功拉取的 URL 中提取仓库名）
         source_names = []
-        for url in urls:
+        for url in successful_urls:
             repo = extract_repo_name(url)
             source_names.append(repo)
-        source_names = list(dict.fromkeys(source_names))
+        source_names = list(dict.fromkeys(source_names))   # 去重保留顺序
 
         total = len(all_domains)
 
