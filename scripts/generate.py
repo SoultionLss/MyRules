@@ -46,10 +46,45 @@ def get_repo_info() -> tuple:
 OWNER, REPO_NAME, BRANCH = get_repo_info()
 FULL_REPO = f"{OWNER}/{REPO_NAME}"
 
+# ==================== 规则源 URL 模板（简写自动补全） ====================
+URL_TEMPLATES = {
+    "blackmatrix7": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list",
+    "loyalsoldier": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/{name}.txt",
+    "acl4ssr": "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{name}.list",
+    "repcz": "https://raw.githubusercontent.com/Repcz/EgernRules/X/Rules/{name}/{name}.yaml",
+    "accademia": "https://cdn.jsdelivr.net/gh/Accademia/Additional_Rule_For_Clash@master/GeositeCN/{name}.yaml",
+    # 需要新增规则源时，在此添加一行即可，格式: "source": "template_url_with_{name}"
+}
+
+def resolve_match(match: str) -> str:
+    """
+    解析规则匹配值：
+      - 若为完整 URL (http/https)，原样返回。
+      - 若包含 ':'，按 "source:name" 格式解析，用 URL_TEMPLATES 补全。
+      - 若不包含 ':'，视为名称，默认使用 blackmatrix7 补全。
+    """
+    if match.startswith(('http://', 'https://')):
+        return match
+
+    if ':' in match:
+        source, name = match.split(':', 1)
+        source = source.lower()
+        if source in URL_TEMPLATES:
+            return URL_TEMPLATES[source].format(name=name)
+        else:
+            print(f"⚠️ 未知规则源: {source}，原样保留: {match}")
+            return match
+    else:
+        # 未指定来源，默认用 blackmatrix7
+        return URL_TEMPLATES["blackmatrix7"].format(name=match)
+
 # ==================== 核心工具函数 ====================
 
 def fetch_domains_from_url(url: str) -> Set[str]:
-    resp = requests.get(url, timeout=30)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    resp = requests.get(url, timeout=30, headers=headers)
     resp.raise_for_status()
     text = resp.text
     domains = set()
@@ -132,13 +167,6 @@ def extract_source_path(url: str) -> str:
     return url
 
 def write_rule_file(file_path: Path, content: str, policy: str, total_domains: int, source_info: list, source_count: int):
-    """
-    写入规则文件，头部包含：
-      - 规则策略
-      - 规则总数（域名数）
-      - 规则来源条目总数（成功拉取的文件数）
-      - 规则来源（每个来源的完整路径）
-    """
     sources = ', '.join(source_info)
     header = [
         "# ============================================================",
@@ -223,14 +251,18 @@ def main():
     groups = defaultdict(list)
     for r in rules:
         if r.get('type') == 'rule_set' and 'match' in r:
-            groups[r['policy']].append(r['match'])
+            original = r['match']
+            resolved = resolve_match(original)
+            if original != resolved:
+                print(f"   🔄 简写映射: {original} -> {resolved}")
+            groups[r['policy']].append(resolved)
 
     print(f"发现 {len(groups)} 个策略组（来自 my_rules.yaml）")
 
     for policy, urls in groups.items():
         print(f"\n🔄 处理组: {policy} (共 {len(urls)} 个源)")
         all_domains = set()
-        successful_urls = []   # 记录成功拉取的 URL
+        successful_urls = []
 
         for url in urls:
             try:
@@ -248,11 +280,11 @@ def main():
         policy_dir = DIST_DIR / policy
         policy_dir.mkdir(exist_ok=True)
 
-        # 从成功拉取的 URL 提取来源路径
+        # 生成来源信息
         source_info = []
         for url in successful_urls:
             source_info.append(extract_source_path(url))
-        source_info = list(dict.fromkeys(source_info))   # 去重（若多个URL指向同一来源，但可能性小）
+        source_info = list(dict.fromkeys(source_info))
         source_count = len(source_info)
 
         total_domains = len(all_domains)
