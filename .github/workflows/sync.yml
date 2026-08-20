@@ -2,7 +2,7 @@ name: Sync and Generate Rules
 
 on:
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '0 12 * * *'   # 每天 UTC 12:00
   workflow_dispatch:
 
 permissions:
@@ -24,18 +24,23 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml requests
 
-      - name: Generate rules
+      - name: Generate rules (dist/)
         run: |
           cd scripts
           python generate.py
 
-      - name: Commit and push dist
+      - name: Generate config templates
+        run: |
+          cd scripts
+          python config_builder.py
+
+      - name: Commit and push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          git add dist/
-          git diff --staged --quiet || git commit -m "chore: auto-update rules [skip ci]"
+          git add dist/ templates/
+          git diff --staged --quiet || git commit -m "chore: auto-update rules and templates [skip ci]"
           git push origin Rules
