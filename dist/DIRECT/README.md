@@ -2,8 +2,8 @@
 
 ## 基本信息
 - **策略名称**: DIRECT
-- **规则总数**: 235228 条
-- **规则来源**: Loyalsoldier/clash-rules@release, xkww3n/Rules@main, blackmatrix7/ios_rule_script@master, DustinWin/ruleset_geodata@master, Loyalsoldier/v2ray-rules-dat
+- **规则总数**: 123826 条
+- **规则来源**: Loyalsoldier/clash-rules@release, xkww3n/Rules@main, blackmatrix7/ios_rule_script@master, DustinWin/ruleset_geodata@master
 
 ## 文件说明
 - `DIRECT.list`  → Surge / Loon / Egern 通用（后缀匹配，每行 .domain）
