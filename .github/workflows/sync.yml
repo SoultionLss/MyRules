@@ -1,59 +1,72 @@
 name: Sync and Generate Rules
 
 on:
-  # 新增：当 Rules 分支上的 my_rules.yaml 发生变化时触发
   push:
     branches:
-      - Rules
+      - main
     paths:
       - 'config/my_rules.yaml'
-
-  # 保留原有的定时触发（每天 UTC 12:00）
   schedule:
     - cron: '0 12 * * *'
-
-  # 保留手动触发
   workflow_dispatch:
 
 permissions:
   contents: write
 
+env:
+  TARGET_REPO: "SoultionLss/Rules"        # 目标规则仓库 (替换为你的)
+  TARGET_BRANCH: "main"                   # 目标分支
+  TARGET_DIR: "rules"                     # 目标仓库中存放规则的目录
+
 jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Rules branch
+      # 1. 检出当前仓库（源码仓库）
+      - name: Checkout source repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: Rules
+          ref: main
 
+      # 2. 设置 Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      # 3. 安装依赖
       - name: Install dependencies
         run: pip install pyyaml requests
 
+      # 4. 生成规则（在当前仓库生成 dist/）
       - name: Generate rules
         run: |
           cd scripts
           python generate.py
 
-      # - name: Generate config templates
-      #   run: |
-      #     cd scripts
-      #     python config_builder.py
-
-      - name: Commit and push to Rules branch
+      # 5. 将 dist/ 推送到目标仓库（作为 rules/）
+      - name: Push to target repository
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}   # 必须配置 Personal Access Token
         run: |
+          # 克隆目标仓库
+          git clone https://x-access-token:${TARGET_TOKEN}@github.com/${TARGET_REPO}.git target_repo
+          cd target_repo
+          # 切换到目标分支（不存在则创建）
+          git checkout ${TARGET_BRANCH} || git checkout -b ${TARGET_BRANCH}
+          # 清空目标仓库中的原有 rules 目录（保留 .git）
+          rm -rf ${TARGET_DIR}
+          # 复制当前仓库的 dist/ 到目标仓库的 rules/
+          cp -r ../dist ${TARGET_DIR}
+          # 配置 git 用户
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          git add -f dist/
-          git add templates/
-          git diff --staged --quiet || git commit -m "chore: auto-update rules and templates [skip ci]"
-          git push origin Rules
+          # 添加并提交
+          git add ${TARGET_DIR}
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update rules from source repo workflow [skip ci]"
+            git push origin ${TARGET_BRANCH}
+          fi
