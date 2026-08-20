@@ -1,0 +1,23 @@
+- rule_set:
+    match: blackmatrix7:Baidu
+    policy: DIRECT
+
+- rule_set:
+    match: blackmatrix7:Google
+    policy: Google
+
+- rule_set:
+    match: loyalsoldier:direct
+    policy: DIRECT
+
+- rule_set:
+    match: acl4ssr:Advertising
+    policy: REJECT
+    
+- rule_set:
+    match: DouYin
+    policy: DIRECT
+    
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Advertising.list
+    policy: REJECT
