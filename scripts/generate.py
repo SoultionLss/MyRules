@@ -8,7 +8,7 @@ import yaml
 import re
 from pathlib import Path
 from collections import defaultdict
-from typing import Set, List, Dict, Tuple
+from typing import Set, List, Dict
 
 # ==================== 路径配置 ====================
 SCRIPT_DIR = Path(__file__).parent
@@ -112,33 +112,52 @@ def parse_rules_yaml(filepath: Path) -> List[Dict]:
             rules.append(entry)
     return rules
 
-def extract_repo_name(url: str) -> str:
-    patterns = [
-        r"github\.com/([^/]+/[^/]+)",
-        r"raw\.githubusercontent\.com/([^/]+/[^/]+)",
-        r"cdn\.jsdelivr\.net/gh/([^/]+/[^/]+)",
-        r"gitlab\.com/([^/]+/[^/]+)",
-    ]
+def extract_source_path(url: str) -> str:
+    """
+    从规则源 URL 中提取可读的路径标识，格式: owner/repo@branch/path/to/file
+    示例:
+      https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt
+      -> Loyalsoldier/clash-rules@release/direct.txt
 
-    for pattern in patterns:
-        match = re.search(pattern, url)
-        if match:
-            return match.group(1)
+      https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Advertising/Advertising.list
+      -> blackmatrix7/ios_rule_script@master/rule/Surge/Advertising/Advertising.list
+    """
+    # 去掉协议
+    if url.startswith('https://'):
+        url = url[8:]
 
-    filename = url.split('/')[-1]
-    base = filename.split('.')[0]
-    if base.endswith('_Domain'):
-        base = base[:-7]
-    if base.endswith('_list'):
-        base = base[:-5]
-    return base
+    # 处理 raw.githubusercontent.com
+    if url.startswith('raw.githubusercontent.com/'):
+        # 格式: raw.githubusercontent.com/owner/repo/branch/path
+        parts = url.split('/', 3)  # 最多切3次，得到 ['raw.githubusercontent.com', 'owner', 'repo', 'branch/path']
+        if len(parts) >= 4:
+            return f"{parts[1]}/{parts[2]}@{parts[3]}"
 
-def write_rule_file(file_path: Path, content: str, policy: str, total: int, source_names: list):
-    sources = ', '.join(source_names)
+    # 处理 cdn.jsdelivr.net/gh/
+    if url.startswith('cdn.jsdelivr.net/gh/'):
+        # 格式: cdn.jsdelivr.net/gh/owner/repo@branch/path
+        parts = url.split('/', 3)
+        if len(parts) >= 4:
+            # parts[3] 已经是 owner/repo@branch/path
+            return parts[3]
+
+    # 兜底：返回原 URL（或简化）
+    return url
+
+def write_rule_file(file_path: Path, content: str, policy: str, total_domains: int, source_info: list, source_count: int):
+    """
+    写入规则文件，头部包含：
+      - 规则策略
+      - 规则总数（域名数）
+      - 规则来源条目总数（成功拉取的文件数）
+      - 规则来源（每个来源的完整路径）
+    """
+    sources = ', '.join(source_info)
     header = [
         "# ============================================================",
         f"# 规则策略: {policy}",
-        f"# 规则总数: {total} 条",
+        f"# 规则总数: {total_domains} 条",
+        f"# 规则来源条目总数: {source_count} 条",
         f"# 规则来源: {sources}",
         "# ============================================================",
         ""
@@ -149,9 +168,9 @@ def write_rule_file(file_path: Path, content: str, policy: str, total: int, sour
         f.write('\n')
         f.write(content)
 
-def write_readme(policy_dir: Path, policy: str, domains: set, source_names: list):
+def write_readme(policy_dir: Path, policy: str, domains: set, source_info: list, source_count: int):
     total = len(domains)
-    sources = ', '.join(source_names)
+    sources = ', '.join(source_info)
 
     base_url_raw = f"https://raw.githubusercontent.com/{FULL_REPO}/{BRANCH}/dist/{policy}"
     base_url_cdn = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{BRANCH}/dist/{policy}"
@@ -161,6 +180,7 @@ def write_readme(policy_dir: Path, policy: str, domains: set, source_names: list
 ## 基本信息
 - **策略名称**: {policy}
 - **规则总数**: {total} 条
+- **规则来源条目总数**: {source_count} 条
 - **规则来源**: {sources}
 
 ## 文件说明
@@ -171,16 +191,16 @@ def write_readme(policy_dir: Path, policy: str, domains: set, source_names: list
 ## 导入链接
 
 ### Surge / Loon / Egern（使用 .list）
-Raw 链接: {base_url_raw}/{policy}.list
-CDN 加速: {base_url_cdn}/{policy}.list
+- Raw 链接: {base_url_raw}/{policy}.list
+- CDN 加速: {base_url_cdn}/{policy}.list
 
 ### Clash（使用 .yaml）
-Raw 链接: {base_url_raw}/{policy}.yaml
-CDN 加速: {base_url_cdn}/{policy}.yaml
+- Raw 链接: {base_url_raw}/{policy}.yaml
+- CDN 加速: {base_url_cdn}/{policy}.yaml
 
 ### v2ray（使用 _domain.txt）
-Raw 链接: {base_url_raw}/{policy}_domain.txt
-CDN 加速: {base_url_cdn}/{policy}_domain.txt
+- Raw 链接: {base_url_raw}/{policy}_domain.txt
+- CDN 加速: {base_url_cdn}/{policy}_domain.txt
 
 ## 使用示例
 
@@ -213,7 +233,6 @@ def main():
     print("📖 解析规则配置文件...")
     rules = parse_rules_yaml(CONFIG_PATH)
 
-    # 按策略分组（只处理 rule_set 条目）
     groups = defaultdict(list)
     for r in rules:
         if r.get('type') == 'rule_set' and 'match' in r:
@@ -221,21 +240,19 @@ def main():
 
     print(f"发现 {len(groups)} 个策略组（来自 my_rules.yaml）")
 
-    # 处理每个策略组
     for policy, urls in groups.items():
         print(f"\n🔄 处理组: {policy} (共 {len(urls)} 个源)")
         all_domains = set()
-        successful_urls = []   # 记录成功拉取的 URL，用于后续生成来源列表
+        successful_urls = []   # 记录成功拉取的 URL
 
         for url in urls:
             try:
                 domains = fetch_domains_from_url(url)
                 print(f"   ✅ {url} -> {len(domains)} 条")
                 all_domains.update(domains)
-                successful_urls.append(url)   # 拉取成功，记录 URL
+                successful_urls.append(url)
             except Exception as e:
                 print(f"   ❌ 拉取失败: {url} - {e}")
-                # 失败的 URL 不加入 successful_urls
 
         if not all_domains:
             print(f"   ⚠️ 无域名，跳过")
@@ -244,35 +261,35 @@ def main():
         policy_dir = DIST_DIR / policy
         policy_dir.mkdir(exist_ok=True)
 
-        # 生成来源名称（仅从成功拉取的 URL 中提取仓库名）
-        source_names = []
+        # 从成功拉取的 URL 提取来源路径
+        source_info = []
         for url in successful_urls:
-            repo = extract_repo_name(url)
-            source_names.append(repo)
-        source_names = list(dict.fromkeys(source_names))   # 去重保留顺序
+            source_info.append(extract_source_path(url))
+        source_info = list(dict.fromkeys(source_info))   # 去重（若多个URL指向同一来源，但可能性小）
+        source_count = len(source_info)
 
-        total = len(all_domains)
+        total_domains = len(all_domains)
 
         # 1. Surge / Loon / Egern .list
         list_content = format_surge_domainset(all_domains)
         list_path = policy_dir / f"{policy}.list"
-        write_rule_file(list_path, list_content, policy, total, source_names)
+        write_rule_file(list_path, list_content, policy, total_domains, source_info, source_count)
         print(f"   ✅ 生成 Surge/Loon/Egern 规则: {list_path}")
 
         # 2. Clash .yaml
         yaml_content = format_clash_yaml(all_domains, policy)
         yaml_path = policy_dir / f"{policy}.yaml"
-        write_rule_file(yaml_path, yaml_content, policy, total, source_names)
+        write_rule_file(yaml_path, yaml_content, policy, total_domains, source_info, source_count)
         print(f"   ✅ 生成 Clash 规则: {yaml_path}")
 
         # 3. v2ray 纯域名 .txt
         txt_content = format_v2ray_domain_txt(all_domains)
         txt_path = policy_dir / f"{policy}_domain.txt"
-        write_rule_file(txt_path, txt_content, policy, total, source_names)
+        write_rule_file(txt_path, txt_content, policy, total_domains, source_info, source_count)
         print(f"   ✅ 生成 v2ray 域名列表: {txt_path}")
 
         # 4. README.md
-        write_readme(policy_dir, policy, all_domains, source_names)
+        write_readme(policy_dir, policy, all_domains, source_info, source_count)
         print(f"   ✅ 生成 README: {policy_dir / 'README.md'}")
 
     print("\n🎉 所有规则生成完成！")
