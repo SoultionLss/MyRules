@@ -8,6 +8,7 @@ import yaml
 import re
 from pathlib import Path
 from collections import defaultdict
+from datetime import datetime
 from typing import Set, List, Dict
 
 # ==================== 路径配置 ====================
@@ -45,14 +46,15 @@ def get_repo_info() -> tuple:
 
 OWNER, REPO_NAME, BRANCH = get_repo_info()
 FULL_REPO = f"{OWNER}/{REPO_NAME}"
+AUTHOR = OWNER  # 用于头部注释
 
 # ==================== 规则源 URL 模板（简写自动补全） ====================
 URL_TEMPLATES = {
     "blackmatrix7": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list",
     "loyalsoldier": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/{name}.txt",
     "acl4ssr": "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{name}.list",
-    "repcz": "https://raw.githubusercontent.com/Repcz/EgernRules/X/Rules/{name}/{name}.yaml",
     "accademia": "https://cdn.jsdelivr.net/gh/Accademia/Additional_Rule_For_Clash@master/GeositeCN/{name}.yaml",
+    "repcz": "https://raw.githubusercontent.com/Repcz/EgernRules/X/Rules/{name}/{name}.yaml",
 }
 
 def resolve_match(match: str) -> str:
@@ -71,7 +73,6 @@ def resolve_match(match: str) -> str:
 
 # ==================== 规范化清洗函数 ====================
 def normalize_domains(domains: List[str]) -> List[str]:
-    """通用域名清洗：去空格、注释、后缀、去重、小写"""
     cleaned = []
     for d in domains:
         d = d.strip()
@@ -97,7 +98,6 @@ def normalize_domains(domains: List[str]) -> List[str]:
     return result
 
 def clean_surge_domainset(domains: List[str]) -> str:
-    """Surge DOMAIN-SET 格式：每行 .domain"""
     cleaned = []
     for d in domains:
         if d.startswith('.'):
@@ -110,7 +110,6 @@ def clean_surge_domainset(domains: List[str]) -> str:
         d = d.strip().lower()
         if d and not d.startswith('#'):
             cleaned.append(f".{d}")
-    # 去重
     seen = set()
     result = []
     for d in cleaned:
@@ -120,7 +119,6 @@ def clean_surge_domainset(domains: List[str]) -> str:
     return '\n'.join(result)
 
 def clean_clash_yaml(domains: List[str], policy: str) -> str:
-    """Clash RULE-SET YAML (payload:)"""
     cleaned = []
     for d in domains:
         for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,', 'DOMAIN-KEYWORD,']:
@@ -143,7 +141,6 @@ def clean_clash_yaml(domains: List[str], policy: str) -> str:
     return '\n'.join(lines)
 
 def clean_egern_yaml(domains: List[str]) -> str:
-    """Egern RULE-SET YAML (rules:)"""
     cleaned = []
     for d in domains:
         for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
@@ -166,13 +163,11 @@ def clean_egern_yaml(domains: List[str]) -> str:
     return '\n'.join(lines)
 
 def clean_v2ray_txt(domains: List[str]) -> str:
-    """v2ray 纯域名列表（保留特殊前缀）"""
     cleaned = []
     for d in domains:
         d = d.strip()
         if not d or d.startswith('#'):
             continue
-        # 保留特殊前缀
         has_prefix = False
         for prefix in ['domain:', 'full:', 'keyword:', 'regexp:']:
             if d.lower().startswith(prefix):
@@ -263,13 +258,11 @@ def parse_rules_yaml(filepath: Path) -> List[Dict]:
 
 # ==================== 生成平台特定 README ====================
 def write_platform_readme(platform_dir: Path, policy: str, domains: set, source_info: list, source_count: int, platform: str):
-    """为指定平台生成 README.md"""
     total = len(domains)
     sources = ', '.join(source_info)
     base_raw = f"https://raw.githubusercontent.com/{FULL_REPO}/{BRANCH}/dist/{platform}/Rules/{policy}"
     base_cdn = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{BRANCH}/dist/{platform}/Rules/{policy}"
 
-    # 文件扩展名根据平台不同
     ext_map = {
         "Surge": ".list",
         "Clash": ".yaml",
@@ -322,7 +315,6 @@ def write_platform_readme(platform_dir: Path, policy: str, domains: set, source_
 
 # ==================== 主程序 ====================
 def main():
-    # 清空旧 dist
     if DIST_DIR.exists():
         print(f"🗑️ 删除旧的 dist 目录: {DIST_DIR}")
         shutil.rmtree(DIST_DIR)
@@ -358,18 +350,16 @@ def main():
             print(f"   ⚠️ 无域名，跳过")
             continue
 
-        # 提取来源信息
         source_info = []
         for url in successful_urls:
             source_info.append(extract_source_path(url))
         source_info = list(dict.fromkeys(source_info))
         source_count = len(source_info)
 
-        # 转换为列表并清洗
         domain_list = list(all_domains)
         normalized = normalize_domains(domain_list)
+        total_domains = len(normalized)
 
-        # 平台配置
         platforms = {
             "Surge": {"ext": ".list", "formatter": clean_surge_domainset, "extra_args": []},
             "Clash": {"ext": ".yaml", "formatter": clean_clash_yaml, "extra_args": [policy]},
@@ -378,22 +368,38 @@ def main():
         }
 
         for plat, cfg in platforms.items():
-            # 创建平台子目录
             platform_dir = DIST_DIR / plat / "Rules" / policy
             platform_dir.mkdir(parents=True, exist_ok=True)
 
-            # 生成规则文件
+            # 生成规则内容
             if cfg["extra_args"]:
                 content = cfg["formatter"](normalized, *cfg["extra_args"])
             else:
                 content = cfg["formatter"](normalized)
+
+            # ========== 添加头部注释 ==========
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            header = [
+                "# ============================================================",
+                f"# 规则策略: {policy}",
+                f"# 规则总数: {total_domains} 条",
+                f"# 规则来源条目总数: {source_count} 条",
+                f"# 规则来源: {', '.join(source_info)}",
+                f"# 作者: {AUTHOR}",
+                f"# 最后更新: {now}",
+                "# ============================================================",
+                ""
+            ]
+            header_text = '\n'.join(header)
+            full_content = header_text + '\n' + content
+
             filename = f"{policy}{cfg['ext']}"
             file_path = platform_dir / filename
             with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
+                f.write(full_content)
             print(f"   ✅ 生成 {plat} 规则: {file_path}")
 
-            # 生成对应平台的 README
+            # 生成该平台 README
             write_platform_readme(platform_dir, policy, set(normalized), source_info, source_count, plat)
 
     print("\n🎉 所有规则生成完成！")
