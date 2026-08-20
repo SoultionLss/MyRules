@@ -1,0 +1,54 @@
+name: Sync and Generate Rules
+
+on:
+  schedule:
+    - cron: '0 12 * * *'    # 每天 UTC 12:00 自动运行
+  workflow_dispatch:         # 也支持手动触发
+
+permissions:
+  contents: write            # 允许 git push
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 检出 Rules 分支（我们需要的是该分支的代码和生成的规则）
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: Rules         # 直接切换到 Rules 分支
+
+      # 2. 设置 Python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. 安装依赖
+      - name: Install dependencies
+        run: pip install pyyaml requests
+
+      # 4. 运行生成脚本（此时工作区是 Rules 分支的内容）
+      - name: Generate rules
+        run: |
+          cd scripts
+          python generate.py
+
+      - name: Generate config templates
+        run: |
+          cd scripts
+          python config_builder.py
+
+      # 5. 提交并推送到 Rules 分支（已是当前分支）
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          # 强制添加 dist/ 和 templates/（即使被 .gitignore 忽略）
+          git add -f dist/
+          git add templates/
+          # 如果有变更则提交，否则跳过
+          git diff --staged --quiet || git commit -m "chore: auto-update rules and templates [skip ci]"
+          git push origin Rules
