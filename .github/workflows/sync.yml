@@ -3,7 +3,7 @@ name: Sync and Generate Rules
 on:
   push:
     branches:
-      - main
+      - Rules
     paths:
       - 'config/my_rules.yaml'
   schedule:
