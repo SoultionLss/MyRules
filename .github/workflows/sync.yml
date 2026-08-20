@@ -22,26 +22,40 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
+      # 1. 检出包含所有脚本和配置的 Rules 分支
       - name: Checkout source repo (Rules branch)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: Rules
 
+      # 2. 设置 Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      # 3. 安装依赖
       - name: Install dependencies
         run: pip install pyyaml requests
 
+      # 4. 生成规则（生成在当前工作区的 dist/）
       - name: Generate rules
         run: |
           cd scripts
           python generate.py
 
-      - name: Commit dist to current repo (test)
+      # ----------------------------------------------------------------
+      # （可选）生成客户端配置文件模板 - 目前注释掉，如需启用请取消注释
+      # 说明：此步骤会读取 templates/Egern.yaml 并生成 Surge/Loon/Clash 模板
+      # ----------------------------------------------------------------
+      # - name: Generate config templates
+      #   run: |
+      #     cd scripts
+      #     python config_builder.py
+
+      # 5. （可选）提交 dist/ 到当前仓库（测试保留）
+      - name: Commit dist to current repo (optional)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -52,6 +66,7 @@ jobs:
           git diff --staged --quiet || git commit -m "chore: auto-update dist [skip ci]"
           git push origin Rules
 
+      # 6. 将 dist/ 推送到目标仓库（作为 rules/）
       - name: Push to target repository
         env:
           TARGET_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
