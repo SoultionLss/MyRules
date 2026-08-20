@@ -2,7 +2,7 @@ name: Sync and Generate Rules
 
 on:
   schedule:
-    - cron: '0 12 * * *'   # 每天 UTC 12:00
+    - cron: '0 12 * * *'
   workflow_dispatch:
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml requests
 
-      - name: Generate rules (dist/)
+      - name: Generate rules
         run: |
           cd scripts
           python generate.py
@@ -41,7 +41,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          # 强制添加 dist/ 和 templates/（即使被 .gitignore 忽略）
           git add -f dist/
           git add templates/
           git diff --staged --quiet || git commit -m "chore: auto-update rules and templates [skip ci]"
