@@ -1,31 +1,40 @@
-.githubuniverse.com
-.npmjs.com
-.githubhackathon.com
-.githubusercontent.com
-.atom.io
+# ============================================================
+# 规则策略: GitHub
+# 规则总数: 31 条
+# 规则来源条目总数: 1 条
+# 规则来源: ios_rule_script@master/rule/Surge/GitHub/GitHub.list
+# 作者: SoultionLss
+# 最后更新: 2026-08-20 11:35:33
+# ============================================================
+
+.githubassets.com
+.github.io
 .rawgithub.com
-.rawgit.com
-.githubpreview.dev
-.domain-keyword
-.githubstatus.com
-.github.dev
+.opensource.guide
+.dependabot.com
 .repo.new
-.npmjs.org
-.ghcr.io
-.githubnext.com
-.github-atom-io-herokuapp-com.freetls.fastly.net
-.github.community
+.githubcopilot.com
 .github.blog
+.github.dev
+.githubstatus.com
+.atom.io
+.thegithubshop.com
 .github-cloud.s3.amazonaws.com
 .githubapp.com
-.dependabot.com
-.githubassets.com
-.githubcopilot.com
-.git.io
-.npm.community
 .github-avatars.oss-cn-hongkong.aliyuncs.com
-.myoctocat.com
+.ghcr.io
+.npmjs.org
+.npmjs.com
+.rawgit.com
 .github.com
-.thegithubshop.com
-.opensource.guide
-.github.io
+.npm.community
+.githubuniverse.com
+.githubusercontent.com
+.github.community
+.githubhackathon.com
+.githubpreview.dev
+.github-atom-io-herokuapp-com.freetls.fastly.net
+.git.io
+.domain-keyword
+.myoctocat.com
+.githubnext.com

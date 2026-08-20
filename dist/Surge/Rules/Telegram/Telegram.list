@@ -1,30 +1,39 @@
+# ============================================================
+# 规则策略: Telegram
+# 规则总数: 46 条
+# 规则来源条目总数: 1 条
+# 规则来源: ios_rule_script@master/rule/Surge/Telegram/Telegram.list
+# 作者: SoultionLss
+# 最后更新: 2026-08-20 11:35:33
+# ============================================================
+
+.ip-cidr
+.process-name
+.or
+.tg.dev
+.ip-asn
+.comments.app
+.telegram.org
+.contest.com
 .api.imem.app
 .telegram-cdn.org
-.telegram.me
-.mbrx.app
-.cdn-telegram.org
-.ip-cidr6
-.telegram.org
-.ip-cidr
-.tg.dev
 .api.swiftgram.app
-.ip-asn
-.domain-keyword
-.process-name
-.stel.com
-.contest.com
-.telegram.dog
-.or
-.tdesktop.com
+.ip-cidr6
+.telega.one
+.mbrx.app
 .quiz.directory
-.graph.org
-.telesco.pe
-.legra.ph
-.telegram.space
-.comments.app
 .t.me
 .telegra.ph
-.tx.me
-.telega.one
-.usercontent.dev
 .telegramdownload.com
+.telegram.space
+.domain-keyword
+.telesco.pe
+.telegram.me
+.graph.org
+.tdesktop.com
+.telegram.dog
+.tx.me
+.stel.com
+.cdn-telegram.org
+.legra.ph
+.usercontent.dev

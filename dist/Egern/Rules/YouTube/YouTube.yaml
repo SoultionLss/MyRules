@@ -1,3 +1,12 @@
+# ============================================================
+# 规则策略: YouTube
+# 规则总数: 190 条
+# 规则来源条目总数: 1 条
+# 规则来源: ios_rule_script@master/rule/Surge/YouTube/YouTube.list
+# 作者: SoultionLss
+# 最后更新: 2026-08-20 11:35:32
+# ============================================================
+
 rules:
   - domain_suffix: domain-keyword
   - domain_suffix: ggpht.cn

@@ -1,3 +1,12 @@
+# ============================================================
+# 规则策略: Google
+# 规则总数: 703 条
+# 规则来源条目总数: 1 条
+# 规则来源: ios_rule_script@master/rule/Surge/Google/Google.list
+# 作者: SoultionLss
+# 最后更新: 2026-08-20 11:35:32
+# ============================================================
+
 rules:
   - domain_suffix: 0emm.com
   - domain_suffix: 1e100.net

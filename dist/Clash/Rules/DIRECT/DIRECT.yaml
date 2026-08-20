@@ -1,3 +1,12 @@
+# ============================================================
+# 规则策略: DIRECT
+# 规则总数: 123794 条
+# 规则来源条目总数: 2 条
+# 规则来源: clash-rules@release/direct.txt, ios_rule_script@master/rule/Surge/ChinaMax/ChinaMax.list
+# 作者: SoultionLss
+# 最后更新: 2026-08-20 11:35:31
+# ============================================================
+
 payload:
   - DOMAIN-SUFFIX,+.0.zone,DIRECT
   - DOMAIN-SUFFIX,+.00.net,DIRECT
@@ -110953,7 +110962,6 @@ payload:
   - DOMAIN-SUFFIX,adcdownload.apple.com.akadns.net,DIRECT
   - DOMAIN-SUFFIX,admob-cn.com,DIRECT
   - DOMAIN-SUFFIX,adservice.google.com,DIRECT
-  - DOMAIN-SUFFIX,afcs.dell.com,DIRECT
   - DOMAIN-SUFFIX,ai.zhaomi.cn,DIRECT
   - DOMAIN-SUFFIX,alibaba,DIRECT
   - DOMAIN-SUFFIX,alibaba.cdn.steampipe.steamcontent.com,DIRECT
@@ -111044,7 +111052,6 @@ payload:
   - DOMAIN-SUFFIX,client-api.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,clientflow.apple.com,DIRECT
   - DOMAIN-SUFFIX,clientflow.apple.com.akadns.net,DIRECT
-  - DOMAIN-SUFFIX,clientperipherals.dell.com,DIRECT
   - DOMAIN-SUFFIX,clientservices.googleapis.com,DIRECT
   - DOMAIN-SUFFIX,cma.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,cn,DIRECT
@@ -111072,7 +111079,6 @@ payload:
   - DOMAIN-SUFFIX,ctdsb.clouddiffuse.xyz,DIRECT
   - DOMAIN-SUFFIX,ctldl.windowsupdate.com,DIRECT
   - DOMAIN-SUFFIX,cueme-api.quark.cn,DIRECT
-  - DOMAIN-SUFFIX,customization-cdn.dell.com,DIRECT
   - DOMAIN-SUFFIX,dartsearch-cn.net,DIRECT
   - DOMAIN-SUFFIX,dc1-cert.ksn.kaspersky-labs.com,DIRECT
   - DOMAIN-SUFFIX,dc1-file.ksn.kaspersky-labs.com,DIRECT
@@ -111080,14 +111086,12 @@ payload:
   - DOMAIN-SUFFIX,dc1-st.ksn.kaspersky-labs.com,DIRECT
   - DOMAIN-SUFFIX,dc1.ksn.kaspersky-labs.com,DIRECT
   - DOMAIN-SUFFIX,dd-cdn.origin-apple.com.akadns.net,DIRECT
-  - DOMAIN-SUFFIX,dds.dell.com,DIRECT
   - DOMAIN-SUFFIX,dejavu.apple.com,DIRECT
   - DOMAIN-SUFFIX,developer.microsoft.com,DIRECT
   - DOMAIN-SUFFIX,devimages-cdn.apple.com,DIRECT
   - DOMAIN-SUFFIX,devstreaming-cdn.apple.com,DIRECT
   - DOMAIN-SUFFIX,dg-meta.video.google.com,DIRECT
   - DOMAIN-SUFFIX,discussionschinese.apple.com,DIRECT
-  - DOMAIN-SUFFIX,dl.dell.com,DIRECT
   - DOMAIN-SUFFIX,dl.google.com,DIRECT
   - DOMAIN-SUFFIX,dl.l.google.com,DIRECT
   - DOMAIN-SUFFIX,dnl-00.geo.kaspersky.com,DIRECT
@@ -111121,33 +111125,22 @@ payload:
   - DOMAIN-SUFFIX,downloaddispatch.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,dreamspark.download.prss.microsoft.com,DIRECT
   - DOMAIN-SUFFIX,dreamsparkuat.download.prss.microsoft.com,DIRECT
-  - DOMAIN-SUFFIX,ea2cn-dev-outlet.dell.com,DIRECT
-  - DOMAIN-SUFFIX,ea2cn-prod-outlet.dell.com,DIRECT
-  - DOMAIN-SUFFIX,ea2cn-staging-outlet.dell.com,DIRECT
   - DOMAIN-SUFFIX,edge.geo.kaspersky.com,DIRECT
-  - DOMAIN-SUFFIX,emoi-cncdn.bing.com,DIRECT
   - DOMAIN-SUFFIX,end-api.shallow.ink,DIRECT
   - DOMAIN-SUFFIX,end.shallow.ink,DIRECT
   - DOMAIN-SUFFIX,entitlements-edge.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,experiments.apple.com,DIRECT
   - DOMAIN-SUFFIX,f.c2r.ts.cdn.office.net,DIRECT
-  - DOMAIN-SUFFIX,fcs.dell.com,DIRECT
   - DOMAIN-SUFFIX,fides-pol.apple.com,DIRECT
   - DOMAIN-SUFFIX,firebase-settings.crashlytics.com,DIRECT
   - DOMAIN-SUFFIX,fontfiles.googleapis.com,DIRECT
   - DOMAIN-SUFFIX,fonts.googleapis.com,DIRECT
   - DOMAIN-SUFFIX,fonts.gstatic.com,DIRECT
   - DOMAIN-SUFFIX,fpinit.itunes.apple.com,DIRECT
-  - DOMAIN-SUFFIX,fta.dell.com,DIRECT
-  - DOMAIN-SUFFIX,ftaapj.dell.com,DIRECT
-  - DOMAIN-SUFFIX,ftaemea.dell.com,DIRECT
-  - DOMAIN-SUFFIX,ftasitapj.dell.com,DIRECT
   - DOMAIN-SUFFIX,g0.gstatic.com,DIRECT
   - DOMAIN-SUFFIX,g1.gstatic.com,DIRECT
   - DOMAIN-SUFFIX,g2.gstatic.com,DIRECT
   - DOMAIN-SUFFIX,g3.gstatic.com,DIRECT
-  - DOMAIN-SUFFIX,gbxgateway-dev.dell.com,DIRECT
-  - DOMAIN-SUFFIX,gbxgateway.dell.com,DIRECT
   - DOMAIN-SUFFIX,geetest.datasink.sensorsdata.cn,DIRECT
   - DOMAIN-SUFFIX,gog.qtlglb.com,DIRECT
   - DOMAIN-SUFFIX,gonglchuangl.net,DIRECT
@@ -111201,7 +111194,6 @@ payload:
   - DOMAIN-SUFFIX,hellofontpreview.oss-cn-beijing.aliyuncs.com,DIRECT
   - DOMAIN-SUFFIX,hellowebfonts.oss-cn-beijing.aliyuncs.com,DIRECT
   - DOMAIN-SUFFIX,hospital.pku.edu.cn,DIRECT
-  - DOMAIN-SUFFIX,i.dell.com,DIRECT
   - DOMAIN-SUFFIX,i.pki.goog,DIRECT
   - DOMAIN-SUFFIX,icbc,DIRECT
   - DOMAIN-SUFFIX,images-cn-8.ssl-images-amazon.com,DIRECT
@@ -111298,7 +111290,6 @@ payload:
   - DOMAIN-SUFFIX,mvod.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,myapp.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,myvs.download.prss.microsoft.com,DIRECT
-  - DOMAIN-SUFFIX,nexus.dell.com,DIRECT
   - DOMAIN-SUFFIX,np-edge.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,ntp.aliyun.com,DIRECT
   - DOMAIN-SUFFIX,ntp.tencent.com,DIRECT
@@ -111329,7 +111320,6 @@ payload:
   - DOMAIN-SUFFIX,osrelease.download.prss.microsoft.com,DIRECT
   - DOMAIN-SUFFIX,osxapps.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,osxapps.itunes.g.aaplimg.com,DIRECT
-  - DOMAIN-SUFFIX,p.cdn.persaas.dell.com,DIRECT
   - DOMAIN-SUFFIX,p00.upd.kaspersky.com,DIRECT
   - DOMAIN-SUFFIX,p01.upd.kaspersky.com,DIRECT
   - DOMAIN-SUFFIX,p02.upd.kaspersky.com,DIRECT
@@ -111425,7 +111415,6 @@ payload:
   - DOMAIN-SUFFIX,s5.mzstatic.com,DIRECT
   - DOMAIN-SUFFIX,safebrowsing-cache.google.com,DIRECT
   - DOMAIN-SUFFIX,safebrowsing.googleapis.com,DIRECT
-  - DOMAIN-SUFFIX,scene7-cdn.dell.com,DIRECT
   - DOMAIN-SUFFIX,sdx.microsoft.com,DIRECT
   - DOMAIN-SUFFIX,se-edge.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,se2.itunes.apple.com,DIRECT
@@ -111440,12 +111429,8 @@ payload:
   - DOMAIN-SUFFIX,shazam-insights.cdn-apple.com,DIRECT
   - DOMAIN-SUFFIX,shell.cdn.office.net,DIRECT
   - DOMAIN-SUFFIX,shouji,DIRECT
-  - DOMAIN-SUFFIX,si.cdn.dell.com,DIRECT
   - DOMAIN-SUFFIX,sina,DIRECT
-  - DOMAIN-SUFFIX,sm.dell.com,DIRECT
   - DOMAIN-SUFFIX,smp-device-content.apple.com,DIRECT
-  - DOMAIN-SUFFIX,snp.cdn.dell.com,DIRECT
-  - DOMAIN-SUFFIX,snpi.dell.com,DIRECT
   - DOMAIN-SUFFIX,software.download.prss.microsoft.com,DIRECT
   - DOMAIN-SUFFIX,sohu,DIRECT
   - DOMAIN-SUFFIX,sp.itunes.apple.com,DIRECT
@@ -111474,7 +111459,6 @@ payload:
   - DOMAIN-SUFFIX,su.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,support-china.apple-support.akadns.net,DIRECT
   - DOMAIN-SUFFIX,support.apple.com,DIRECT
-  - DOMAIN-SUFFIX,supportassist.dell.com,DIRECT
   - DOMAIN-SUFFIX,surface.download.prss.microsoft.com,DIRECT
   - DOMAIN-SUFFIX,surface.downloads.prss.microsoft.com,DIRECT
   - DOMAIN-SUFFIX,swallow-apple-com.v.aaplimg.com,DIRECT
@@ -111500,7 +111484,6 @@ payload:
   - DOMAIN-SUFFIX,tj-pod3-smp-device.apple.com,DIRECT
   - DOMAIN-SUFFIX,tmall,DIRECT
   - DOMAIN-SUFFIX,tools.google.com,DIRECT
-  - DOMAIN-SUFFIX,tp.louisvuitton.com,DIRECT
   - DOMAIN-SUFFIX,unicom,DIRECT
   - DOMAIN-SUFFIX,universal-activity-service.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,update.crashlytics.com,DIRECT
@@ -111508,7 +111491,6 @@ payload:
   - DOMAIN-SUFFIX,updates-http.cdn-apple.com,DIRECT
   - DOMAIN-SUFFIX,updates-http.cdn-apple.com.akadns.net,DIRECT
   - DOMAIN-SUFFIX,updates.cdn-apple.com,DIRECT
-  - DOMAIN-SUFFIX,uplaypc-s-ubisoft.cdn.ubi.com,DIRECT
   - DOMAIN-SUFFIX,upp.itunes.apple.com,DIRECT
   - DOMAIN-SUFFIX,user-agent,DIRECT
   - DOMAIN-SUFFIX,valid.apple.com,DIRECT
@@ -111526,13 +111508,10 @@ payload:
   - DOMAIN-SUFFIX,weatherkit.apple.com,DIRECT
   - DOMAIN-SUFFIX,weibo,DIRECT
   - DOMAIN-SUFFIX,windbg.download.prss.microsoft.com,DIRECT
-  - DOMAIN-SUFFIX,www-csb.dell.com,DIRECT
   - DOMAIN-SUFFIX,www-google-analytics.l.google.com,DIRECT
   - DOMAIN-SUFFIX,www-googletagmanager.l.google.com,DIRECT
-  - DOMAIN-SUFFIX,www.amd.com,DIRECT
   - DOMAIN-SUFFIX,www.apple.com,DIRECT
   - DOMAIN-SUFFIX,www.apple.com.edgekey.net.globalredir.akadns.net,DIRECT
-  - DOMAIN-SUFFIX,www.dell.com,DIRECT
   - DOMAIN-SUFFIX,www.destinationurl.com,DIRECT
   - DOMAIN-SUFFIX,www.entrust.cn,DIRECT
   - DOMAIN-SUFFIX,www.gstatic.com,DIRECT

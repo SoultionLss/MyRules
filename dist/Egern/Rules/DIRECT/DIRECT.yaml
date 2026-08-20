@@ -1,3 +1,12 @@
+# ============================================================
+# 规则策略: DIRECT
+# 规则总数: 123794 条
+# 规则来源条目总数: 2 条
+# 规则来源: clash-rules@release/direct.txt, ios_rule_script@master/rule/Surge/ChinaMax/ChinaMax.list
+# 作者: SoultionLss
+# 最后更新: 2026-08-20 11:35:31
+# ============================================================
+
 rules:
   - domain_suffix: +.0.zone
   - domain_suffix: +.00.net
@@ -110953,7 +110962,6 @@ rules:
   - domain_suffix: adcdownload.apple.com.akadns.net
   - domain_suffix: admob-cn.com
   - domain_suffix: adservice.google.com
-  - domain_suffix: afcs.dell.com
   - domain_suffix: ai.zhaomi.cn
   - domain_suffix: alibaba
   - domain_suffix: alibaba.cdn.steampipe.steamcontent.com
@@ -111044,7 +111052,6 @@ rules:
   - domain_suffix: client-api.itunes.apple.com
   - domain_suffix: clientflow.apple.com
   - domain_suffix: clientflow.apple.com.akadns.net
-  - domain_suffix: clientperipherals.dell.com
   - domain_suffix: clientservices.googleapis.com
   - domain_suffix: cma.itunes.apple.com
   - domain_suffix: cn
@@ -111072,7 +111079,6 @@ rules:
   - domain_suffix: ctdsb.clouddiffuse.xyz
   - domain_suffix: ctldl.windowsupdate.com
   - domain_suffix: cueme-api.quark.cn
-  - domain_suffix: customization-cdn.dell.com
   - domain_suffix: dartsearch-cn.net
   - domain_suffix: dc1-cert.ksn.kaspersky-labs.com
   - domain_suffix: dc1-file.ksn.kaspersky-labs.com
@@ -111080,14 +111086,12 @@ rules:
   - domain_suffix: dc1-st.ksn.kaspersky-labs.com
   - domain_suffix: dc1.ksn.kaspersky-labs.com
   - domain_suffix: dd-cdn.origin-apple.com.akadns.net
-  - domain_suffix: dds.dell.com
   - domain_suffix: dejavu.apple.com
   - domain_suffix: developer.microsoft.com
   - domain_suffix: devimages-cdn.apple.com
   - domain_suffix: devstreaming-cdn.apple.com
   - domain_suffix: dg-meta.video.google.com
   - domain_suffix: discussionschinese.apple.com
-  - domain_suffix: dl.dell.com
   - domain_suffix: dl.google.com
   - domain_suffix: dl.l.google.com
   - domain_suffix: dnl-00.geo.kaspersky.com
@@ -111121,33 +111125,22 @@ rules:
   - domain_suffix: downloaddispatch.itunes.apple.com
   - domain_suffix: dreamspark.download.prss.microsoft.com
   - domain_suffix: dreamsparkuat.download.prss.microsoft.com
-  - domain_suffix: ea2cn-dev-outlet.dell.com
-  - domain_suffix: ea2cn-prod-outlet.dell.com
-  - domain_suffix: ea2cn-staging-outlet.dell.com
   - domain_suffix: edge.geo.kaspersky.com
-  - domain_suffix: emoi-cncdn.bing.com
   - domain_suffix: end-api.shallow.ink
   - domain_suffix: end.shallow.ink
   - domain_suffix: entitlements-edge.itunes.apple.com
   - domain_suffix: experiments.apple.com
   - domain_suffix: f.c2r.ts.cdn.office.net
-  - domain_suffix: fcs.dell.com
   - domain_suffix: fides-pol.apple.com
   - domain_suffix: firebase-settings.crashlytics.com
   - domain_suffix: fontfiles.googleapis.com
   - domain_suffix: fonts.googleapis.com
   - domain_suffix: fonts.gstatic.com
   - domain_suffix: fpinit.itunes.apple.com
-  - domain_suffix: fta.dell.com
-  - domain_suffix: ftaapj.dell.com
-  - domain_suffix: ftaemea.dell.com
-  - domain_suffix: ftasitapj.dell.com
   - domain_suffix: g0.gstatic.com
   - domain_suffix: g1.gstatic.com
   - domain_suffix: g2.gstatic.com
   - domain_suffix: g3.gstatic.com
-  - domain_suffix: gbxgateway-dev.dell.com
-  - domain_suffix: gbxgateway.dell.com
   - domain_suffix: geetest.datasink.sensorsdata.cn
   - domain_suffix: gog.qtlglb.com
   - domain_suffix: gonglchuangl.net
@@ -111201,7 +111194,6 @@ rules:
   - domain_suffix: hellofontpreview.oss-cn-beijing.aliyuncs.com
   - domain_suffix: hellowebfonts.oss-cn-beijing.aliyuncs.com
   - domain_suffix: hospital.pku.edu.cn
-  - domain_suffix: i.dell.com
   - domain_suffix: i.pki.goog
   - domain_suffix: icbc
   - domain_suffix: images-cn-8.ssl-images-amazon.com
@@ -111298,7 +111290,6 @@ rules:
   - domain_suffix: mvod.itunes.apple.com
   - domain_suffix: myapp.itunes.apple.com
   - domain_suffix: myvs.download.prss.microsoft.com
-  - domain_suffix: nexus.dell.com
   - domain_suffix: np-edge.itunes.apple.com
   - domain_suffix: ntp.aliyun.com
   - domain_suffix: ntp.tencent.com
@@ -111329,7 +111320,6 @@ rules:
   - domain_suffix: osrelease.download.prss.microsoft.com
   - domain_suffix: osxapps.itunes.apple.com
   - domain_suffix: osxapps.itunes.g.aaplimg.com
-  - domain_suffix: p.cdn.persaas.dell.com
   - domain_suffix: p00.upd.kaspersky.com
   - domain_suffix: p01.upd.kaspersky.com
   - domain_suffix: p02.upd.kaspersky.com
@@ -111425,7 +111415,6 @@ rules:
   - domain_suffix: s5.mzstatic.com
   - domain_suffix: safebrowsing-cache.google.com
   - domain_suffix: safebrowsing.googleapis.com
-  - domain_suffix: scene7-cdn.dell.com
   - domain_suffix: sdx.microsoft.com
   - domain_suffix: se-edge.itunes.apple.com
   - domain_suffix: se2.itunes.apple.com
@@ -111440,12 +111429,8 @@ rules:
   - domain_suffix: shazam-insights.cdn-apple.com
   - domain_suffix: shell.cdn.office.net
   - domain_suffix: shouji
-  - domain_suffix: si.cdn.dell.com
   - domain_suffix: sina
-  - domain_suffix: sm.dell.com
   - domain_suffix: smp-device-content.apple.com
-  - domain_suffix: snp.cdn.dell.com
-  - domain_suffix: snpi.dell.com
   - domain_suffix: software.download.prss.microsoft.com
   - domain_suffix: sohu
   - domain_suffix: sp.itunes.apple.com
@@ -111474,7 +111459,6 @@ rules:
   - domain_suffix: su.itunes.apple.com
   - domain_suffix: support-china.apple-support.akadns.net
   - domain_suffix: support.apple.com
-  - domain_suffix: supportassist.dell.com
   - domain_suffix: surface.download.prss.microsoft.com
   - domain_suffix: surface.downloads.prss.microsoft.com
   - domain_suffix: swallow-apple-com.v.aaplimg.com
@@ -111500,7 +111484,6 @@ rules:
   - domain_suffix: tj-pod3-smp-device.apple.com
   - domain_suffix: tmall
   - domain_suffix: tools.google.com
-  - domain_suffix: tp.louisvuitton.com
   - domain_suffix: unicom
   - domain_suffix: universal-activity-service.itunes.apple.com
   - domain_suffix: update.crashlytics.com
@@ -111508,7 +111491,6 @@ rules:
   - domain_suffix: updates-http.cdn-apple.com
   - domain_suffix: updates-http.cdn-apple.com.akadns.net
   - domain_suffix: updates.cdn-apple.com
-  - domain_suffix: uplaypc-s-ubisoft.cdn.ubi.com
   - domain_suffix: upp.itunes.apple.com
   - domain_suffix: user-agent
   - domain_suffix: valid.apple.com
@@ -111526,13 +111508,10 @@ rules:
   - domain_suffix: weatherkit.apple.com
   - domain_suffix: weibo
   - domain_suffix: windbg.download.prss.microsoft.com
-  - domain_suffix: www-csb.dell.com
   - domain_suffix: www-google-analytics.l.google.com
   - domain_suffix: www-googletagmanager.l.google.com
-  - domain_suffix: www.amd.com
   - domain_suffix: www.apple.com
   - domain_suffix: www.apple.com.edgekey.net.globalredir.akadns.net
-  - domain_suffix: www.dell.com
   - domain_suffix: www.destinationurl.com
   - domain_suffix: www.entrust.cn
   - domain_suffix: www.gstatic.com
