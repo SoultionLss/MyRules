@@ -51,73 +51,74 @@
     match: https://cdn.jsdelivr.net/gh/QuixoticHeart/rule-set@main/Surge/TikTok.list
     policy: TikTok
 
-# AI
-
+# ============================================
+# AI 服务（建议补全来源前缀，如 blackmatrix7:OpenAI）
+# ============================================
 - rule_set:
-    match: OpenAI
-    policy: AI
-    
-- rule_set:
-    match: Claude
+    match: blackmatrix7:OpenAI
     policy: AI
 
 - rule_set:
-    match: Anthropic
+    match: blackmatrix7:Claude
     policy: AI
 
 - rule_set:
-    match: xAI
+    match: blackmatrix7:Anthropic
     policy: AI
 
-# =====================================
+- rule_set:
+    match: blackmatrix7:xAI
+    policy: AI
+
+# ============================================
 # 社交媒体
-# =====================================
+# ============================================
 - rule_set:
-    match: Instgram
+    match: blackmatrix7:Instagram
     policy: Social
 
 - rule_set:
-    match: Threads
+    match: blackmatrix7:Threads
     policy: Social
 
 - rule_set:
-    match: Twitter
-    policy: Social
-    
-- rule_set:
-    match: Reddit
+    match: blackmatrix7:Twitter
     policy: Social
 
-# ==========================
+- rule_set:
+    match: blackmatrix7:Reddit
+    policy: Social
+
+# ============================================
 # 流媒体
-# ===========================
+# ============================================
 - rule_set:
-      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Netflix/Netflix.list
-      policy: Streaming
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Netflix/Netflix.list
+    policy: Streaming
 
-  - rule_set:
-      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Disney/Disney.list
-      policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Disney/Disney.list
+    policy: Streaming
 
-  - rule_set:
-      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/HBO/HBO.list
-      policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/HBO/HBO.list
+    policy: Streaming
 
-  - rule_set:
-      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/PrimeVideo/PrimeVideo.list
-      policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/PrimeVideo/PrimeVideo.list
+    policy: Streaming
 
-  - rule_set:
-      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Hulu/Hulu.list
-      policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Hulu/Hulu.list
+    policy: Streaming
 
-  - rule_set:
-      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Peacock/Peacock.list
-      policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Peacock/Peacock.list
+    policy: Streaming
 
-  - rule_set:
-      match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Crunchyroll/Crunchyroll.list
-      policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Crunchyroll/Crunchyroll.list
+    policy: Streaming
 
 # ============================================
 # 低优先级：国内 IP 段
