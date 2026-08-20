@@ -1,0 +1,6 @@
+payload:
+  - DOMAIN-SUFFIX,and,REJECT
+  - DOMAIN-SUFFIX,domain-keyword,REJECT
+  - DOMAIN-SUFFIX,ip-cidr,REJECT
+  - DOMAIN-SUFFIX,ip-cidr6,REJECT
+  - DOMAIN-SUFFIX,url-regex,REJECT
