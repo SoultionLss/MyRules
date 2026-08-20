@@ -1,0 +1,317 @@
+mode: rule
+log-level: info
+ipv6: false
+allow-lan: false
+external-controller: 127.0.0.1:9090
+proxies: []
+proxy-groups:
+- name: 全部节点-手选
+  type: select
+  proxies:
+  - Manual
+- name: 家宽-手选
+  type: select
+  proxies:
+  - Manual
+- name: 香港-手选
+  type: select
+  proxies:
+  - Manual
+- name: 台湾-手选
+  type: select
+  proxies:
+  - Manual
+- name: 日本-手选
+  type: select
+  proxies:
+  - Manual
+- name: 狮城-手选
+  type: select
+  proxies:
+  - Manual
+- name: 美国-手选
+  type: select
+  proxies:
+  - Manual
+- name: 低倍率-手选
+  type: select
+  proxies:
+  - Manual
+- name: 高倍率-手选
+  type: select
+  proxies:
+  - Manual
+- name: 冷门节点-手选
+  type: select
+  proxies:
+  - Manual
+- name: 香港-智能
+  type: url-test
+  proxies:
+  - Manual
+  url: http://1.1.1.1/generate_204
+  interval: 600
+- name: 台湾-智能
+  type: url-test
+  proxies:
+  - Manual
+  url: http://1.1.1.1/generate_204
+  interval: 600
+- name: 日本-智能
+  type: url-test
+  proxies:
+  - Manual
+  url: http://1.1.1.1/generate_204
+  interval: 600
+- name: 狮城-智能
+  type: url-test
+  proxies:
+  - Manual
+  url: http://1.1.1.1/generate_204
+  interval: 600
+- name: 美国-智能
+  type: url-test
+  proxies:
+  - Manual
+  url: http://1.1.1.1/generate_204
+  interval: 600
+- name: 低倍率-智能
+  type: url-test
+  proxies:
+  - Manual
+  url: http://1.1.1.1/generate_204
+  interval: 600
+- name: 冷门节点-智能
+  type: url-test
+  proxies:
+  - Manual
+  url: http://1.1.1.1/generate_204
+  interval: 600
+- name: 香港-故转
+  type: fallback
+  proxies:
+  - 香港-手选
+  - 香港-智能
+- name: 台湾-故转
+  type: fallback
+  proxies:
+  - 台湾-手选
+  - 台湾-智能
+- name: 日本-故转
+  type: fallback
+  proxies:
+  - 日本-手选
+  - 日本-智能
+- name: 狮城-故转
+  type: fallback
+  proxies:
+  - 狮城-手选
+  - 狮城-智能
+- name: 美国-故转
+  type: fallback
+  proxies:
+  - 美国-手选
+  - 美国-智能
+- name: 低倍率-故转
+  type: fallback
+  proxies:
+  - 低倍率-手选
+  - 低倍率-智能
+- name: Global
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - 低倍率-故转
+  - Manual
+- name: Streaming
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - Manual
+- name: YouTube
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - Manual
+- name: TikTok
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - Manual
+- name: GitHub
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - Manual
+- name: Microsoft
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - Manual
+- name: Google
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - Manual
+- name: AI
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - Manual
+- name: Social
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - Manual
+- name: Telegram
+  type: select
+  proxies:
+  - 美国-故转
+  - Manual
+- name: HongKongSocial
+  type: select
+  proxies:
+  - 香港-故转
+  - Manual
+- name: Final
+  type: select
+  proxies:
+  - 美国-故转
+  - 香港-故转
+  - 狮城-故转
+  - 日本-故转
+  - 台湾-故转
+  - 低倍率-故转
+  - Manual
+rule-providers:
+  REJECT:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/REJECT/REJECT.yaml
+    interval: 86400
+    behavior: classical
+  DIRECT:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/DIRECT/DIRECT.yaml
+    interval: 86400
+    behavior: classical
+  TikTok:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/TikTok/TikTok.yaml
+    interval: 86400
+    behavior: classical
+  Global:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/Global/Global.yaml
+    interval: 86400
+    behavior: classical
+  Streaming:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/Streaming/Streaming.yaml
+    interval: 86400
+    behavior: classical
+  Microsoft:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/Microsoft/Microsoft.yaml
+    interval: 86400
+    behavior: classical
+  GitHub:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/GitHub/GitHub.yaml
+    interval: 86400
+    behavior: classical
+  Telegram:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/Telegram/Telegram.yaml
+    interval: 86400
+    behavior: classical
+  HongKongSocial:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/HongKongSocial/HongKongSocial.yaml
+    interval: 86400
+    behavior: classical
+  Social:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/Social/Social.yaml
+    interval: 86400
+    behavior: classical
+  Google:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/Google/Google.yaml
+    interval: 86400
+    behavior: classical
+  YouTube:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/YouTube/YouTube.yaml
+    interval: 86400
+    behavior: classical
+  AI:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/Clash/Rules/AI/AI.yaml
+    interval: 86400
+    behavior: classical
+rules:
+- '  - RULE-SET, REJECT, REJECT'
+- '  - RULE-SET, DIRECT, DIRECT'
+- '  - RULE-SET, TikTok, TikTok'
+- '  - RULE-SET, DIRECT, DIRECT'
+- '  - RULE-SET, Global, Global'
+- '  - RULE-SET, Streaming, Streaming'
+- '  - RULE-SET, Microsoft, Microsoft'
+- '  - RULE-SET, GitHub, GitHub'
+- '  - RULE-SET, Telegram, Telegram'
+- '  - RULE-SET, HongKongSocial, HongKongSocial'
+- '  - RULE-SET, HongKongSocial, HongKongSocial'
+- '  - RULE-SET, Social, Social'
+- '  - RULE-SET, Social, Social'
+- '  - RULE-SET, Social, Social'
+- '  - RULE-SET, Social, Social'
+- '  - RULE-SET, Streaming, Streaming'
+- '  - RULE-SET, Streaming, Streaming'
+- '  - RULE-SET, Streaming, Streaming'
+- '  - RULE-SET, Streaming, Streaming'
+- '  - RULE-SET, Streaming, Streaming'
+- '  - RULE-SET, Streaming, Streaming'
+- '  - RULE-SET, Streaming, Streaming'
+- '  - RULE-SET, Google, Google'
+- '  - RULE-SET, YouTube, YouTube'
+- '  - RULE-SET, Global, Global'
+- '  - RULE-SET, AI, AI'
+- '  - RULE-SET, DIRECT, DIRECT'
+- '  - RULE-SET, DIRECT, DIRECT'
+- '  - MATCH, PROXY'

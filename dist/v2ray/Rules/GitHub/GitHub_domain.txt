@@ -4,37 +4,37 @@
 # 规则来源条目总数: 1 条
 # 规则来源: ios_rule_script@master/rule/Surge/GitHub/GitHub.list
 # 作者: SoultionLss
-# 最后更新: 2026-08-20 12:55:36
+# 最后更新: 2026-08-20 17:18:33
 # ============================================================
 
+github.blog
+githubstatus.com
+githubuniverse.com
+git.io
+rawgithub.com
+npmjs.com
 github-avatars.oss-cn-hongkong.aliyuncs.com
+atom.io
 github.com
 dependabot.com
-githubapp.com
 github.io
-github-cloud.s3.amazonaws.com
-thegithubshop.com
-githubpreview.dev
-npmjs.com
-domain-keyword
-githubnext.com
-git.io
-githubusercontent.com
-npm.community
-npmjs.org
-githubuniverse.com
-githubassets.com
-github-atom-io-herokuapp-com.freetls.fastly.net
 myoctocat.com
-atom.io
-github.blog
-github.dev
-github.community
-rawgit.com
-repo.new
-ghcr.io
-opensource.guide
+npmjs.org
 githubcopilot.com
+github-cloud.s3.amazonaws.com
+githubassets.com
+opensource.guide
+ghcr.io
+githubapp.com
+npm.community
+github.dev
+githubpreview.dev
 githubhackathon.com
-rawgithub.com
-githubstatus.com
+github-atom-io-herokuapp-com.freetls.fastly.net
+rawgit.com
+githubnext.com
+githubusercontent.com
+github.community
+domain-keyword
+thegithubshop.com
+repo.new

@@ -1,0 +1,50 @@
+# ============================================================
+# 规则策略: Social
+# 规则总数: 46 条
+# 规则来源条目总数: 4 条
+# 规则来源: blackmatrix7/ios_rule_script@master/rule/Surge/Instagram/Instagram.list, blackmatrix7/ios_rule_script@master/rule/Surge/Threads/Threads.list, blackmatrix7/ios_rule_script@master/rule/Surge/Twitter/Twitter.list, blackmatrix7/ios_rule_script@master/rule/Surge/Reddit/Reddit.list
+# 作者: SoultionLss
+# 最后更新: 2026-08-20 17:18:39
+# ============================================================
+
+rules:
+  - domain_suffix: ads-twitter.com
+  - domain_suffix: cdninstagram.com
+  - domain_suffix: cms-twdigitalassets.com
+  - domain_suffix: domain-keyword
+  - domain_suffix: grok.com
+  - domain_suffix: instagr.am
+  - domain_suffix: instagram.com
+  - domain_suffix: ip-cidr
+  - domain_suffix: periscope.tv
+  - domain_suffix: pscp.tv
+  - domain_suffix: redd.it
+  - domain_suffix: reddit.com
+  - domain_suffix: redditmail.com
+  - domain_suffix: redditmedia.com
+  - domain_suffix: redditstatic.com
+  - domain_suffix: reddituploads.com
+  - domain_suffix: reddituploads.com.cdn-cf.behance.net
+  - domain_suffix: reddituploads.com.cdn-cf.dropbox.com
+  - domain_suffix: t.co
+  - domain_suffix: tellapart.com
+  - domain_suffix: threads.net
+  - domain_suffix: tweetdeck.com
+  - domain_suffix: twimg.co
+  - domain_suffix: twimg.com
+  - domain_suffix: twimg.org
+  - domain_suffix: twitpic.com
+  - domain_suffix: twitter.biz
+  - domain_suffix: twitter.com
+  - domain_suffix: twitter.jp
+  - domain_suffix: twittercommunity.com
+  - domain_suffix: twitterflightschool.com
+  - domain_suffix: twitterinc.com
+  - domain_suffix: twitteroauth.com
+  - domain_suffix: twitterstat.us
+  - domain_suffix: twtrdns.net
+  - domain_suffix: twttr.com
+  - domain_suffix: twttr.net
+  - domain_suffix: twvid.com
+  - domain_suffix: vine.co
+  - domain_suffix: x.com

@@ -4,11 +4,11 @@
 # 规则来源条目总数: 1 条
 # 规则来源: ios_rule_script@master/rule/Surge/Advertising/Advertising.list
 # 作者: SoultionLss
-# 最后更新: 2026-08-20 12:55:35
+# 最后更新: 2026-08-20 17:18:33
 # ============================================================
 
-domain-keyword
 ip-cidr
+domain-keyword
+and
 url-regex
 ip-cidr6
-and

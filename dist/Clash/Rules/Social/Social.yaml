@@ -1,0 +1,50 @@
+# ============================================================
+# 规则策略: Social
+# 规则总数: 46 条
+# 规则来源条目总数: 4 条
+# 规则来源: blackmatrix7/ios_rule_script@master/rule/Surge/Instagram/Instagram.list, blackmatrix7/ios_rule_script@master/rule/Surge/Threads/Threads.list, blackmatrix7/ios_rule_script@master/rule/Surge/Twitter/Twitter.list, blackmatrix7/ios_rule_script@master/rule/Surge/Reddit/Reddit.list
+# 作者: SoultionLss
+# 最后更新: 2026-08-20 17:18:39
+# ============================================================
+
+payload:
+  - DOMAIN-SUFFIX,ads-twitter.com,Social
+  - DOMAIN-SUFFIX,cdninstagram.com,Social
+  - DOMAIN-SUFFIX,cms-twdigitalassets.com,Social
+  - DOMAIN-SUFFIX,domain-keyword,Social
+  - DOMAIN-SUFFIX,grok.com,Social
+  - DOMAIN-SUFFIX,instagr.am,Social
+  - DOMAIN-SUFFIX,instagram.com,Social
+  - DOMAIN-SUFFIX,ip-cidr,Social
+  - DOMAIN-SUFFIX,periscope.tv,Social
+  - DOMAIN-SUFFIX,pscp.tv,Social
+  - DOMAIN-SUFFIX,redd.it,Social
+  - DOMAIN-SUFFIX,reddit.com,Social
+  - DOMAIN-SUFFIX,redditmail.com,Social
+  - DOMAIN-SUFFIX,redditmedia.com,Social
+  - DOMAIN-SUFFIX,redditstatic.com,Social
+  - DOMAIN-SUFFIX,reddituploads.com,Social
+  - DOMAIN-SUFFIX,reddituploads.com.cdn-cf.behance.net,Social
+  - DOMAIN-SUFFIX,reddituploads.com.cdn-cf.dropbox.com,Social
+  - DOMAIN-SUFFIX,t.co,Social
+  - DOMAIN-SUFFIX,tellapart.com,Social
+  - DOMAIN-SUFFIX,threads.net,Social
+  - DOMAIN-SUFFIX,tweetdeck.com,Social
+  - DOMAIN-SUFFIX,twimg.co,Social
+  - DOMAIN-SUFFIX,twimg.com,Social
+  - DOMAIN-SUFFIX,twimg.org,Social
+  - DOMAIN-SUFFIX,twitpic.com,Social
+  - DOMAIN-SUFFIX,twitter.biz,Social
+  - DOMAIN-SUFFIX,twitter.com,Social
+  - DOMAIN-SUFFIX,twitter.jp,Social
+  - DOMAIN-SUFFIX,twittercommunity.com,Social
+  - DOMAIN-SUFFIX,twitterflightschool.com,Social
+  - DOMAIN-SUFFIX,twitterinc.com,Social
+  - DOMAIN-SUFFIX,twitteroauth.com,Social
+  - DOMAIN-SUFFIX,twitterstat.us,Social
+  - DOMAIN-SUFFIX,twtrdns.net,Social
+  - DOMAIN-SUFFIX,twttr.com,Social
+  - DOMAIN-SUFFIX,twttr.net,Social
+  - DOMAIN-SUFFIX,twvid.com,Social
+  - DOMAIN-SUFFIX,vine.co,Social
+  - DOMAIN-SUFFIX,x.com,Social

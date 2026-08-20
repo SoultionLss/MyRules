@@ -1,0 +1,519 @@
+http_port: 6152
+socks_port: 6153
+vif_only: true
+hijack_dns:
+- '*:53'
+geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb
+asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
+proxy_latency_test_url: http://1.1.1.1/generate_204
+direct_latency_test_url: http://wifi.vivo.com.cn/generate_204
+dns:
+  bootstrap:
+  - system
+  upstreams:
+    Domestic-DNS:
+    - 223.5.5.5
+    - 119.29.29.29
+    Domestic-Encrypted-DNS:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+    Foreign-Encrypted-DNS:
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+  forward:
+  - proxy_rule_set:
+      match: https://cdn.jsdelivr.net/gh/Repcz/Tool@X/Egern/Rules/Reject.yaml
+      value: REJECT
+      disabled: false
+  - proxy_rule_set:
+      match: https://cdn.jsdelivr.net/gh/Accademia/Additional_Rule_For_Clash@master/GeositeCN/GeositeCN.yaml
+      value: Domestic-DNS
+      disabled: false
+  - domain_wildcard:
+      match: '*'
+      value: Domestic-Encrypted-DNS
+      disabled: false
+  hosts:
+    dns.google:
+    - 8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844
+    cloudflare-dns.com:
+    - 104.16.249.249, 104.16.248.249, 2606:4700::6810:f8f9, 2606:4700::6810:f9f9
+    dns.alidns.com:
+    - 223.5.5.5, 223.6.6.6, 2400:3200:baba::1, 2400:3200::1
+    doh.pub:
+    - 1.12.12.12, 120.53.53.53
+    dot.pub:
+    - 1.12.12.12, 120.53.53.53
+  proxy_nameservers:
+  - https://dns.alidns.com/dns-query
+  - https://doh.pub/dns-query
+real_ip_domains:
+- lancache.steamcontent.com
+- '*.msftconnecttest.com'
+- '*.msftncsi.com'
+- '*.srv.nintendo.net'
+- '*.stun.playstation.net'
+- xbox.*.microsoft.com
+- '*.xboxlive.com'
+- '*.logon.battlenet.com.cn'
+- '*.logon.battle.net'
+- stun.l.google.com
+- easy-login.10099.com.cn
+- '*-update.xoyocdn.com'
+- '*.prod.cloud.netflix.com'
+- appboot.netflix.com
+- '*-appboot.netflix.com'
+mitm:
+  enabled: true
+  hostnames:
+    includes:
+    - weather-data.apple.com
+    - weather-analytics-events.apple.com
+    - pluginhub.kelee.one
+    - hub.kelee.one
+    - surge.qingr.moe
+    - t.me
+    - telegram.me
+policy_groups:
+- external:
+    name: Manual
+    type: select
+    urls:
+    - http://your-service-provider
+    hidden: false
+    icon: https://github.com/Repcz/Repcz.github.io/raw/main/docs/egern/Photo/Egern.png
+- select:
+    name: 全部节点-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+- select:
+    name: 家宽-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)家宽|家庭|宽带|Home|Broadband
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+- select:
+    name: 香港-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇭🇰|香港|(\b(HK|Hong)\b)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+- select:
+    name: 台湾-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇨🇳|🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+- select:
+    name: 日本-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇯🇵|日本|东京|(\b(JP|Japan)\b)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+- select:
+    name: 狮城-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇸🇬|新加坡|狮|(\b(SG|Singapore)\b)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+- select:
+    name: 美国-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇺🇸|美国|洛杉矶|圣何塞|(\b(US|United States)\b)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+- select:
+    name: 低倍率-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)低倍|0\.5|0.5|(\b(LR|Low)\b)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+- select:
+    name: 高倍率-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)高倍|2\.0|2.0|(\b(HR|High)\b)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+- select:
+    name: 冷门节点-手选
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)冷门|欧洲|(\b(EU|Europe)\b)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+- auto_test:
+    name: 香港-智能
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇭🇰|香港|(\b(HK|Hong)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+- auto_test:
+    name: 台湾-智能
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇨🇳|🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+- auto_test:
+    name: 日本-智能
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇯🇵|日本|东京|(\b(JP|Japan)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+- auto_test:
+    name: 狮城-智能
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇸🇬|新加坡|狮|(\b(SG|Singapore)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+- auto_test:
+    name: 美国-智能
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)🇺🇸|美国|洛杉矶|圣何塞|(\b(US|United States)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+- auto_test:
+    name: 低倍率-智能
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)低倍|0\.5|0.5|(\b(LR|Low)\b)
+    tolerance: 10
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+- auto_test:
+    name: 冷门节点-智能
+    policies:
+    - Manual
+    flatten: true
+    include-all: true
+    filter: (?i)冷门|欧洲|(\b(EU|Europe)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+- fallback:
+    name: 香港-故转
+    policies:
+    - 香港-手选
+    - 香港-智能
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+- fallback:
+    name: 台湾-故转
+    policies:
+    - 台湾-手选
+    - 台湾-智能
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+- fallback:
+    name: 日本-故转
+    policies:
+    - 日本-手选
+    - 日本-智能
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+- fallback:
+    name: 狮城-故转
+    policies:
+    - 狮城-手选
+    - 狮城-智能
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+- fallback:
+    name: 美国-故转
+    policies:
+    - 美国-手选
+    - 美国-智能
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+- fallback:
+    name: 低倍率-故转
+    policies:
+    - 低倍率-手选
+    - 低倍率-智能
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+- select:
+    name: Global
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - 低倍率-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
+- select:
+    name: Streaming
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+- select:
+    name: YouTube
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+- select:
+    name: TikTok
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/TikTok.png
+- select:
+    name: GitHub
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GitHub.png
+- select:
+    name: Microsoft
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
+- select:
+    name: Google
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
+- select:
+    name: AI
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/OpenAI.png
+- select:
+    name: Social
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
+- select:
+    name: Telegram
+    policies:
+    - 美国-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
+- select:
+    name: HongKongSocial
+    policies:
+    - 香港-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/WhatsApp.png
+- select:
+    name: Final
+    policies:
+    - 美国-故转
+    - 香港-故转
+    - 狮城-故转
+    - 日本-故转
+    - 台湾-故转
+    - 低倍率-故转
+    - Manual
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
+rules:
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Advertising/Advertising.list
+    policy: REJECT
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/DouYin/DouYin.list
+    policy: DIRECT
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/TikTok/TikTok.list
+    policy: TikTok
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/apple.txt
+    policy: DIRECT
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Apple/Apple.list
+    policy: Global
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Apple/AppleTV.list
+    policy: Streaming
+    disabled: false
+- domain:
+    match: copilot.microsoft.com
+    policy: AI
+- domain:
+    match: api.microsoftapp.net
+    policy: AI
+- domain:
+    match: copilot.azure.com
+    policy: AI
+- domain:
+    match: openai.azure.com
+    policy: AI
+- domain:
+    match: edgeservices.bing.com
+    policy: AI
+- domain:
+    match: sydney.bing.com
+    policy: AI
+- domain:
+    match: img.bing.com
+    policy: AI
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Microsoft/Microsoft.list
+    policy: Microsoft
+- domain:
+    match: cn.bing.com
+    policy: DIRECT
+- domain:
+    match: '*.cn.bing.com'
+    policy: DIRECT
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/GitHub/GitHub.list
+    policy: GitHub
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Telegram/Telegram.list
+    policy: Telegram
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/WhatsApp/WhatsApp.list
+    policy: HongKongSocial
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Line/Line.list
+    policy: HongKongSocial
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Instagram/Instagram.list
+    policy: Social
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Threads/Threads.list
+    policy: Social
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Twitter/Twitter.list
+    policy: Social
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Reddit/Reddit.list
+    policy: Social
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Netflix/Netflix.list
+    policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Disney/Disney.list
+    policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/HBO/HBO.list
+    policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/PrimeVideo/PrimeVideo.list
+    policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Hulu/Hulu.list
+    policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Peacock/Peacock.list
+    policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Crunchyroll/Crunchyroll.list
+    policy: Streaming
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Google/Google.list
+    policy: Google
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/YouTube/YouTube.list
+    policy: YouTube
+- user_agent:
+    match: yt-dlp|youtube-dl
+    policy: DIRECT
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/PikPak/PikPak.list
+    policy: DIRECT
+    disabled: true
+- domain:
+    match: access.pikpakdrive.com
+    policy: REJECT
+- domain:
+    match: access.mypikpak.com
+    policy: REJECT
+- domain:
+    match: access.mypikpak.net
+    policy: REJECT
+- domain:
+    match: access.pikpak.me
+    policy: REJECT
+- domain_keyword:
+    match: dl-a10b-
+    policy: DIRECT
+- domain_keyword:
+    match: dl-z01a-
+    policy: DIRECT
+- domain_regex:
+    match: ^dl-[A-Za-z0-9-]+\.mypikpak\.com$
+    policy: DIRECT
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/Baidu/Baidu.list
+    policy: Global
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/viewer12/OverseasAI.list@main/rule/Egern/OverseasAI/OverseasAI.yaml
+    policy: AI
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/Accademia/Additional_Rule_For_Clash@master/GeositeCN/ChinaMax_Domain.yaml
+    policy: DIRECT
+- rule_set:
+    match: https://cdn.jsdelivr.net/gh/Repcz/Tool@X/Egern/Rules/Lan.yaml
+    policy: DIRECT
+- default:
+    policy: Final
