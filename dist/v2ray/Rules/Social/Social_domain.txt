@@ -4,46 +4,46 @@
 # 规则来源条目总数: 4 条
 # 规则来源: blackmatrix7/ios_rule_script@master/rule/Surge/Instagram/Instagram.list, blackmatrix7/ios_rule_script@master/rule/Surge/Threads/Threads.list, blackmatrix7/ios_rule_script@master/rule/Surge/Twitter/Twitter.list, blackmatrix7/ios_rule_script@master/rule/Surge/Reddit/Reddit.list
 # 作者: SoultionLss
-# 最后更新: 2026-08-20 17:18:39
+# 最后更新: 2026-08-21 12:54:37
 # ============================================================
 
-t.co
-ip-cidr
-threads.net
-twitter.biz
-twitter.jp
-twitterstat.us
-periscope.tv
-twimg.org
-tellapart.com
-ads-twitter.com
-domain-keyword
-twimg.com
-reddituploads.com.cdn-cf.dropbox.com
-twttr.com
-reddituploads.com
-twittercommunity.com
-reddit.com
+twvid.com
 redditstatic.com
+ads-twitter.com
+periscope.tv
+instagram.com
+domain-keyword
+grok.com
+twtrdns.net
 x.com
+ip-cidr
+tellapart.com
+redditmail.com
+redd.it
+twimg.org
+twittercommunity.com
 tweetdeck.com
+twitter.com
+cdninstagram.com
+twitterinc.com
+twitterstat.us
 redditmedia.com
 pscp.tv
-twtrdns.net
-twitpic.com
-vine.co
-cdninstagram.com
-twttr.net
-grok.com
-twitteroauth.com
-instagr.am
-redditmail.com
+twitter.biz
+threads.net
 reddituploads.com.cdn-cf.behance.net
+twitteroauth.com
+twitter.jp
+reddituploads.com
+twitpic.com
+reddituploads.com.cdn-cf.dropbox.com
+reddit.com
+twttr.com
 twimg.co
-twitter.com
+t.co
 twitterflightschool.com
-twvid.com
-twitterinc.com
-redd.it
+instagr.am
 cms-twdigitalassets.com
-instagram.com
+vine.co
+twttr.net
+twimg.com

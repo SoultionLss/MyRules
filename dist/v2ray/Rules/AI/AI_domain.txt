@@ -4,44 +4,44 @@
 # 规则来源条目总数: 3 条
 # 规则来源: blackmatrix7/ios_rule_script@master/rule/Surge/OpenAI/OpenAI.list, blackmatrix7/ios_rule_script@master/rule/Surge/Claude/Claude.list, blackmatrix7/ios_rule_script@master/rule/Surge/Anthropic/Anthropic.list
 # 作者: SoultionLss
-# 最后更新: 2026-08-20 17:18:37
+# 最后更新: 2026-08-21 12:54:36
 # ============================================================
 
-oaiusercontent.com
-host.livekit.cloud
-openai.com
-segment.io
-turn.livekit.cloud
-chatgpt.com
-client-api.arkoselabs.com
-oaistatic.com
-identrust.com
-sentry.io
-domain-keyword
-intercom.io
-stripe.com
-cdn.usefathom.com
-openaicom.imgix.net
-claude.ai
-featuregates.org
-openaicomproductionae4b.blob.core.windows.net
-auth0.com
-chatgpt.livekit.cloud
-production-openaicom-storage.azureedge.net
-static.cloudflareinsights.com
-intercomcdn.com
 api.statsig.com
-chat.openai.com.cdn.cloudflare.net
-ai.com
-anthropic.com
-observeit.net
-openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
-ip-asn
-launchdarkly.com
-events.statsigapi.net
-ip-cidr
-browser-intake-datadoghq.com
-servd-anthropic-website.b-cdn.net
-openai-api.arkoselabs.com
-algolia.net
 openaiapi-site.azureedge.net
+host.livekit.cloud
+openai-api.arkoselabs.com
+chat.openai.com.cdn.cloudflare.net
+intercomcdn.com
+intercom.io
+segment.io
+auth0.com
+domain-keyword
+events.statsigapi.net
+observeit.net
+client-api.arkoselabs.com
+featuregates.org
+ip-asn
+production-openaicom-storage.azureedge.net
+chatgpt.com
+openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
+openaicom.imgix.net
+oaiusercontent.com
+stripe.com
+chatgpt.livekit.cloud
+servd-anthropic-website.b-cdn.net
+oaistatic.com
+ip-cidr
+ai.com
+openaicomproductionae4b.blob.core.windows.net
+algolia.net
+static.cloudflareinsights.com
+openai.com
+sentry.io
+claude.ai
+cdn.usefathom.com
+anthropic.com
+turn.livekit.cloud
+browser-intake-datadoghq.com
+launchdarkly.com
+identrust.com
