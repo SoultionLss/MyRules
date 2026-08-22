@@ -4,44 +4,44 @@
 # 规则来源条目总数: 3 条
 # 规则来源: blackmatrix7/ios_rule_script@master/rule/Surge/OpenAI/OpenAI.list, blackmatrix7/ios_rule_script@master/rule/Surge/Claude/Claude.list, blackmatrix7/ios_rule_script@master/rule/Surge/Anthropic/Anthropic.list
 # 作者: SoultionLss
-# 最后更新: 2026-08-21 12:54:36
+# 最后更新: 2026-08-22 12:45:37
 # ============================================================
 
-api.statsig.com
-openaiapi-site.azureedge.net
-host.livekit.cloud
-openai-api.arkoselabs.com
-chat.openai.com.cdn.cloudflare.net
-intercomcdn.com
-intercom.io
-segment.io
-auth0.com
-domain-keyword
-events.statsigapi.net
-observeit.net
-client-api.arkoselabs.com
-featuregates.org
-ip-asn
-production-openaicom-storage.azureedge.net
-chatgpt.com
-openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
-openaicom.imgix.net
-oaiusercontent.com
-stripe.com
-chatgpt.livekit.cloud
-servd-anthropic-website.b-cdn.net
-oaistatic.com
-ip-cidr
 ai.com
-openaicomproductionae4b.blob.core.windows.net
+chatgpt.com
+stripe.com
+identrust.com
 algolia.net
-static.cloudflareinsights.com
+openaiapi-site.azureedge.net
+openaicom.imgix.net
+api.statsig.com
+production-openaicom-storage.azureedge.net
+browser-intake-datadoghq.com
+segment.io
+host.livekit.cloud
+domain-keyword
+openaicomproductionae4b.blob.core.windows.net
+openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
+launchdarkly.com
+ip-cidr
+auth0.com
+oaiusercontent.com
 openai.com
+observeit.net
+oaistatic.com
 sentry.io
 claude.ai
-cdn.usefathom.com
-anthropic.com
+static.cloudflareinsights.com
 turn.livekit.cloud
-browser-intake-datadoghq.com
-launchdarkly.com
-identrust.com
+events.statsigapi.net
+featuregates.org
+intercom.io
+anthropic.com
+chat.openai.com.cdn.cloudflare.net
+client-api.arkoselabs.com
+openai-api.arkoselabs.com
+servd-anthropic-website.b-cdn.net
+ip-asn
+chatgpt.livekit.cloud
+intercomcdn.com
+cdn.usefathom.com
