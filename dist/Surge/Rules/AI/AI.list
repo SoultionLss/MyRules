@@ -4,44 +4,44 @@
 # 规则来源条目总数: 3 条
 # 规则来源: blackmatrix7/ios_rule_script@master/rule/Surge/OpenAI/OpenAI.list, blackmatrix7/ios_rule_script@master/rule/Surge/Claude/Claude.list, blackmatrix7/ios_rule_script@master/rule/Surge/Anthropic/Anthropic.list
 # 作者: SoultionLss
-# 最后更新: 2026-08-22 12:45:37
+# 最后更新: 2026-08-23 12:46:27
 # ============================================================
 
-.ai.com
-.chatgpt.com
-.stripe.com
-.identrust.com
-.algolia.net
-.openaiapi-site.azureedge.net
-.openaicom.imgix.net
-.api.statsig.com
-.production-openaicom-storage.azureedge.net
-.browser-intake-datadoghq.com
-.segment.io
-.host.livekit.cloud
+.events.statsigapi.net
+.intercom.io
+.ip-asn
+.client-api.arkoselabs.com
 .domain-keyword
-.openaicomproductionae4b.blob.core.windows.net
-.openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
-.launchdarkly.com
+.chatgpt.livekit.cloud
 .ip-cidr
+.stripe.com
+.host.livekit.cloud
+.featuregates.org
+.openai-api.arkoselabs.com
+.algolia.net
+.sentry.io
+.static.cloudflareinsights.com
+.launchdarkly.com
+.api.statsig.com
+.observeit.net
+.openaicomproductionae4b.blob.core.windows.net
+.chatgpt.com
+.openaiapi-site.azureedge.net
+.production-openaicom-storage.azureedge.net
 .auth0.com
 .oaiusercontent.com
-.openai.com
-.observeit.net
-.oaistatic.com
-.sentry.io
-.claude.ai
-.static.cloudflareinsights.com
-.turn.livekit.cloud
-.events.statsigapi.net
-.featuregates.org
-.intercom.io
-.anthropic.com
 .chat.openai.com.cdn.cloudflare.net
-.client-api.arkoselabs.com
-.openai-api.arkoselabs.com
+.anthropic.com
+.openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
+.ai.com
+.segment.io
 .servd-anthropic-website.b-cdn.net
-.ip-asn
-.chatgpt.livekit.cloud
 .intercomcdn.com
+.openaicom.imgix.net
+.browser-intake-datadoghq.com
+.turn.livekit.cloud
 .cdn.usefathom.com
+.claude.ai
+.oaistatic.com
+.openai.com
+.identrust.com
