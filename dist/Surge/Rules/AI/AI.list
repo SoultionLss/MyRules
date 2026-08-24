@@ -4,44 +4,44 @@
 # 规则来源条目总数: 3 条
 # 规则来源: blackmatrix7/ios_rule_script@master/rule/Surge/OpenAI/OpenAI.list, blackmatrix7/ios_rule_script@master/rule/Surge/Claude/Claude.list, blackmatrix7/ios_rule_script@master/rule/Surge/Anthropic/Anthropic.list
 # 作者: SoultionLss
-# 最后更新: 2026-08-23 12:46:27
+# 最后更新: 2026-08-24 12:56:55
 # ============================================================
 
-.events.statsigapi.net
-.intercom.io
-.ip-asn
-.client-api.arkoselabs.com
-.domain-keyword
-.chatgpt.livekit.cloud
-.ip-cidr
-.stripe.com
-.host.livekit.cloud
-.featuregates.org
-.openai-api.arkoselabs.com
-.algolia.net
-.sentry.io
-.static.cloudflareinsights.com
-.launchdarkly.com
-.api.statsig.com
-.observeit.net
-.openaicomproductionae4b.blob.core.windows.net
-.chatgpt.com
-.openaiapi-site.azureedge.net
-.production-openaicom-storage.azureedge.net
-.auth0.com
-.oaiusercontent.com
 .chat.openai.com.cdn.cloudflare.net
-.anthropic.com
-.openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
-.ai.com
-.segment.io
-.servd-anthropic-website.b-cdn.net
-.intercomcdn.com
-.openaicom.imgix.net
-.browser-intake-datadoghq.com
-.turn.livekit.cloud
-.cdn.usefathom.com
-.claude.ai
-.oaistatic.com
-.openai.com
+.auth0.com
 .identrust.com
+.ip-cidr
+.servd-anthropic-website.b-cdn.net
+.chatgpt.com
+.cdn.usefathom.com
+.ai.com
+.browser-intake-datadoghq.com
+.intercom.io
+.chatgpt.livekit.cloud
+.turn.livekit.cloud
+.stripe.com
+.openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
+.featuregates.org
+.openai.com
+.sentry.io
+.events.statsigapi.net
+.intercomcdn.com
+.oaistatic.com
+.domain-keyword
+.host.livekit.cloud
+.ip-asn
+.claude.ai
+.openaiapi-site.azureedge.net
+.openaicomproductionae4b.blob.core.windows.net
+.openaicom.imgix.net
+.openai-api.arkoselabs.com
+.production-openaicom-storage.azureedge.net
+.oaiusercontent.com
+.observeit.net
+.anthropic.com
+.launchdarkly.com
+.client-api.arkoselabs.com
+.algolia.net
+.static.cloudflareinsights.com
+.segment.io
+.api.statsig.com
