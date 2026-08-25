@@ -2,7 +2,7 @@
 
 ## 基本信息
 - **策略名称**: DIRECT
-- **规则总数**: 123796 条
+- **规则总数**: 123862 条
 - **规则来源条目总数**: 2 条
 - **规则来源**: clash-rules@release/direct.txt, ios_rule_script@master/rule/Surge/ChinaMax/ChinaMax.list
 

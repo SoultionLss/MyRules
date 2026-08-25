@@ -4,37 +4,37 @@
 # 规则来源条目总数: 1 条
 # 规则来源: ios_rule_script@master/rule/Surge/GitHub/GitHub.list
 # 作者: SoultionLss
-# 最后更新: 2026-08-24 12:56:54
+# 最后更新: 2026-08-25 12:53:27
 # ============================================================
 
+.npmjs.com
 .dependabot.com
-.github.community
-.githubapp.com
-.myoctocat.com
-.thegithubshop.com
-.github-avatars.oss-cn-hongkong.aliyuncs.com
-.githubcopilot.com
-.opensource.guide
-.githubhackathon.com
-.github-atom-io-herokuapp-com.freetls.fastly.net
-.githubstatus.com
-.githubusercontent.com
-.githubassets.com
-.npm.community
-.rawgit.com
-.github-cloud.s3.amazonaws.com
-.npmjs.org
-.repo.new
-.github.io
-.github.dev
-.githubuniverse.com
-.githubpreview.dev
-.github.com
 .ghcr.io
-.git.io
-.atom.io
+.repo.new
+.github.com
+.myoctocat.com
+.githubnext.com
+.githubpreview.dev
+.rawgit.com
+.githubapp.com
+.githubhackathon.com
+.thegithubshop.com
 .rawgithub.com
 .github.blog
-.githubnext.com
-.npmjs.com
+.atom.io
+.githubassets.com
+.git.io
 .domain-keyword
+.npm.community
+.opensource.guide
+.npmjs.org
+.githubstatus.com
+.github-atom-io-herokuapp-com.freetls.fastly.net
+.githubuniverse.com
+.github.dev
+.github-avatars.oss-cn-hongkong.aliyuncs.com
+.githubusercontent.com
+.github.community
+.githubcopilot.com
+.github-cloud.s3.amazonaws.com
+.github.io
