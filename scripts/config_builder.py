@@ -13,7 +13,7 @@ TEMPLATE_DIR = BASE_DIR / "templates"
 EGERN_TEMPLATE = TEMPLATE_DIR / "Egern.yaml"
 DIST_DIR = BASE_DIR / "dist"
 
-def get_repo_info():
+def get_target_repo_info():
     target_repo = os.environ.get("TARGET_REPO")
     target_branch = os.environ.get("TARGET_BRANCH")
     if target_repo and target_branch:
@@ -32,7 +32,6 @@ def get_repo_info():
             repo = remote_url.split(":")[1].replace(".git", "")
         else:
             raise ValueError("Unknown remote URL format")
-        owner, name = repo.split("/")
         branch = subprocess.check_output(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
             cwd=BASE_DIR,
@@ -43,7 +42,7 @@ def get_repo_info():
         print(f"⚠️ 无法获取仓库信息，使用默认值: {e}")
         return "SoultionLss/MyRules", "main"
 
-TARGET_REPO, TARGET_BRANCH = get_repo_info()
+TARGET_REPO, TARGET_BRANCH = get_target_repo_info()
 
 def load_yaml(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -61,14 +60,15 @@ def build_rule_refs(rules, platform, cdn_base):
             policy = entry['policy']
             if entry.get('disabled', False):
                 continue
+            # 根据平台生成引用链接（指向策略组目录下的文件）
             if platform == 'Surge' or platform == 'Loon':
-                url = f"{cdn_base}/Surge/{policy}.list"
+                url = f"{cdn_base}/{platform}/{policy}/{policy}.list"
                 refs.append(f"RULE-SET, {url}, {policy}")
             elif platform == 'Clash':
-                url = f"{cdn_base}/Clash/{policy}.yaml"
+                url = f"{cdn_base}/{platform}/{policy}/{policy}.yaml"
                 refs.append(f"  - RULE-SET, {url}, {policy}")
             elif platform == 'Egern':
-                url = f"{cdn_base}/Egern/{policy}.yaml"
+                url = f"{cdn_base}/{platform}/{policy}/{policy}.yaml"
                 refs.append(f"  - rule_set:\n      match: {url}\n      policy: {policy}")
     return refs
 
@@ -133,9 +133,10 @@ def main():
     refs = build_rule_refs(rules, 'Surge', cdn_base)
     surge_lines.extend(refs)
     surge_lines.append("FINAL, Proxy")
-    with open(surge_dir / "Surge.conf", 'w', encoding='utf-8') as f:
+    surge_conf_path = surge_dir / "Surge.conf"
+    with open(surge_conf_path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(surge_lines))
-    print("   ✅ Surge 主配置已生成")
+    print(f"   ✅ Surge 主配置已生成: {surge_conf_path}")
 
     # Clash
     clash_dir = DIST_DIR / "Clash"
@@ -147,13 +148,8 @@ def main():
             policy = entry['policy']
             if entry.get('disabled', False):
                 continue
-            url = f"{cdn_base}/Clash/{policy}.yaml"
-            providers[policy] = {
-                "type": "http",
-                "url": url,
-                "interval": 86400,
-                "behavior": "classical"
-            }
+            url = f"{cdn_base}/Clash/{policy}/{policy}.yaml"
+            providers[policy] = {"type": "http", "url": url, "interval": 86400, "behavior": "classical"}
     clash_rules = []
     for rule in rules:
         if 'rule_set' in rule:
@@ -176,35 +172,21 @@ def main():
     for group in policy_groups:
         if 'select' in group:
             g = group['select']
-            proxy_groups.append({
-                "name": g['name'],
-                "type": "select",
-                "proxies": g['policies']
-            })
+            proxy_groups.append({"name": g['name'], "type": "select", "proxies": g['policies']})
         elif 'fallback' in group:
             g = group['fallback']
-            proxy_groups.append({
-                "name": g['name'],
-                "type": "fallback",
-                "proxies": g['policies']
-            })
+            proxy_groups.append({"name": g['name'], "type": "fallback", "proxies": g['policies']})
         elif 'auto_test' in group:
             g = group['auto_test']
-            proxy_groups.append({
-                "name": g['name'],
-                "type": "url-test",
-                "proxies": g['policies'],
-                "url": "http://1.1.1.1/generate_204",
-                "interval": 600
-            })
+            proxy_groups.append({"name": g['name'], "type": "url-test", "proxies": g['policies'], "url": "http://1.1.1.1/generate_204", "interval": 600})
     clash_data["proxy-groups"] = proxy_groups
-    dump_yaml(clash_data, clash_dir / "Clash.yaml")
-    print("   ✅ Clash 主配置已生成")
+    clash_path = clash_dir / "Clash.yaml"
+    dump_yaml(clash_data, clash_path)
+    print(f"   ✅ Clash 主配置已生成: {clash_path}")
 
     # Egern
     egern_dir = DIST_DIR / "Egern"
     egern_dir.mkdir(parents=True, exist_ok=True)
-    # 更新规则引用
     updated_rules = []
     for rule in rules:
         if 'rule_set' in rule:
@@ -212,22 +194,26 @@ def main():
             policy = entry['policy']
             if entry.get('disabled', False):
                 continue
-            # 替换为 CDN 链接（扁平化）
-            entry['match'] = f"{cdn_base}/Egern/{policy}.yaml"
+            entry['match'] = f"{cdn_base}/Egern/{policy}/{policy}.yaml"
             updated_rules.append(rule)
         else:
             updated_rules.append(rule)
     egern_data['rules'] = updated_rules
-    dump_yaml(egern_data, egern_dir / "Egern.yaml")
-    print("   ✅ Egern 主配置已生成")
+    egern_path = egern_dir / "Egern.yaml"
+    dump_yaml(egern_data, egern_path)
+    print(f"   ✅ Egern 主配置已生成: {egern_path}")
 
-    # Loon 与 Surge 类似，也可生成（可选）
+    # Loon
     loon_dir = DIST_DIR / "Loon"
     loon_dir.mkdir(parents=True, exist_ok=True)
-    # 简单复制 Surge 配置并修改文件名（Loon 与 Surge 高度兼容）
-    shutil.copy(surge_dir / "Surge.conf", loon_dir / "Loon.conf")
-    # 替换规则引用中的 Surge 为 Loon（但我们的规则文件是共享的，所以不改）
-    print("   ✅ Loon 主配置已生成（基于 Surge 模板）")
+    # 复用 Surge 配置并修改内部引用（简单处理）
+    with open(surge_conf_path, 'r', encoding='utf-8') as f:
+        loon_content = f.read()
+    # 替换 Surge 特定内容（Loon 兼容）
+    loon_path = loon_dir / "Loon.conf"
+    with open(loon_path, 'w', encoding='utf-8') as f:
+        f.write(loon_content.replace("Surge", "Loon"))
+    print(f"   ✅ Loon 主配置已生成: {loon_path}")
 
     print("🎉 所有主配置文件生成完成！")
 
