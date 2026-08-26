@@ -1,0 +1,90 @@
+# ============================================
+# 高优先级：国内直连（白名单）
+# ============================================
+- rule_set:
+    match: loyalsoldier:direct
+    policy: DIRECT
+
+- rule_set:
+    match: blackmatrix7:ChinaMax
+    policy: DIRECT
+
+- rule_set:
+    match: accademia:GeositeCN
+    policy: DIRECT
+
+# ============================================
+# 广告拦截
+# ============================================
+- rule_set:
+    match: blackmatrix7:Advertising
+    policy: REJECT
+
+- rule_set:
+    match: acl4ssr:Advertising
+    policy: REJECT
+
+# ============================================
+# 特殊应用分流（使用简写，自动回退）
+# ============================================
+- rule_set:
+    match: blackmatrix7:Google
+    policy: Google
+
+- rule_set:
+    match: blackmatrix7:YouTube
+    policy: YouTube
+
+- rule_set:
+    match: blackmatrix7:GitHub
+    policy: GitHub
+
+- rule_set:
+    match: blackmatrix7:Telegram
+    policy: Telegram
+
+- rule_set:
+    match: blackmatrix7:TikTok
+    policy: TikTok
+
+# ============================================
+# AI 服务（自动回退备用）
+# ============================================
+- rule_set:
+    match: OpenAI         # 自动尝试所有来源
+    policy: AI
+
+# ============================================
+# 社交媒体
+# ============================================
+- rule_set:
+    match: blackmatrix7:Instagram
+    policy: Social
+
+- rule_set:
+    match: blackmatrix7:Twitter
+    policy: Social
+
+# ============================================
+# 流媒体
+# ============================================
+- rule_set:
+    match: blackmatrix7:Netflix
+    policy: Streaming
+
+- rule_set:
+    match: blackmatrix7:Disney
+    policy: Streaming
+
+# ============================================
+# 低优先级：国内 IP 段
+# ============================================
+- rule_set:
+    match: loyalsoldier:geoip-cn
+    policy: DIRECT
+
+# ============================================
+# 默认策略
+# ============================================
+- default:
+    policy: PROXY
