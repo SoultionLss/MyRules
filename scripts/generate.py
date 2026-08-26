@@ -250,6 +250,7 @@ class SurgeSerializer(Serializer):
         return f"RULE-SET, {base_url}/{policy}.list, {policy}"
 
 class LoonSerializer(Serializer):
+    """Loon 规则集（.list，DOMAIN-SUFFIX 格式）"""
     def get_extension(self) -> str:
         return ".list"
     
@@ -299,6 +300,7 @@ class V2raySerializer(Serializer):
         return f"在配置文件的 'domain' 或 'domains' 字段引用 {base_url}/{policy}_domain.txt"
 
 class QuantumultXSerializer(Serializer):
+    """Quantumult X 规则集（.list，HOST-SUFFIX 格式）"""
     def get_extension(self) -> str:
         return ".list"
     
@@ -314,7 +316,7 @@ class QuantumultXSerializer(Serializer):
 class SingboxSerializer(Serializer):
     """
     Sing-box 官方 rule_set JSON 格式
-    参考: https://sing-box.sagernet.org/configuration/rule-set/
+    参考: https://sing-box.sagernet.org/configuration/route/rule-set/
     """
     def get_extension(self) -> str:
         return ".json"
