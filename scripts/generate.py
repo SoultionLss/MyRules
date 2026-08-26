@@ -12,15 +12,15 @@ from pathlib import Path
 from collections import defaultdict
 from datetime import datetime
 from typing import Set, List, Dict, Any, Optional, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 
 # ==================== 路径配置 ====================
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
 CONFIG_PATH = BASE_DIR / "config" / "my_rules.yaml"
-TEMP_DIR = BASE_DIR / "temp_dist"   # 临时构建目录（原子性替换）
-FINAL_DIR = BASE_DIR / "dist"       # 最终输出目录
+TEMP_DIR = BASE_DIR / "temp_dist"
+FINAL_DIR = BASE_DIR / "dist"
 
 # ==================== 目标仓库配置 ====================
 def get_target_repo_info():
@@ -66,19 +66,11 @@ URL_TEMPLATES = {
     "repcz_egernrules": "https://raw.githubusercontent.com/Repcz/EgernRules/X/Rules/{name}/{name}.yaml",
 }
 
-# 自动回退顺序
 FALLBACK_ORDER = ["blackmatrix7", "loyalsoldier", "acl4ssr", "repcz", "accademia", "repcz_egernrules"]
 
 def resolve_match(match: str) -> List[str]:
-    """
-    解析规则匹配值，返回一个 URL 列表（用于自动回退）。
-    如果 match 是完整 URL，直接返回单元素列表。
-    如果是 "source:name"，返回该来源的 URL。
-    如果是纯名称，尝试所有来源模板，返回所有可能的 URL（按 FALLBACK_ORDER 顺序）。
-    """
     if match.startswith(('http://', 'https://')):
         return [match]
-
     if ':' in match:
         source, name = match.split(':', 1)
         source = source.lower()
@@ -88,11 +80,9 @@ def resolve_match(match: str) -> List[str]:
             print(f"⚠️ 未知规则源: {source}，尝试自动回退...")
             return [URL_TEMPLATES[s].format(name=name) for s in FALLBACK_ORDER if s in URL_TEMPLATES]
     else:
-        # 纯名称，尝试所有来源
         return [URL_TEMPLATES[s].format(name=match) for s in FALLBACK_ORDER if s in URL_TEMPLATES]
 
 def is_valid_domain(domain: str) -> bool:
-    """简单的域名格式过滤，只允许标准域名和泛域名（以 . 开头）"""
     if domain.startswith('.'):
         domain = domain[1:]
     if not domain:
@@ -100,10 +90,7 @@ def is_valid_domain(domain: str) -> bool:
     return bool(re.match(r'^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$', domain))
 
 def fetch_domains_from_url(url: str) -> Tuple[Set[str], bool]:
-    """尝试下载并解析域名，返回 (域名集合, 是否成功)"""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
     try:
         resp = requests.get(url, timeout=30, headers=headers)
         resp.raise_for_status()
@@ -145,7 +132,6 @@ def fetch_domains_from_url(url: str) -> Tuple[Set[str], bool]:
     if not domains:
         print(f"   ⚠️ 未能提取到有效域名: {url}")
         return set(), False
-
     return domains, True
 
 def normalize_domains(domains: List[str]) -> List[str]:
@@ -210,133 +196,88 @@ class RuleSet:
     updated_at: str
     owner: str
 
+@dataclass
+class SourceData:
+    """单个规则源的完整数据，用于生成独立文件"""
+    name: str           # 规则源名称，如 OpenAI
+    policy: str         # 所属策略组
+    domains: Set[str]   # 域名集合
+    sources: List[str]  # 来源 URL 路径列表（用于头部注释）
+    url: str            # 原始匹配字符串（用于去重）
+
 # ==================== 序列化器基类 ====================
 class Serializer(ABC):
-    """序列化器基类 - 每个平台一个实现"""
-    
     @abstractmethod
     def get_extension(self) -> str:
-        """返回文件扩展名（含点，如 .list）"""
         pass
-    
     @abstractmethod
     def serialize(self, rule_set: RuleSet) -> str:
-        """将 RuleSet 序列化为目标格式的纯规则内容"""
         pass
-    
     @abstractmethod
     def get_import_example(self, policy: str, base_url: str) -> str:
-        """
-        返回导入示例。
-        base_url 格式: https://cdn.jsdelivr.net/gh/owner/repo@branch/Platform
-        """
         pass
 
 # ==================== 各平台序列化器 ====================
-
 class SurgeSerializer(Serializer):
-    def get_extension(self) -> str:
-        return ".list"
-    
+    def get_extension(self) -> str: return ".list"
     def serialize(self, rule_set: RuleSet) -> str:
         lines = []
         for d in sorted(rule_set.domains):
-            if d.startswith('.'):
-                d = d[1:]
+            if d.startswith('.'): d = d[1:]
             lines.append(f".{d}")
         return "\n".join(lines)
-    
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"RULE-SET, {base_url}/{policy}.list, {policy}"
 
 class LoonSerializer(Serializer):
-    """Loon 规则集（.list，DOMAIN-SUFFIX 格式）"""
-    def get_extension(self) -> str:
-        return ".list"
-    
+    def get_extension(self) -> str: return ".list"
     def serialize(self, rule_set: RuleSet) -> str:
-        lines = []
-        for d in sorted(rule_set.domains):
-            lines.append(f"DOMAIN-SUFFIX,{d},{rule_set.policy}")
-        return "\n".join(lines)
-    
+        return "\n".join(f"DOMAIN-SUFFIX,{d},{rule_set.policy}" for d in sorted(rule_set.domains))
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"RULE-SET, {base_url}/{policy}.list, {policy}"
 
 class ClashSerializer(Serializer):
-    def get_extension(self) -> str:
-        return ".yaml"
-    
+    def get_extension(self) -> str: return ".yaml"
     def serialize(self, rule_set: RuleSet) -> str:
         lines = ["payload:"]
         for d in sorted(rule_set.domains):
             lines.append(f"  - DOMAIN-SUFFIX,{d},{rule_set.policy}")
         return "\n".join(lines)
-    
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"- RULE-SET, {base_url}/{policy}.yaml, {policy}"
 
 class EgernSerializer(Serializer):
-    def get_extension(self) -> str:
-        return ".yaml"
-    
+    def get_extension(self) -> str: return ".yaml"
     def serialize(self, rule_set: RuleSet) -> str:
         lines = ["rules:"]
         for d in sorted(rule_set.domains):
             lines.append(f"  - domain_suffix: {d}")
         return "\n".join(lines)
-    
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"- rule_set:\n    match: {base_url}/{policy}.yaml\n    policy: {policy}"
 
 class V2raySerializer(Serializer):
-    def get_extension(self) -> str:
-        return "_domain.txt"
-    
+    def get_extension(self) -> str: return "_domain.txt"
     def serialize(self, rule_set: RuleSet) -> str:
         return "\n".join(sorted(rule_set.domains))
-    
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"在配置文件的 'domain' 或 'domains' 字段引用 {base_url}/{policy}_domain.txt"
 
 class QuantumultXSerializer(Serializer):
-    """Quantumult X 规则集（.list，HOST-SUFFIX 格式）"""
-    def get_extension(self) -> str:
-        return ".list"
-    
+    def get_extension(self) -> str: return ".list"
     def serialize(self, rule_set: RuleSet) -> str:
-        lines = []
-        for d in sorted(rule_set.domains):
-            lines.append(f"HOST-SUFFIX,{d},{rule_set.policy}")
-        return "\n".join(lines)
-    
+        return "\n".join(f"HOST-SUFFIX,{d},{rule_set.policy}" for d in sorted(rule_set.domains))
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"RULE-SET, {base_url}/{policy}.list, {policy}"
 
 class SingboxSerializer(Serializer):
-    """
-    Sing-box 官方 rule_set JSON 格式
-    参考: https://sing-box.sagernet.org/configuration/route/rule-set/
-    """
-    def get_extension(self) -> str:
-        return ".json"
-    
+    def get_extension(self) -> str: return ".json"
     def serialize(self, rule_set: RuleSet) -> str:
-        # 官方格式: {"version": 1, "rules": [{"domain_suffix": [...]}]}
-        data = {
-            "version": 1,
-            "rules": [
-                {
-                    "domain_suffix": sorted(rule_set.domains)
-                }
-            ]
-        }
+        data = {"version": 1, "rules": [{"domain_suffix": sorted(rule_set.domains)}]}
         return json.dumps(data, indent=2, ensure_ascii=False)
-    
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"在 route.rules 中引用: {{ 'rule_set': '{base_url}/{policy}.json' }}"
 
-# ==================== 序列化器注册表 ====================
 SERIALIZERS = {
     "Surge": SurgeSerializer(),
     "Loon": LoonSerializer(),
@@ -363,163 +304,209 @@ def build_header(rule_set: RuleSet) -> str:
     ]
     return '\n'.join(lines)
 
-# ==================== 平台 README 生成 ====================
-def write_platform_readme(platform_dir: Path, rule_set: RuleSet, platform: str, base_url: str):
-    """为每个平台目录生成 README.md（扁平化，只生成一个总 README）"""
-    serializer = SERIALIZERS[platform]
-    ext = serializer.get_extension()
-    filename = f"{rule_set.policy}{ext}"
-    
-    content = f"""# {platform} 规则集
+# ==================== 生成单个平台的规则文件（含独立文件） ====================
+def generate_platform_files(platform_name: str, serializer: Serializer,
+                           merged_groups: Dict[str, RuleSet],
+                           separate_sources: Dict[str, SourceData],
+                           output_root: Path):
+    """为指定平台生成所有规则文件（合并 + 独立）"""
+    platform_dir = output_root / platform_name
+    platform_dir.mkdir(parents=True, exist_ok=True)
 
-## 基本信息
-- **策略名称**: {rule_set.policy}
-- **规则总数**: {rule_set.total} 条
-- **规则来源条目总数**: {rule_set.source_count} 条
-- **规则来源**: {', '.join(rule_set.sources)}
+    # 1. 生成独立文件
+    for source_name, src_data in separate_sources.items():
+        # 源名称可能包含特殊字符，但一般就是 OpenAI 这样的
+        policy = src_data.policy
+        strategy_dir = platform_dir / policy
+        strategy_dir.mkdir(exist_ok=True)
 
-## 导入链接
+        # 构建独立的 RuleSet
+        domain_list = sorted(src_data.domains)
+        rule_set = RuleSet(
+            policy=policy,  # 与合并文件策略一致
+            domains=domain_list,
+            total=len(domain_list),
+            source_count=len(src_data.sources),
+            sources=src_data.sources,
+            updated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            owner=OWNER
+        )
 
-### Raw 链接
-https://raw.githubusercontent.com/{TARGET_REPO}/{TARGET_BRANCH}/{platform}/{filename}
+        filename = f"{source_name}{serializer.get_extension()}"
+        file_path = strategy_dir / filename
+        content = serializer.serialize(rule_set)
+        full_content = build_header(rule_set) + "\n" + content
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(full_content)
+        # 日志稍后在主循环统一输出
 
-### CDN 加速
-{base_url}/{filename}
+    # 2. 生成合并文件
+    for policy, rule_set in merged_groups.items():
+        strategy_dir = platform_dir / policy
+        strategy_dir.mkdir(parents=True, exist_ok=True)
 
-## 使用示例
+        filename = f"{policy}{serializer.get_extension()}"
+        file_path = strategy_dir / filename
+        content = serializer.serialize(rule_set)
+        full_content = build_header(rule_set) + "\n" + content
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(full_content)
 
-### {platform}
-{serializer.get_import_example(rule_set.policy, base_url)}
+    return platform_dir
 
-## 更新频率
-本规则集每日自动更新（北京时间 20:00）。
-"""
+# ==================== 生成 README（平台根目录） ====================
+def write_platform_readme(platform_dir: Path, merged_groups: Dict[str, RuleSet],
+                         separate_sources: Dict[str, SourceData], platform: str):
+    """生成平台根目录的 README.md，列出所有策略组和独立文件"""
+    lines = [
+        f"# {platform} 规则集",
+        "",
+        "本目录包含以下策略组的规则文件。",
+        "",
+        "## 策略组列表",
+        ""
+    ]
+    for policy in sorted(merged_groups.keys()):
+        lines.append(f"### {policy}")
+        lines.append("")
+        # 列出合并文件
+        ext = SERIALIZERS[platform].get_extension()
+        merged_file = f"{policy}{ext}"
+        lines.append(f"- 合并文件: `{merged_file}`")
+        # 列出独立文件（如果有）
+        independent = [name for name, src in separate_sources.items() if src.policy == policy]
+        if independent:
+            lines.append("- 独立文件:")
+            for name in sorted(independent):
+                lines.append(f"  - `{name}{ext}`")
+        lines.append("")
+    lines.append("## 使用方式")
+    lines.append("在客户端配置中按需引用对应文件，推荐顺序：独立文件优先，合并文件兜底。")
+    lines.append("")
+    lines.append("## 更新频率")
+    lines.append("本规则集每日自动更新（北京时间 20:00）。")
+
     readme_path = platform_dir / "README.md"
     with open(readme_path, 'w', encoding='utf-8') as f:
-        f.write(content)
+        f.write('\n'.join(lines))
 
 # ==================== 主程序 ====================
 def main():
-    # 1. 清空并重建临时目录（原子性构建）
+    # 清空临时目录
     if TEMP_DIR.exists():
         shutil.rmtree(TEMP_DIR)
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
     print("📖 解析规则配置文件...")
     rules = parse_rules_yaml(CONFIG_PATH)
-    groups = defaultdict(list)
-    for r in rules:
-        if r.get('type') == 'rule_set' and 'match' in r:
-            original = r['match']
-            possible_urls = resolve_match(original)
-            if len(possible_urls) > 1:
-                print(f"   🔄 自动回退已启用: {original} -> 将尝试 {len(possible_urls)} 个来源")
-            groups[r['policy']].extend(possible_urls)
 
-    print(f"发现 {len(groups)} 个策略组")
+    # 存储数据
+    # 1. 每个策略组的合并规则（所有源聚合）
+    group_domains = defaultdict(set)
+    group_sources = defaultdict(set)
+    # 2. 独立源数据（按源名称索引）
+    separate_data = {}  # source_name -> SourceData
 
-    # 存储成功构建的策略组
-    success_groups = {}
-    failed_groups = []
+    # 解析每个 rule_set
+    for rule in rules:
+        if rule.get('type') != 'rule_set' or 'match' not in rule:
+            continue
+        policy = rule['policy']
+        match_str = rule['match']
+        separate = rule.get('separate', False)
 
-    for policy, urls in groups.items():
-        print(f"\n🔄 处理组: {policy} (共 {len(urls)} 个候选URL)")
-        all_domains = set()
-        successful_urls = []
-        failed_urls = []
-
-        for url in urls:
-            domains_ok, ok = fetch_domains_from_url(url)
-            if ok:
-                print(f"   ✅ 成功: {url} -> {len(domains_ok)} 条")
-                all_domains.update(domains_ok)
-                successful_urls.append(url)
-            else:
-                failed_urls.append(url)
-
-        if not all_domains:
-            print(f"   ❌ 策略组 {policy} 完全失败（尝试了 {len(urls)} 个来源）")
-            failed_groups.append(policy)
+        # 解析可能的 URL 列表（回退）
+        possible_urls = resolve_match(match_str)
+        if not possible_urls:
+            print(f"⚠️ 无法解析: {match_str}，跳过")
             continue
 
-        if failed_urls:
-            print(f"   ⚠️ 部分失败: {len(failed_urls)}/{len(urls)} 个来源失败，但已从其他来源获取数据")
+        # 尝试下载
+        domains = set()
+        success_urls = []
+        for url in possible_urls:
+            d, ok = fetch_domains_from_url(url)
+            if ok:
+                domains.update(d)
+                success_urls.append(url)
+                break  # 第一个成功的 URL 即可
+
+        if not domains:
+            print(f"❌ 规则源 {match_str} 完全失败，跳过")
+            continue
 
         # 标准化域名
-        normalized = normalize_domains(list(all_domains))
+        normalized = normalize_domains(list(domains))
         if not normalized:
-            print(f"   ❌ 策略组 {policy} 清洗后无有效域名")
-            failed_groups.append(policy)
+            print(f"❌ 规则源 {match_str} 清洗后无有效域名，跳过")
             continue
 
-        # 构建来源信息
-        source_info = []
-        for url in successful_urls:
-            source_info.append(extract_source_path(url))
-        source_info = list(dict.fromkeys(source_info))
+        # 更新合并组
+        group_domains[policy].update(normalized)
+        for url in success_urls:
+            group_sources[policy].add(extract_source_path(url))
 
-        rule_set = RuleSet(
+        # 如果是独立源，保存独立数据
+        if separate:
+            # 确定源名称：从 match 中提取
+            # 如果 match 是 "source:name"，取 name；否则用 match 本身
+            if ':' in match_str:
+                _, name = match_str.split(':', 1)
+            else:
+                name = match_str
+            # 如果同名源已存在，合并域名和来源
+            if name in separate_data:
+                separate_data[name].domains.update(normalized)
+                separate_data[name].sources.extend([extract_source_path(u) for u in success_urls])
+            else:
+                separate_data[name] = SourceData(
+                    name=name,
+                    policy=policy,
+                    domains=set(normalized),
+                    sources=[extract_source_path(u) for u in success_urls],
+                    url=match_str
+                )
+
+    # 构建最终的 RuleSet 对象
+    merged_groups = {}
+    for policy, domains in group_domains.items():
+        domain_list = sorted(domains)
+        sources = sorted(group_sources[policy])
+        merged_groups[policy] = RuleSet(
             policy=policy,
-            domains=normalized,
-            total=len(normalized),
-            source_count=len(source_info),
-            sources=source_info,
+            domains=domain_list,
+            total=len(domain_list),
+            source_count=len(sources),
+            sources=sources,
             updated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             owner=OWNER
         )
-        success_groups[policy] = rule_set
 
-    # 2. 检查是否有任何成功组
-    if not success_groups:
-        print("❌ 没有任何策略组成功生成规则，工作流将失败")
-        shutil.rmtree(TEMP_DIR)
-        raise RuntimeError("No rules generated")
+    # 生成各平台文件
+    for platform_name, serializer in SERIALIZERS.items():
+        print(f"\n📦 生成 {platform_name} 平台规则...")
+        platform_dir = TEMP_DIR / platform_name
+        # 生成规则文件（内部会创建子目录）
+        generate_platform_files(platform_name, serializer,
+                               merged_groups, separate_data, TEMP_DIR)
+        # 生成 README
+        write_platform_readme(platform_dir, merged_groups, separate_data, platform_name)
+        print(f"   ✅ {platform_name} 规则生成完成")
 
-    if failed_groups:
-        print(f"⚠️ 以下策略组失败，将使用旧版本（如果有）: {', '.join(failed_groups)}")
-
-    # 3. 生成规则文件到临时目录（扁平化结构）
-    for policy, rule_set in success_groups.items():
-        print(f"\n📝 生成策略组: {policy} (规则总数: {rule_set.total})")
-        
-        for platform_name, serializer in SERIALIZERS.items():
-            # 扁平化路径: temp_dist/Platform/Policy.ext
-            platform_dir = TEMP_DIR / platform_name
-            platform_dir.mkdir(parents=True, exist_ok=True)
-
-            # 生成规则内容
-            content = serializer.serialize(rule_set)
-            header = build_header(rule_set)
-            full_content = header + "\n" + content
-
-            filename = f"{policy}{serializer.get_extension()}"
-            file_path = platform_dir / filename
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(full_content)
-            
-            # 生成 README（每个平台目录只生成一个总 README）
-            base_url = f"https://cdn.jsdelivr.net/gh/{TARGET_REPO}@{TARGET_BRANCH}/{platform_name}"
-            write_platform_readme(platform_dir, rule_set, platform_name, base_url)
-
-        print(f"   ✅ 组 {policy} 已生成所有平台文件（扁平化）")
-
-    # 4. 原子性替换：将 TEMP_DIR 的内容覆盖到 FINAL_DIR
+    # 原子性替换
     if FINAL_DIR.exists():
-        print(f"🗑️ 删除旧的 dist 目录: {FINAL_DIR}")
+        print(f"\n🗑️ 删除旧的 dist 目录: {FINAL_DIR}")
         shutil.rmtree(FINAL_DIR)
-    
-    # 复制临时目录到最终目录
     shutil.copytree(TEMP_DIR, FINAL_DIR)
     print(f"✅ 原子性替换完成: {TEMP_DIR} -> {FINAL_DIR}")
 
-    # 5. 清理临时目录
+    # 清理临时目录
     shutil.rmtree(TEMP_DIR)
 
     print("\n🎉 所有规则生成完成！")
     print(f"📁 输出目录: {FINAL_DIR.absolute()}")
-    print(f"📊 成功策略组: {', '.join(success_groups.keys())}")
-    if failed_groups:
-        print(f"⚠️ 失败策略组（未更新）: {', '.join(failed_groups)}")
+    print(f"📊 策略组数量: {len(merged_groups)}")
+    print(f"📊 独立源数量: {len(separate_data)}")
 
 if __name__ == "__main__":
     main()
