@@ -19,6 +19,7 @@ from abc import ABC, abstractmethod
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
 CONFIG_PATH = BASE_DIR / "config" / "my_rules.yaml"
+SOURCES_PATH = BASE_DIR / "config" / "sources.yaml"
 TEMP_DIR = BASE_DIR / "temp_dist"
 FINAL_DIR = BASE_DIR / "dist"
 
@@ -56,8 +57,100 @@ def get_target_repo_info():
 TARGET_REPO, TARGET_BRANCH = get_target_repo_info()
 OWNER = TARGET_REPO.split('/')[0]
 
-# ==================== 规则源 URL 模板 ====================
-URL_TEMPLATES = {
+# ==================== 从 sources.yaml 加载来源模板（自动推断占位符） ====================
+def infer_name_pattern(url: str) -> str:
+    """
+    从完整 URL 自动推断 {name} 占位符位置。
+    示例:
+      https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
+      -> https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list
+    """
+    # 如果 URL 中已经包含 {name}，直接返回
+    if '{name}' in url:
+        return url
+
+    # 尝试提取规则名称：在路径末尾，通常以大写字母开头
+    # 匹配模式: /{name}/{name}.ext 或 /{name}.ext
+    patterns = [
+        # 匹配 /Word/Word.ext 模式
+        r'/([A-Z][a-zA-Z0-9_-]+)/([A-Z][a-zA-Z0-9_-]+)\.([a-z]+)$',
+        # 匹配 /Word.ext 模式
+        r'/([A-Z][a-zA-Z0-9_-]+)\.([a-z]+)$',
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            name = match.group(1)
+            # 替换所有出现 name 的地方为 {name}
+            result = url.replace(f'/{name}/', '/{name}/')
+            result = result.replace(f'/{name}.', '/{name}.')
+            # 如果替换后没有变化，可能是文件名为 {name}.ext 的情况
+            if result == url:
+                # 尝试替换文件名部分
+                filename = match.group(0)
+                result = url.replace(filename, f'/{name}.{match.group(2)}' if '/' in filename else f'{name}.{match.group(2)}')
+                result = result.replace(name, '{name}')
+            return result
+
+    # 如果上述模式都不匹配，尝试用最后一个路径段作为名称
+    parts = url.split('/')
+    last_part = parts[-1]
+    if '.' in last_part:
+        name = last_part.split('.')[0]
+        # 检查是否在路径中重复出现
+        if name in url:
+            result = url.replace(name, '{name}')
+            return result
+
+    # 无法推断，返回原 URL（但不替换，后续会导致下载失败）
+    print(f"⚠️ 无法从 URL 推断占位符: {url}，将使用原 URL（仅支持单规则）")
+    return url
+
+def load_url_templates() -> Dict[str, str]:
+    """从 config/sources.yaml 加载 URL 模板，自动推断占位符"""
+    if not SOURCES_PATH.exists():
+        print("⚠️ config/sources.yaml 不存在，使用内置默认模板")
+        return URL_TEMPLATES_DEFAULT
+
+    try:
+        with open(SOURCES_PATH, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+
+        if not isinstance(data, dict):
+            print("⚠️ sources.yaml 格式错误，应为字典格式，使用默认模板")
+            return URL_TEMPLATES_DEFAULT
+
+        templates = {}
+        for key, value in data.items():
+            # 跳过注释行
+            if key.startswith('#'):
+                continue
+            if not isinstance(value, str):
+                continue
+
+            # 如果 value 是完整 URL，自动推断占位符
+            if '{name}' not in value:
+                inferred = infer_name_pattern(value)
+                templates[key] = inferred
+                if inferred != value:
+                    print(f"   🔄 自动推断: {key} -> {inferred}")
+            else:
+                templates[key] = value
+
+        if templates:
+            print(f"✅ 从 sources.yaml 加载了 {len(templates)} 个来源模板")
+            return templates
+        else:
+            print("⚠️ sources.yaml 为空，使用默认模板")
+            return URL_TEMPLATES_DEFAULT
+
+    except Exception as e:
+        print(f"⚠️ 加载 sources.yaml 失败: {e}，使用内置默认模板")
+        return URL_TEMPLATES_DEFAULT
+
+# 内置默认模板（作为 fallback）
+URL_TEMPLATES_DEFAULT = {
     "blackmatrix7": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list",
     "loyalsoldier": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/{name}.txt",
     "acl4ssr": "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{name}.list",
@@ -66,11 +159,21 @@ URL_TEMPLATES = {
     "repcz_egernrules": "https://raw.githubusercontent.com/Repcz/EgernRules/X/Rules/{name}/{name}.yaml",
 }
 
-FALLBACK_ORDER = ["blackmatrix7", "loyalsoldier", "acl4ssr", "repcz", "accademia", "repcz_egernrules"]
+# 运行时加载
+print("📖 加载规则来源模板...")
+URL_TEMPLATES = load_url_templates()
+FALLBACK_ORDER = list(URL_TEMPLATES.keys())
 
 def resolve_match(match: str) -> List[str]:
+    """
+    解析规则匹配值，返回一个 URL 列表（用于自动回退）。
+    如果 match 是完整 URL，直接返回单元素列表。
+    如果是 "source:name"，返回该来源的 URL。
+    如果是纯名称，尝试所有来源模板，返回所有可能的 URL（按 FALLBACK_ORDER 顺序）。
+    """
     if match.startswith(('http://', 'https://')):
         return [match]
+
     if ':' in match:
         source, name = match.split(':', 1)
         source = source.lower()
@@ -80,6 +183,7 @@ def resolve_match(match: str) -> List[str]:
             print(f"⚠️ 未知规则源: {source}，尝试自动回退...")
             return [URL_TEMPLATES[s].format(name=name) for s in FALLBACK_ORDER if s in URL_TEMPLATES]
     else:
+        # 纯名称，尝试所有来源
         return [URL_TEMPLATES[s].format(name=match) for s in FALLBACK_ORDER if s in URL_TEMPLATES]
 
 def is_valid_domain(domain: str) -> bool:
@@ -198,12 +302,11 @@ class RuleSet:
 
 @dataclass
 class SourceData:
-    """单个规则源的完整数据，用于生成独立文件"""
-    name: str           # 规则源名称，如 OpenAI
-    policy: str         # 所属策略组
-    domains: Set[str]   # 域名集合
-    sources: List[str]  # 来源 URL 路径列表（用于头部注释）
-    url: str            # 原始匹配字符串（用于去重）
+    name: str
+    policy: str
+    domains: Set[str]
+    sources: List[str]
+    url: str
 
 # ==================== 序列化器基类 ====================
 class Serializer(ABC):
@@ -221,11 +324,7 @@ class Serializer(ABC):
 class SurgeSerializer(Serializer):
     def get_extension(self) -> str: return ".list"
     def serialize(self, rule_set: RuleSet) -> str:
-        lines = []
-        for d in sorted(rule_set.domains):
-            if d.startswith('.'): d = d[1:]
-            lines.append(f".{d}")
-        return "\n".join(lines)
+        return "\n".join(f".{d}" if not d.startswith('.') else d for d in sorted(rule_set.domains))
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"RULE-SET, {base_url}/{policy}.list, {policy}"
 
@@ -304,26 +403,23 @@ def build_header(rule_set: RuleSet) -> str:
     ]
     return '\n'.join(lines)
 
-# ==================== 生成单个平台的规则文件（含独立文件） ====================
+# ==================== 生成单个平台的规则文件 ====================
 def generate_platform_files(platform_name: str, serializer: Serializer,
                            merged_groups: Dict[str, RuleSet],
                            separate_sources: Dict[str, SourceData],
                            output_root: Path):
-    """为指定平台生成所有规则文件（合并 + 独立）"""
     platform_dir = output_root / platform_name
     platform_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. 生成独立文件
     for source_name, src_data in separate_sources.items():
-        # 源名称可能包含特殊字符，但一般就是 OpenAI 这样的
         policy = src_data.policy
         strategy_dir = platform_dir / policy
         strategy_dir.mkdir(exist_ok=True)
 
-        # 构建独立的 RuleSet
         domain_list = sorted(src_data.domains)
         rule_set = RuleSet(
-            policy=policy,  # 与合并文件策略一致
+            policy=policy,
             domains=domain_list,
             total=len(domain_list),
             source_count=len(src_data.sources),
@@ -338,7 +434,6 @@ def generate_platform_files(platform_name: str, serializer: Serializer,
         full_content = build_header(rule_set) + "\n" + content
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(full_content)
-        # 日志稍后在主循环统一输出
 
     # 2. 生成合并文件
     for policy, rule_set in merged_groups.items():
@@ -354,10 +449,9 @@ def generate_platform_files(platform_name: str, serializer: Serializer,
 
     return platform_dir
 
-# ==================== 生成 README（平台根目录） ====================
+# ==================== 生成平台 README ====================
 def write_platform_readme(platform_dir: Path, merged_groups: Dict[str, RuleSet],
                          separate_sources: Dict[str, SourceData], platform: str):
-    """生成平台根目录的 README.md，列出所有策略组和独立文件"""
     lines = [
         f"# {platform} 规则集",
         "",
@@ -369,11 +463,9 @@ def write_platform_readme(platform_dir: Path, merged_groups: Dict[str, RuleSet],
     for policy in sorted(merged_groups.keys()):
         lines.append(f"### {policy}")
         lines.append("")
-        # 列出合并文件
         ext = SERIALIZERS[platform].get_extension()
         merged_file = f"{policy}{ext}"
         lines.append(f"- 合并文件: `{merged_file}`")
-        # 列出独立文件（如果有）
         independent = [name for name, src in separate_sources.items() if src.policy == policy]
         if independent:
             lines.append("- 独立文件:")
@@ -392,22 +484,17 @@ def write_platform_readme(platform_dir: Path, merged_groups: Dict[str, RuleSet],
 
 # ==================== 主程序 ====================
 def main():
-    # 清空临时目录
     if TEMP_DIR.exists():
         shutil.rmtree(TEMP_DIR)
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
-    print("📖 解析规则配置文件...")
+    print("\n📖 解析规则配置文件...")
     rules = parse_rules_yaml(CONFIG_PATH)
 
-    # 存储数据
-    # 1. 每个策略组的合并规则（所有源聚合）
     group_domains = defaultdict(set)
     group_sources = defaultdict(set)
-    # 2. 独立源数据（按源名称索引）
-    separate_data = {}  # source_name -> SourceData
+    separate_data = {}
 
-    # 解析每个 rule_set
     for rule in rules:
         if rule.get('type') != 'rule_set' or 'match' not in rule:
             continue
@@ -415,13 +502,11 @@ def main():
         match_str = rule['match']
         separate = rule.get('separate', False)
 
-        # 解析可能的 URL 列表（回退）
         possible_urls = resolve_match(match_str)
         if not possible_urls:
             print(f"⚠️ 无法解析: {match_str}，跳过")
             continue
 
-        # 尝试下载
         domains = set()
         success_urls = []
         for url in possible_urls:
@@ -429,32 +514,26 @@ def main():
             if ok:
                 domains.update(d)
                 success_urls.append(url)
-                break  # 第一个成功的 URL 即可
+                break
 
         if not domains:
             print(f"❌ 规则源 {match_str} 完全失败，跳过")
             continue
 
-        # 标准化域名
         normalized = normalize_domains(list(domains))
         if not normalized:
             print(f"❌ 规则源 {match_str} 清洗后无有效域名，跳过")
             continue
 
-        # 更新合并组
         group_domains[policy].update(normalized)
         for url in success_urls:
             group_sources[policy].add(extract_source_path(url))
 
-        # 如果是独立源，保存独立数据
         if separate:
-            # 确定源名称：从 match 中提取
-            # 如果 match 是 "source:name"，取 name；否则用 match 本身
             if ':' in match_str:
                 _, name = match_str.split(':', 1)
             else:
                 name = match_str
-            # 如果同名源已存在，合并域名和来源
             if name in separate_data:
                 separate_data[name].domains.update(normalized)
                 separate_data[name].sources.extend([extract_source_path(u) for u in success_urls])
@@ -467,7 +546,6 @@ def main():
                     url=match_str
                 )
 
-    # 构建最终的 RuleSet 对象
     merged_groups = {}
     for policy, domains in group_domains.items():
         domain_list = sorted(domains)
@@ -482,25 +560,19 @@ def main():
             owner=OWNER
         )
 
-    # 生成各平台文件
     for platform_name, serializer in SERIALIZERS.items():
         print(f"\n📦 生成 {platform_name} 平台规则...")
         platform_dir = TEMP_DIR / platform_name
-        # 生成规则文件（内部会创建子目录）
-        generate_platform_files(platform_name, serializer,
-                               merged_groups, separate_data, TEMP_DIR)
-        # 生成 README
+        generate_platform_files(platform_name, serializer, merged_groups, separate_data, TEMP_DIR)
         write_platform_readme(platform_dir, merged_groups, separate_data, platform_name)
         print(f"   ✅ {platform_name} 规则生成完成")
 
-    # 原子性替换
     if FINAL_DIR.exists():
         print(f"\n🗑️ 删除旧的 dist 目录: {FINAL_DIR}")
         shutil.rmtree(FINAL_DIR)
     shutil.copytree(TEMP_DIR, FINAL_DIR)
     print(f"✅ 原子性替换完成: {TEMP_DIR} -> {FINAL_DIR}")
 
-    # 清理临时目录
     shutil.rmtree(TEMP_DIR)
 
     print("\n🎉 所有规则生成完成！")
