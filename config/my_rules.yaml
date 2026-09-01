@@ -97,7 +97,7 @@
     separate: true
 
 - rule_set:
-    match: blackmatrix7:Crunchyroll
+    match: https://raw.githubusercontent.com/HotKids/Rules/a06feb8eb0bfc42a406f738806a122a50e2b144f/Surge/RULE-SET/Crunchyroll.list
     policy: Streaming
     separate: true
 
@@ -136,8 +136,8 @@
 # 🔒 哔哩哔哩（优先级 5 - DIRECT）
 # ============================================================
 - rule_set:
-    match: blackmatrix7:Bilibili
-    policy: DIRECT
+    match: https://raw.githubusercontent.com/Centralmatrix3/Matrix-io/refs/heads/master/Ruleset/Egern/BiliBili.yaml
+    policy: BiliBili
 
 # ============================================================
 # 🏠 私有网络/局域网（优先级 6 - DIRECT）
@@ -226,38 +226,22 @@
 # 📈 券商服务（优先级 12）
 # ============================================================
 - rule_set:
-    match: blackmatrix7:Futu
-    policy: Brokerage
-
-- rule_set:
-    match: blackmatrix7:Moomoo
-    policy: Brokerage
-
-- rule_set:
-    match: blackmatrix7:LongBridge
-    policy: Brokerage
-
-- rule_set:
-    match: blackmatrix7:TigerTrade
-    policy: Brokerage
-
-- rule_set:
-    match: blackmatrix7:InteractiveBrokers
+    match: https://raw.githubusercontent.com/forecho/broker-rules/refs/heads/main/rule/Surge/Broker.list
     policy: Brokerage
 
 # ============================================================
 # 🍎 苹果推送（优先级 13）
 # ============================================================
 - rule_set:
-    match: blackmatrix7:ApplePush
-    policy: Global
+    match: https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/ApplePush.list
+    policy: ApplePush
 
 # ============================================================
 # 🍏 苹果服务（优先级 14 - DIRECT）
 # ============================================================
 - rule_set:
     match: loyalsoldier:apple
-    policy: DIRECT
+    policy: AppleDirect
 
 # ============================================================
 # 国际网盘（PikPak、Terabox）低倍率
@@ -275,28 +259,28 @@
 # ============================================================
 - rule_set:
     match: https://raw.githubusercontent.com/KeterCo/ClashRules/a505e394fb0fad9405dac53d0fa8edaa3075f4c1/Soop.list
-    policy: DIRECT
+    policy: SOOP
 
 # ============================================================
 # GEOIP CN（优先级 15 - DIRECT）
 # ============================================================
 - rule_set:
     match: loyalsoldier:geoip-cn
-    policy: DIRECT
+    policy: geoipcn
 
 # ============================================================
 # 国内服务（优先级 16 - DIRECT）
 # ============================================================
 - rule_set:
     match: blackmatrix7:ChinaMax
-    policy: DIRECT
+    policy: ChinaMax
 
 # ============================================================
 # CIDR 直连（优先级 17 - DIRECT）
 # ============================================================
 - rule_set:
-    match: rabbitspec:ChinaCIDR
-    policy: DIRECT
+    match: https://raw.githubusercontent.com/Rabbit-Spec/Surge/refs/heads/Master/Rules/ChinaCIDR.list
+    policy: ChinaCIDR
 
 # ============================================================
 # 🐟 漏网之鱼（优先级 18 - PROXY 兜底）
