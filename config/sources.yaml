@@ -7,8 +7,8 @@
 # ---- 主流规则源（使用完整链接，自动推断） ----
 
 blackmatrix7: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list"
-loyalsoldier: "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/apple.txt"
-lingjingmaster: "https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/HSBC_HK.list"
+loyalsoldier: "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/{name}.txt"
+lingjingmaster: "https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/{name}.list"
 rabbitspec: "https://raw.githubusercontent.com/Rabbit-Spec/Surge/refs/heads/Master/Rules/{name}.list"
 
 # ---- 手动指定模板（覆盖自动推断） ----
