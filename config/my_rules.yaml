@@ -141,10 +141,10 @@
 
 # ============================================================
 # 🏠 私有网络/局域网（优先级 6 - DIRECT）
-# ============================================================
-- rule_set:
-    match: repcz:Lan
-    policy: DIRECT
+# # ============================================================
+# - rule_set:
+#     match: repcz:Lan
+#     policy: DIRECT
 
 # ============================================================
 # 📲 Telegram（优先级 7）
@@ -240,7 +240,7 @@
 # 🍏 苹果服务（优先级 14 - DIRECT）
 # ============================================================
 - rule_set:
-    match: loyalsoldier:apple
+    match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/refs/heads/release/apple.txt
     policy: AppleDirect
 
 # ============================================================
