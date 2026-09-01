@@ -282,6 +282,9 @@
     match: https://raw.githubusercontent.com/Rabbit-Spec/Surge/refs/heads/Master/Rules/ChinaCIDR.list
     policy: ChinaCIDR
 
+- rule_set:
+    match: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/cn.txt
+    policy: ChinaCIDR
 # ============================================================
 # 🐟 漏网之鱼（优先级 18 - PROXY 兜底）
 # ============================================================
