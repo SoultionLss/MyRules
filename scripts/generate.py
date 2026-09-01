@@ -59,17 +59,12 @@ OWNER = TARGET_REPO.split('/')[0]
 
 # ==================== 从 sources.yaml 加载来源模板 ====================
 def infer_name_pattern(url: str) -> str:
-    """
-    从完整 URL 自动推断 {name} 占位符位置。
-    """
     if '{name}' in url:
         return url
-
     patterns = [
         r'/([A-Z][a-zA-Z0-9_-]+)/([A-Z][a-zA-Z0-9_-]+)\.([a-z]+)$',
         r'/([A-Z][a-zA-Z0-9_-]+)\.([a-z]+)$',
     ]
-
     for pattern in patterns:
         match = re.search(pattern, url)
         if match:
@@ -81,7 +76,6 @@ def infer_name_pattern(url: str) -> str:
                 result = url.replace(filename, f'/{name}.{match.group(2)}' if '/' in filename else f'{name}.{match.group(2)}')
                 result = result.replace(name, '{name}')
             return result
-
     parts = url.split('/')
     last_part = parts[-1]
     if '.' in last_part:
@@ -89,31 +83,25 @@ def infer_name_pattern(url: str) -> str:
         if name in url:
             result = url.replace(name, '{name}')
             return result
-
     print(f"⚠️ 无法从 URL 推断占位符: {url}，将使用原 URL")
     return url
 
 def load_url_templates() -> Dict[str, str]:
-    """从 config/sources.yaml 加载 URL 模板，自动推断占位符"""
     if not SOURCES_PATH.exists():
         print("⚠️ config/sources.yaml 不存在，使用内置默认模板")
         return URL_TEMPLATES_DEFAULT
-
     try:
         with open(SOURCES_PATH, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f)
-
         if not isinstance(data, dict):
             print("⚠️ sources.yaml 格式错误，应为字典格式，使用默认模板")
             return URL_TEMPLATES_DEFAULT
-
         templates = {}
         for key, value in data.items():
             if key.startswith('#'):
                 continue
             if not isinstance(value, str):
                 continue
-
             if '{name}' not in value:
                 inferred = infer_name_pattern(value)
                 templates[key] = inferred
@@ -121,19 +109,16 @@ def load_url_templates() -> Dict[str, str]:
                     print(f"   🔄 自动推断: {key} -> {inferred}")
             else:
                 templates[key] = value
-
         if templates:
             print(f"✅ 从 sources.yaml 加载了 {len(templates)} 个来源模板")
             return templates
         else:
             print("⚠️ sources.yaml 为空，使用默认模板")
             return URL_TEMPLATES_DEFAULT
-
     except Exception as e:
         print(f"⚠️ 加载 sources.yaml 失败: {e}，使用内置默认模板")
         return URL_TEMPLATES_DEFAULT
 
-# 内置默认模板
 URL_TEMPLATES_DEFAULT = {
     "blackmatrix7": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list",
     "loyalsoldier": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/{name}.txt",
@@ -150,7 +135,6 @@ FALLBACK_ORDER = list(URL_TEMPLATES.keys())
 def resolve_match(match: str) -> List[str]:
     if match.startswith(('http://', 'https://')):
         return [match]
-
     if ':' in match:
         source, name = match.split(':', 1)
         source = source.lower()
@@ -170,7 +154,6 @@ def is_valid_domain(domain: str) -> bool:
     return bool(re.match(r'^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$', domain))
 
 def is_valid_ip_cidr(cidr: str) -> bool:
-    """检查是否为有效的 IP-CIDR 格式"""
     if '/' not in cidr:
         return False
     parts = cidr.split('/')
@@ -187,10 +170,6 @@ def is_valid_ip_cidr(cidr: str) -> bool:
     return False
 
 def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
-    """
-    从 URL 下载规则，返回 (域名集合, IP-CIDR 集合, 是否成功)
-    同时提取 DOMAIN、DOMAIN-SUFFIX 和 IP-CIDR、IP-CIDR6 规则
-    """
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
     try:
         resp = requests.get(url, timeout=30, headers=headers)
@@ -217,7 +196,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
             line = item.strip()
             if not line or line.startswith('#'):
                 continue
-
             if line.startswith('IP-CIDR,'):
                 parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
                 if len(parts) >= 2:
@@ -230,7 +208,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
                     cidr = parts[1].strip()
                     ip_cidrs.add(cidr)
                 continue
-
             for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
                 if line.startswith(prefix):
                     domain = line[len(prefix):].split(',')[0].strip("'").strip('"')
@@ -242,7 +219,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
-
             if line.startswith('IP-CIDR,'):
                 parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
                 if len(parts) >= 2:
@@ -257,7 +233,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
                     if is_valid_ip_cidr(cidr):
                         ip_cidrs.add(cidr)
                 continue
-
             for prefix in ['DOMAIN-SUFFIX,', 'DOMAIN,']:
                 if line.startswith(prefix):
                     domain = line[len(prefix):].split(',')[0].strip("'").strip('"')
@@ -268,7 +243,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
     if not domains and not ip_cidrs:
         print(f"   ⚠️ 未能提取到有效规则: {url}")
         return set(), set(), False
-
     return domains, ip_cidrs, True
 
 def normalize_domains(domains: List[str]) -> List[str]:
@@ -371,11 +345,9 @@ class Serializer(ABC):
     @abstractmethod
     def get_extension(self) -> str:
         pass
-
     @abstractmethod
     def serialize(self, rule_set: RuleSet) -> str:
         pass
-
     @abstractmethod
     def get_import_example(self, policy: str, base_url: str) -> str:
         pass
@@ -384,7 +356,6 @@ class Serializer(ABC):
 class SurgeSerializer(Serializer):
     def get_extension(self) -> str:
         return ".list"
-
     def serialize(self, rule_set: RuleSet) -> str:
         lines = []
         for d in sorted(rule_set.domains):
@@ -394,14 +365,12 @@ class SurgeSerializer(Serializer):
         for cidr in sorted(rule_set.ip_cidrs):
             lines.append(f"IP-CIDR,{cidr},{rule_set.policy}")
         return "\n".join(lines)
-
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"RULE-SET, {base_url}/{policy}.list, {policy}"
 
 class LoonSerializer(Serializer):
     def get_extension(self) -> str:
         return ".list"
-
     def serialize(self, rule_set: RuleSet) -> str:
         lines = []
         for d in sorted(rule_set.domains):
@@ -409,14 +378,12 @@ class LoonSerializer(Serializer):
         for cidr in sorted(rule_set.ip_cidrs):
             lines.append(f"IP-CIDR,{cidr},{rule_set.policy}")
         return "\n".join(lines)
-
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"RULE-SET, {base_url}/{policy}.list, {policy}"
 
 class ClashSerializer(Serializer):
     def get_extension(self) -> str:
         return ".yaml"
-
     def serialize(self, rule_set: RuleSet) -> str:
         lines = ["payload:"]
         for d in sorted(rule_set.domains):
@@ -424,14 +391,12 @@ class ClashSerializer(Serializer):
         for cidr in sorted(rule_set.ip_cidrs):
             lines.append(f"  - IP-CIDR,{cidr},{rule_set.policy}")
         return "\n".join(lines)
-
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"- RULE-SET, {base_url}/{policy}.yaml, {policy}"
 
 class EgernSerializer(Serializer):
     def get_extension(self) -> str:
         return ".yaml"
-
     def serialize(self, rule_set: RuleSet) -> str:
         lines = ["rules:"]
         for d in sorted(rule_set.domains):
@@ -439,25 +404,20 @@ class EgernSerializer(Serializer):
         for cidr in sorted(rule_set.ip_cidrs):
             lines.append(f"  - ip_cidr: {cidr}")
         return "\n".join(lines)
-
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"- rule_set:\n    match: {base_url}/{policy}.yaml\n    policy: {policy}"
 
 class V2raySerializer(Serializer):
     def get_extension(self) -> str:
         return "_domain.txt"
-
     def serialize(self, rule_set: RuleSet) -> str:
-        lines = sorted(rule_set.domains)
-        return "\n".join(lines)
-
+        return "\n".join(sorted(rule_set.domains))
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"在配置文件的 'domain' 或 'domains' 字段引用 {base_url}/{policy}_domain.txt"
 
 class QuantumultXSerializer(Serializer):
     def get_extension(self) -> str:
         return ".list"
-
     def serialize(self, rule_set: RuleSet) -> str:
         lines = []
         for d in sorted(rule_set.domains):
@@ -465,25 +425,19 @@ class QuantumultXSerializer(Serializer):
         for cidr in sorted(rule_set.ip_cidrs):
             lines.append(f"IP-CIDR,{cidr},{rule_set.policy}")
         return "\n".join(lines)
-
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"RULE-SET, {base_url}/{policy}.list, {policy}"
 
 class SingboxSerializer(Serializer):
     def get_extension(self) -> str:
         return ".json"
-
     def serialize(self, rule_set: RuleSet) -> str:
-        data = {
-            "version": 1,
-            "rules": []
-        }
+        data = {"version": 1, "rules": []}
         if rule_set.domains:
             data["rules"].append({"domain_suffix": sorted(rule_set.domains)})
         if rule_set.ip_cidrs:
             data["rules"].append({"ip_cidr": sorted(rule_set.ip_cidrs)})
         return json.dumps(data, indent=2, ensure_ascii=False)
-
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"在 route.rules 中引用: {{ 'rule_set': '{base_url}/{policy}.json' }}"
 
@@ -524,6 +478,12 @@ def generate_platform_files(platform_name: str, serializer: Serializer,
 
     # 1. 生成独立文件
     for source_name, src_data in separate_sources.items():
+        # 防御：如果 source_name 包含 '://'，说明它是完整 URL，提取文件名
+        if '://' in source_name:
+            import os
+            base = os.path.basename(source_name)
+            source_name = base.split('.')[0] if '.' in base else base
+
         policy = src_data.policy
         strategy_dir = platform_dir / policy
         strategy_dir.mkdir(exist_ok=True)
