@@ -662,11 +662,14 @@ def main():
         for url in success_urls:
             group_sources[policy].add(extract_source_path(url))
 
-        if separate:
+                if separate:
             if ':' in match_str:
                 _, name = match_str.split(':', 1)
             else:
-                name = match_str
+                # 完整 URL：提取文件名（去掉扩展名）
+                import os
+                base = os.path.basename(match_str)  # 例如 "xAI.list"
+                name = base.split('.')[0] if '.' in base else base  # 例如 "xAI"
             if name in separate_data:
                 separate_data[name].domains.update(normalized_domains)
                 separate_data[name].ip_cidrs.update(normalized_ip_cidrs)
