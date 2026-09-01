@@ -136,7 +136,7 @@
 # 🔒 哔哩哔哩（优先级 5 - DIRECT）
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/Centralmatrix3/Matrix-io/refs/heads/master/Ruleset/Egern/BiliBili.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/BiliBili/BiliBili.list
     policy: BiliBili
 
 # ============================================================
@@ -272,7 +272,7 @@
 # 国内服务（优先级 16 - DIRECT）
 # ============================================================
 - rule_set:
-    match: blackmatrix7:ChinaMax
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/ChinaMax/ChinaMax.list
     policy: ChinaMax
 
 # ============================================================
