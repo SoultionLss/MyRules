@@ -477,12 +477,14 @@ def generate_platform_files(platform_name: str, serializer: Serializer,
     platform_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. 生成独立文件
-    for source_name, src_data in separate_sources.items():
-        # 防御：如果 source_name 包含 '://'，说明它是完整 URL，提取文件名
-        if '://' in source_name:
+    for raw_name, src_data in separate_sources.items():
+        # 防御：如果 raw_name 看起来像 URL（包含 :// 或开头是 /），提取文件名
+        if '://' in raw_name or raw_name.startswith('/'):
             import os
-            base = os.path.basename(source_name)
+            base = os.path.basename(raw_name)
             source_name = base.split('.')[0] if '.' in base else base
+        else:
+            source_name = raw_name
 
         policy = src_data.policy
         strategy_dir = platform_dir / policy
@@ -540,7 +542,17 @@ def write_platform_readme(platform_dir: Path, merged_groups: Dict[str, RuleSet],
         ext = SERIALIZERS[platform].get_extension()
         merged_file = f"{policy}{ext}"
         lines.append(f"- 合并文件: `{merged_file}`")
-        independent = [name for name, src in separate_sources.items() if src.policy == policy]
+        independent = []
+        for name, src in separate_sources.items():
+            if src.policy == policy:
+                # 如果 name 是 URL，提取纯文件名用于显示
+                if '://' in name or name.startswith('/'):
+                    import os
+                    base = os.path.basename(name)
+                    display_name = base.split('.')[0] if '.' in base else base
+                else:
+                    display_name = name
+                independent.append(display_name)
         if independent:
             lines.append("- 独立文件:")
             for name in sorted(independent):
@@ -609,7 +621,9 @@ def main():
         for url in success_urls:
             group_sources[policy].add(extract_source_path(url))
 
+        # ========== 关键修复：处理独立源 ==========
         if separate:
+            # 提取规则名称
             if ':' in match_str:
                 _, name = match_str.split(':', 1)
             else:
@@ -617,6 +631,8 @@ def main():
                 import os
                 base = os.path.basename(match_str)
                 name = base.split('.')[0] if '.' in base else base
+
+            # 合并或创建独立源数据
             if name in separate_data:
                 separate_data[name].domains.update(normalized_domains)
                 separate_data[name].ip_cidrs.update(normalized_ip_cidrs)
@@ -630,6 +646,7 @@ def main():
                     sources=[extract_source_path(u) for u in success_urls],
                     url=match_str
                 )
+        # ========================================
 
     merged_groups = {}
     for policy in group_domains.keys():
