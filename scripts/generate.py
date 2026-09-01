@@ -61,14 +61,10 @@ OWNER = TARGET_REPO.split('/')[0]
 def infer_name_pattern(url: str) -> str:
     """
     从完整 URL 自动推断 {name} 占位符位置。
-    示例:
-      https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
-      -> https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list
     """
     if '{name}' in url:
         return url
 
-    # 如果 URL 以 .list 或 .txt 结尾，提取文件名
     patterns = [
         r'/([A-Z][a-zA-Z0-9_-]+)/([A-Z][a-zA-Z0-9_-]+)\.([a-z]+)$',
         r'/([A-Z][a-zA-Z0-9_-]+)\.([a-z]+)$',
@@ -181,10 +177,11 @@ def is_valid_ip_cidr(cidr: str) -> bool:
     if len(parts) != 2:
         return False
     ip, mask = parts[0].strip(), parts[1].strip()
-    # 基本 IPv4 格式检查
     if re.match(r'^(\d{1,3}\.){3}\d{1,3}$', ip):
-        return 0 <= int(mask) <= 32
-    # IPv6 格式检查（简化）
+        try:
+            return 0 <= int(mask) <= 32
+        except ValueError:
+            return False
     if ':' in ip:
         return True
     return False
@@ -206,7 +203,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
     domains = set()
     ip_cidrs = set()
 
-    # 尝试 YAML 解析
     try:
         data = yaml.safe_load(text)
         if isinstance(data, dict) and 'payload' in data:
@@ -222,7 +218,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
             if not line or line.startswith('#'):
                 continue
 
-            # 提取 IP-CIDR
             if line.startswith('IP-CIDR,'):
                 parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
                 if len(parts) >= 2:
@@ -236,7 +231,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
                     ip_cidrs.add(cidr)
                 continue
 
-            # 提取域名
             for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
                 if line.startswith(prefix):
                     domain = line[len(prefix):].split(',')[0].strip("'").strip('"')
@@ -244,13 +238,11 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
                         domains.add(domain)
                     break
     except Exception:
-        # 按行解析（.list 格式）
         for line in text.splitlines():
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
 
-            # 提取 IP-CIDR
             if line.startswith('IP-CIDR,'):
                 parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
                 if len(parts) >= 2:
@@ -262,10 +254,10 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
                 parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
                 if len(parts) >= 2:
                     cidr = parts[1].strip()
-                    ip_cidrs.add(cidr)
+                    if is_valid_ip_cidr(cidr):
+                        ip_cidrs.add(cidr)
                 continue
 
-            # 提取域名
             for prefix in ['DOMAIN-SUFFIX,', 'DOMAIN,']:
                 if line.startswith(prefix):
                     domain = line[len(prefix):].split(',')[0].strip("'").strip('"')
@@ -395,12 +387,10 @@ class SurgeSerializer(Serializer):
 
     def serialize(self, rule_set: RuleSet) -> str:
         lines = []
-        # 域名规则（后缀匹配）
         for d in sorted(rule_set.domains):
             if d.startswith('.'):
                 d = d[1:]
             lines.append(f".{d}")
-        # IP-CIDR 规则
         for cidr in sorted(rule_set.ip_cidrs):
             lines.append(f"IP-CIDR,{cidr},{rule_set.policy}")
         return "\n".join(lines)
@@ -446,7 +436,6 @@ class EgernSerializer(Serializer):
         lines = ["rules:"]
         for d in sorted(rule_set.domains):
             lines.append(f"  - domain_suffix: {d}")
-        # Egern 的 IP-CIDR 语法
         for cidr in sorted(rule_set.ip_cidrs):
             lines.append(f"  - ip_cidr: {cidr}")
         return "\n".join(lines)
@@ -460,7 +449,6 @@ class V2raySerializer(Serializer):
 
     def serialize(self, rule_set: RuleSet) -> str:
         lines = sorted(rule_set.domains)
-        # v2ray 纯文本模式不支持 IP-CIDR，IP 规则需单独处理
         return "\n".join(lines)
 
     def get_import_example(self, policy: str, base_url: str) -> str:
@@ -649,7 +637,6 @@ def main():
             print(f"❌ 规则源 {match_str} 完全失败，跳过")
             continue
 
-        # 标准化域名
         normalized_domains = normalize_domains(list(domains))
         normalized_ip_cidrs = normalize_ip_cidrs(list(ip_cidrs))
 
@@ -662,14 +649,14 @@ def main():
         for url in success_urls:
             group_sources[policy].add(extract_source_path(url))
 
-                if separate:
+        if separate:
             if ':' in match_str:
                 _, name = match_str.split(':', 1)
             else:
                 # 完整 URL：提取文件名（去掉扩展名）
                 import os
-                base = os.path.basename(match_str)  # 例如 "xAI.list"
-                name = base.split('.')[0] if '.' in base else base  # 例如 "xAI"
+                base = os.path.basename(match_str)
+                name = base.split('.')[0] if '.' in base else base
             if name in separate_data:
                 separate_data[name].domains.update(normalized_domains)
                 separate_data[name].ip_cidrs.update(normalized_ip_cidrs)
