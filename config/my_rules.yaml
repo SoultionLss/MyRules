@@ -44,7 +44,7 @@
     separate: true
 
 - rule_set:
-    match: blackmatrix7:Grok
+    match: https://raw.githubusercontent.com/funnyzak/network-rules/91d7339ab4e80883cf57dac518d4e92cd102003d/Surge/Rulesets/xAI.list
     policy: AI
     separate: true
 
@@ -194,7 +194,7 @@
 # HongKongSocial（WhatsApp、Line）
 # ============================================================
 - rule_set:
-    match: blackmatrix7:WhatsApp
+    match: blackmatrix7:Whatsapp
     policy: HongKongSocial
     separate: true
 
@@ -251,7 +251,7 @@
     policy: LowRate
 
 - rule_set:
-    match: blackmatrix7:Terabox
+    match: blackmatrix7:TeraBox
     policy: LowRate
 
 # ============================================================
