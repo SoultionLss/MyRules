@@ -1,90 +1,305 @@
-# ============================================
-# 高优先级：国内直连（白名单）
-# ============================================
-- rule_set:
-    match: loyalsoldier:direct
-    policy: DIRECT
+# ============================================================
+# 分流规则配置文件
+# 规则从上到下依次匹配，优先级逐行递减
+# 格式：- rule_set: match: 来源名:规则名  policy: 策略组名  separate: true/false
+# ============================================================
 
-- rule_set:
-    match: blackmatrix7:ChinaMax
-    policy: DIRECT
+# ============================================================
+# 🧱 DNS 防泄露（优先级 1）
+# ============================================================
+# - rule_set:
+#     match: blackmatrix7:HTTPDNS
+#     policy: REJECT
+#     separate: true
 
-- rule_set:
-    match: accademia:GeositeCN
-    policy: DIRECT
-
-# ============================================
-# 广告拦截
-# ============================================
-- rule_set:
-    match: blackmatrix7:Advertising
-    policy: REJECT
-
-- rule_set:
-    match: acl4ssr:Advertising
-    policy: REJECT
-
-# ============================================
-# 特殊应用分流（使用简写，自动回退）
-# ============================================
+# ============================================================
+# 🔍 谷歌服务（优先级 2）- 含 Gemini，优先于 AI
+# ============================================================
 - rule_set:
     match: blackmatrix7:Google
     policy: Google
+    separate: true
 
 - rule_set:
-    match: blackmatrix7:YouTube
-    policy: YouTube
+    match: blackmatrix7:Gemini
+    policy: Google
+    separate: true
+
+# ============================================================
+# 🤖 AI 服务（优先级 3）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:OpenAI
+    policy: AI
+    separate: true
 
 - rule_set:
-    match: blackmatrix7:GitHub
-    policy: GitHub
+    match: blackmatrix7:Claude
+    policy: AI
+    separate: true
 
 - rule_set:
-    match: blackmatrix7:Telegram
-    policy: Telegram
+    match: blackmatrix7:Anthropic
+    policy: AI
+    separate: true
 
+- rule_set:
+    match: blackmatrix7:Grok
+    policy: AI
+    separate: true
+
+# ============================================================
+# 抖音（DIRECT）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:DouYin
+    policy: DIRECT
+
+# ============================================================
+# TikTok
+# ============================================================
 - rule_set:
     match: blackmatrix7:TikTok
     policy: TikTok
+    separate: true
 
-# ============================================
-# AI 服务（自动回退备用）
-# ============================================
-- rule_set:
-    match: OpenAI         # 自动尝试所有来源
-    policy: AI
-
-# ============================================
-# 社交媒体
-# ============================================
-- rule_set:
-    match: blackmatrix7:Instagram
-    policy: Social
-
-- rule_set:
-    match: blackmatrix7:Twitter
-    policy: Social
-
-# ============================================
-# 流媒体
-# ============================================
+# ============================================================
+# 📺 流媒体（Netflix、Disney+、HBO、PrimeVideo、Hulu、Peacock、Crunchyroll）
+# ============================================================
 - rule_set:
     match: blackmatrix7:Netflix
     policy: Streaming
+    separate: true
 
 - rule_set:
     match: blackmatrix7:Disney
     policy: Streaming
+    separate: true
 
-# ============================================
-# 低优先级：国内 IP 段
-# ============================================
+- rule_set:
+    match: blackmatrix7:HBO
+    policy: Streaming
+    separate: true
+
+- rule_set:
+    match: blackmatrix7:PrimeVideo
+    policy: Streaming
+    separate: true
+
+- rule_set:
+    match: blackmatrix7:Hulu
+    policy: Streaming
+    separate: true
+
+- rule_set:
+    match: blackmatrix7:Peacock
+    policy: Streaming
+    separate: true
+
+- rule_set:
+    match: blackmatrix7:Crunchyroll
+    policy: Streaming
+    separate: true
+
+# ============================================================
+# Social（Twitter、Instagram、Threads、Reddit）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:Twitter
+    policy: Social
+    separate: true
+
+- rule_set:
+    match: blackmatrix7:Instagram
+    policy: Social
+    separate: true
+
+- rule_set:
+    match: blackmatrix7:Threads
+    policy: Social
+    separate: true
+
+- rule_set:
+    match: blackmatrix7:Reddit
+    policy: Social
+    separate: true
+
+# ============================================================
+# 📹 YouTube（优先级 4）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:YouTube
+    policy: YouTube
+    separate: true
+
+# ============================================================
+# 🔒 哔哩哔哩（优先级 5 - DIRECT）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:Bilibili
+    policy: DIRECT
+
+# ============================================================
+# 🏠 私有网络/局域网（优先级 6 - DIRECT）
+# ============================================================
+- rule_set:
+    match: repcz:Lan
+    policy: DIRECT
+
+# ============================================================
+# 📲 Telegram（优先级 7）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:Telegram
+    policy: Telegram
+    separate: true
+
+# ============================================================
+# 🐱 代码托管（优先级 8）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:GitHub
+    policy: GitHub
+    separate: true
+
+- rule_set:
+    match: blackmatrix7:GitLab
+    policy: GitHub
+
+- rule_set:
+    match: blackmatrix7:Atlassian
+    policy: GitHub
+
+- rule_set:
+    match: blackmatrix7:Cloudflare
+    policy: GitHub
+
+# ============================================================
+# Ⓜ️ 微软服务（优先级 9）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:Microsoft
+    policy: Microsoft
+    separate: true
+
+- domain:
+    match: cn.bing.com
+    policy: DIRECT
+
+- domain:
+    match: '*.cn.bing.com'
+    policy: DIRECT
+
+# ============================================================
+# HongKongSocial（WhatsApp、Line）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:WhatsApp
+    policy: HongKongSocial
+    separate: true
+
+- rule_set:
+    match: blackmatrix7:Line
+    policy: HongKongSocial
+    separate: true
+
+# ============================================================
+# 🏦 汇丰香港（优先级 10）- 含 Reward+
+# ============================================================
+- rule_set:
+    match: lingjingmaster:HSBC_HK
+    policy: HongKongBanking
+    separate: true
+
+# ============================================================
+# 🏦 其他香港银行（优先级 11）
+# ============================================================
+- rule_set:
+    match: lingjingmaster:HK_Banks_Direct
+    policy: HongKongBanking
+
+- rule_set:
+    match: https://raw.githubusercontent.com/Bwy999/Surge/fe4d122f120932bb2a40e4c992871c4ec89eb788/Ruleset/HKBank.list
+    policy: HongKongBanking
+
+# ============================================================
+# 📈 券商服务（优先级 12）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:Futu
+    policy: Brokerage
+
+- rule_set:
+    match: blackmatrix7:Moomoo
+    policy: Brokerage
+
+- rule_set:
+    match: blackmatrix7:LongBridge
+    policy: Brokerage
+
+- rule_set:
+    match: blackmatrix7:TigerTrade
+    policy: Brokerage
+
+- rule_set:
+    match: blackmatrix7:InteractiveBrokers
+    policy: Brokerage
+
+# ============================================================
+# 🍎 苹果推送（优先级 13）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:ApplePush
+    policy: Global
+
+# ============================================================
+# 🍏 苹果服务（优先级 14 - DIRECT）
+# ============================================================
+- rule_set:
+    match: loyalsoldier:apple
+    policy: DIRECT
+
+# ============================================================
+# 国际网盘（PikPak、Terabox）低倍率
+# ============================================================
+- rule_set:
+    match: blackmatrix7:PikPak
+    policy: LowRate
+
+- rule_set:
+    match: blackmatrix7:Terabox
+    policy: LowRate
+
+# ============================================================
+# SOOP（DIRECT）
+# ============================================================
+- rule_set:
+    match: https://raw.githubusercontent.com/KeterCo/ClashRules/a505e394fb0fad9405dac53d0fa8edaa3075f4c1/Soop.list
+    policy: DIRECT
+
+# ============================================================
+# GEOIP CN（优先级 15 - DIRECT）
+# ============================================================
 - rule_set:
     match: loyalsoldier:geoip-cn
     policy: DIRECT
 
-# ============================================
-# 默认策略
-# ============================================
+# ============================================================
+# 国内服务（优先级 16 - DIRECT）
+# ============================================================
+- rule_set:
+    match: blackmatrix7:ChinaMax
+    policy: DIRECT
+
+# ============================================================
+# CIDR 直连（优先级 17 - DIRECT）
+# ============================================================
+- rule_set:
+    match: rabbitspec:ChinaCIDR
+    policy: DIRECT
+
+# ============================================================
+# 🐟 漏网之鱼（优先级 18 - PROXY 兜底）
+# ============================================================
 - default:
     policy: PROXY
