@@ -264,9 +264,9 @@
 # ============================================================
 # GEOIP CN（优先级 15 - DIRECT）
 # ============================================================
-- rule_set:
-    match: loyalsoldier:geoip-cn
-    policy: geoipcn
+# - rule_set:
+#     match: loyalsoldier:geoip-cn
+#     policy: geoipcn
 
 # ============================================================
 # 国内服务（优先级 16 - DIRECT）
