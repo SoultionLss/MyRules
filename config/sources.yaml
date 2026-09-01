@@ -5,12 +5,10 @@
 # ============================================================
 
 # ---- 主流规则源（使用完整链接，自动推断） ----
-blackmatrix7: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list"
-loyalsoldier: "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/direct.txt"
-acl4ssr: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Advertising.list"
-repcz: "https://cdn.jsdelivr.net/gh/Repcz/Tool@X/Egern/Rules/Lan.yaml"
-accademia: "https://cdn.jsdelivr.net/gh/Accademia/Additional_Rule_For_Clash@master/GeositeCN/ChinaMax.yaml"
-repcz_egernrules: "https://raw.githubusercontent.com/Repcz/EgernRules/X/Rules/Direct/Direct.yaml"
+
+blackmatrix7: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/Disney/Disney.list"
+loyalsoldier: "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/apple.txt"
+lingjingmaster: "https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/HSBC_HK.list"
 
 # ---- 手动指定模板（覆盖自动推断） ----
 # my_custom: "https://raw.githubusercontent.com/MyOrg/MyRules/main/{name}.list"
