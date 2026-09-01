@@ -9,6 +9,7 @@
 blackmatrix7: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/Disney/Disney.list"
 loyalsoldier: "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/apple.txt"
 lingjingmaster: "https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/HSBC_HK.list"
+rabbitspec: "https://raw.githubusercontent.com/Rabbit-Spec/Surge/refs/heads/Master/Rules/ChinaCIDR.list"
 
 # ---- 手动指定模板（覆盖自动推断） ----
 # my_custom: "https://raw.githubusercontent.com/MyOrg/MyRules/main/{name}.list"
