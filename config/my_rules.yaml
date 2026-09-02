@@ -1,57 +1,29 @@
 # ============================================================
 # 分流规则配置文件
-# ============================================================
-#
-# 【文件用途】
-#   本文件定义需要拉取的所有规则源及其合并策略。
-#   generate.py 会读取本文件，下载规则源，并根据 merge_group
-#   字段决定是合并到合集还是作为独立源。
+# 规则从上到下依次匹配，优先级逐行递减
 #
 # 【字段说明】
-#   match: 规则源标识，支持三种格式：
-#          1. "来源名:规则名"（如 blackmatrix7:Google）
-#             需在 sources.yaml 中定义对应的 URL 模板
-#          2. 完整 URL（如 https://raw.githubusercontent.com/...）
-#             直接使用该 URL 下载规则
-#          3. 纯名称（如 Google）
-#             自动尝试所有来源（不推荐，建议明确指定来源）
-#
-#   policy: 策略组名称
-#           - 有 merge_group 时：指定合集名称和策略组名称
-#           - 无 merge_group 时：指定独立源使用的策略组
-#
+#   match: 规则源标识，格式为 "来源名:规则名" 或完整 URL
+#   policy: 策略组名称（合集名称/策略组名称）
 #   merge_group: 可选字段，指定合并到哪个合集
-#           - 有 merge_group: 该规则源合并到指定合集文件
-#             例如 merge_group: AI 表示合并到 AI.list
-#           - 无 merge_group: 该规则源作为独立源
-#             例如 match: blackmatrix7:Google 生成 Google.list
-#
-# 【规则匹配优先级】
-#   规则按从上到下的顺序匹配，越靠前优先级越高。
-#   建议将最重要的规则放在前面（如 Google、AI 等）。
-#
-# 【输出说明】
-#   - 合集文件: {平台}/{策略组}/{策略组}.{ext}
-#     例: Surge/AI/AI.list
-#   - 独立文件: {平台}/{策略组}/{源名称}.{ext}
-#     例: Surge/AI/OpenAI.list
-#
+#                - 有 merge_group: 该规则源合并到指定合集
+#                - 无 merge_group: 该规则源作为独立源
 # ============================================================
 
 # ============================================================
-# 🧱 DNS 防泄露（优先级 1）
+# 优先级 1：DNS 防泄露
+# 来源: blackmatrix7:BlockHttpDNS
+# 策略: REJECT
 # ============================================================
-# 说明：拦截 DNS 防泄露请求，防止 DNS 查询泄露隐私
-# 状态：已注释，需要可取消注释
-# - rule_set:
-#     match: blackmatrix7:HTTPDNS
-#     policy: REJECT
-#     merge_group: REJECT
+- rule_set:
+    match: blackmatrix7:BlockHttpDNS
+    policy: REJECT
+    merge_group: REJECT
 
 # ============================================================
-# 🔍 谷歌服务（优先级 2）
-# 说明：Google 全系列服务，含 Gemini，优先于 AI 规则
-# 合集名：Google
+# 优先级 2：谷歌服务（含 Gemini）
+# 来源: blackmatrix7:Google + blackmatrix7:Gemini
+# 策略: Google（日本节点，可手动切香港节点）
 # ============================================================
 - rule_set:
     match: blackmatrix7:Google
@@ -64,9 +36,9 @@
     merge_group: Google
 
 # ============================================================
-# 🤖 AI 服务（优先级 3）
-# 说明：OpenAI、Claude、Anthropic、Grok 等 AI 服务
-# 合集名：AI
+# 优先级 3：AI 服务
+# 来源: blackmatrix7:OpenAI + blackmatrix7:Claude + blackmatrix7:xAI + blackmatrix7:Anthropic
+# 策略: AI（美国节点）
 # ============================================================
 - rule_set:
     match: blackmatrix7:OpenAI
@@ -79,28 +51,28 @@
     merge_group: AI
 
 - rule_set:
-    match: blackmatrix7:Anthropic
+    match: blackmatrix7:xAI
     policy: AI
     merge_group: AI
 
 - rule_set:
-    match: https://raw.githubusercontent.com/funnyzak/network-rules/91d7339ab4e80883cf57dac518d4e92cd102003d/Surge/Rulesets/xAI.list
+    match: blackmatrix7:Anthropic
     policy: AI
     merge_group: AI
 
 # ============================================================
-# 📱 抖音服务（优先级 3.5）
-# 说明：抖音国内服务，直连
-# 来源：blackmatrix7:DouYin
+# 抖音服务
+# 来源: blackmatrix7:DouYin
+# 策略: DIRECT
 # ============================================================
 - rule_set:
     match: blackmatrix7:DouYin
     policy: DIRECT
 
 # ============================================================
-# 🎵 TikTok（优先级 4）
-# 说明：TikTok 国际版服务
-# 合集名：TikTok
+# TikTok
+# 来源: blackmatrix7:TikTok
+# 策略: TikTok（美国故选）
 # ============================================================
 - rule_set:
     match: blackmatrix7:TikTok
@@ -108,9 +80,9 @@
     merge_group: TikTok
 
 # ============================================================
-# 📺 流媒体（优先级 5）
-# 说明：Netflix、Disney+、HBO、PrimeVideo、Hulu、Peacock、Crunchyroll
-# 合集名：Streaming
+# 流媒体
+# 来源: blackmatrix7:Netflix/Disney/HBO/PrimeVideo/Hulu/Peacock + HotKids:Crunchyroll
+# 策略: Streaming（美国故选）
 # ============================================================
 - rule_set:
     match: blackmatrix7:Netflix
@@ -148,9 +120,9 @@
     merge_group: Streaming
 
 # ============================================================
-# 👥 Social 社交媒体（优先级 6）
-# 说明：Twitter、Instagram、Threads、Reddit
-# 合集名：Social
+# Social 社交媒体
+# 来源: blackmatrix7:Twitter/Instagram/Threads/Reddit
+# 策略: Social（美国故选）
 # ============================================================
 - rule_set:
     match: blackmatrix7:Twitter
@@ -173,9 +145,9 @@
     merge_group: Social
 
 # ============================================================
-# 📹 YouTube（优先级 7）
-# 说明：YouTube 视频及翻译 API
-# 合集名：YouTube
+# 优先级 4：YouTube（含翻译 API）
+# 来源: blackmatrix7:YouTube
+# 策略: YouTube（节点选择）
 # ============================================================
 - rule_set:
     match: blackmatrix7:YouTube
@@ -183,28 +155,27 @@
     merge_group: YouTube
 
 # ============================================================
-# 🔒 哔哩哔哩（优先级 8）
-# 说明：B站直连
-# 来源：完整 URL（blackmatrix7 仓库）
+# 优先级 5：哔哩哔哩
+# 来源: blackmatrix7:BiliBili
+# 策略: DIRECT
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/BiliBili/BiliBili.list
-    policy: BiliBili
+    match: blackmatrix7:BiliBili
+    policy: DIRECT
 
 # ============================================================
-# 🏠 私有网络/局域网（优先级 9）
-# 说明：局域网地址直连
-# 来源：Repcz/Tool
-# 状态：已注释，需要可取消注释
+# 优先级 6：私有网络/局域网
+# 来源: repcz:Egern/Rules/Lan
+# 策略: DIRECT
 # ============================================================
-# - rule_set:
-#     match: repcz:Egern/Rules/Lan
-#     policy: DIRECT
+- rule_set:
+    match: repcz:Egern/Rules/Lan
+    policy: DIRECT
 
 # ============================================================
-# 📲 Telegram（优先级 10）
-# 说明：Telegram 消息服务
-# 合集名：Telegram
+# 优先级 7：Telegram
+# 来源: blackmatrix7:Telegram
+# 策略: Telegram（美国故选）
 # ============================================================
 - rule_set:
     match: blackmatrix7:Telegram
@@ -212,9 +183,9 @@
     merge_group: Telegram
 
 # ============================================================
-# 🐱 代码托管（优先级 11）
-# 说明：GitHub、GitLab、Atlassian、Cloudflare
-# 合集名：GitHub
+# 优先级 8：代码托管（GitHub/GitLab/Atlassian）
+# 来源: blackmatrix7:GitHub/GitLab/Atlassian
+# 策略: GitHub
 # ============================================================
 - rule_set:
     match: blackmatrix7:GitHub
@@ -231,22 +202,26 @@
     policy: GitHub
     merge_group: GitHub
 
+# ============================================================
+# Cloudflare（独立规则源，与 GitHub 策略组并列）
+# 来源: blackmatrix7:Cloudflare
+# 策略: GitHub
+# ============================================================
 - rule_set:
     match: blackmatrix7:Cloudflare
     policy: GitHub
-    merge_group: GitHub
 
 # ============================================================
-# Ⓜ️ 微软服务（优先级 12）
-# 说明：微软全系列服务，bing.cn 直连
-# 合集名：Microsoft
+# 优先级 9：微软服务（bing.cn 直连）
+# 来源: blackmatrix7:Microsoft
+# 策略: Microsoft（DIRECT）
 # ============================================================
 - rule_set:
     match: blackmatrix7:Microsoft
     policy: Microsoft
     merge_group: Microsoft
 
-# 微软中国直连规则
+# 微软中国直连
 - domain:
     match: cn.bing.com
     policy: DIRECT
@@ -256,9 +231,9 @@
     policy: DIRECT
 
 # ============================================================
-# 💬 HongKongSocial（优先级 13）
-# 说明：香港常用社交软件 WhatsApp、Line
-# 合集名：HongKongSocial
+# 优先级 10：HongKongSocial（WhatsApp/Line）
+# 来源: blackmatrix7:Whatsapp/Line
+# 策略: HongKongSocial（香港故选）
 # ============================================================
 - rule_set:
     match: blackmatrix7:Whatsapp
@@ -271,9 +246,9 @@
     merge_group: HongKongSocial
 
 # ============================================================
-# 🏦 汇丰香港（优先级 14）
-# 说明：汇丰香港含 Reward+
-# 来源：LingJingMaster/Shadowrocket-Rules
+# 优先级 11：汇丰香港（含 Reward+）
+# 来源: lingjingmaster:HSBC_HK
+# 策略: HongKongBanking（DIRECT）
 # ============================================================
 - rule_set:
     match: lingjingmaster:HSBC_HK
@@ -281,8 +256,9 @@
     merge_group: HongKongBanking
 
 # ============================================================
-# 🏦 其他香港银行（优先级 15）
-# 说明：中银、恒生、众安等香港银行
+# 优先级 12：其他香港银行
+# 来源: lingjingmaster:HK_Banks_Direct + Bwy999:HKBank
+# 策略: HongKongBanking（DIRECT）
 # ============================================================
 - rule_set:
     match: lingjingmaster:HK_Banks_Direct
@@ -295,37 +271,37 @@
     merge_group: HongKongBanking
 
 # ============================================================
-# 📈 券商服务（优先级 16）
-# 说明：富途、长桥、老虎、嘉信等券商
-# 来源：forecho/broker-rules
+# 优先级 13：券商服务
+# 来源: forecho/broker-rules
+# 策略: Brokerage（香港节点）
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/forecho/broker-rules/refs/heads/main/rule/Surge/Broker.list
+    match: broker:Broker
     policy: Brokerage
     merge_group: Brokerage
 
 # ============================================================
-# 🍎 苹果推送（优先级 17）
-# 说明：Apple 推送通知服务
-# 来源：LingJingMaster/Shadowrocket-Rules（独立源）
+# 优先级 14：苹果推送
+# 来源: lingjingmaster:ApplePush
+# 策略: ApplePush（节点选择）
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/ApplePush.list
+    match: lingjingmaster:ApplePush
     policy: ApplePush
 
 # ============================================================
-# 🍏 苹果服务（优先级 18）
-# 说明：Apple 服务（iCloud、App Store 等）直连
-# 来源：Loyalsoldier/surge-rules（独立源）
+# 优先级 15：苹果服务
+# 来源: loyalsoldier:apple
+# 策略: AppleDirect（DIRECT）
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/refs/heads/release/apple.txt
-    policy: AppleDirect
+    match: loyalsoldier:apple
+    policy: DIRECT
 
 # ============================================================
-# 💾 国际网盘（优先级 19）
-# 说明：PikPak、Terabox，使用低倍率节点
-# 合集名：LowRate
+# 优先级 16：国际网盘（低倍率）
+# 来源: blackmatrix7:PikPak/TeraBox
+# 策略: LowRate（低倍率故选）
 # ============================================================
 - rule_set:
     match: blackmatrix7:PikPak
@@ -338,47 +314,44 @@
     merge_group: LowRate
 
 # ============================================================
-# 🎮 SOOP（优先级 20）
-# 说明：SOOP 直播服务直连
-# 来源：KeterCo/ClashRules（独立源）
+# 优先级 17：SOOP
+# 来源: KeterCo/ClashRules
+# 策略: DIRECT
 # ============================================================
 - rule_set:
     match: https://raw.githubusercontent.com/KeterCo/ClashRules/a505e394fb0fad9405dac53d0fa8edaa3075f4c1/Soop.list
-    policy: SOOP
+    policy: DIRECT
 
 # ============================================================
-# 🌍 GEOIP CN（优先级 21）
-# 说明：中国 IP 地址段直连
-# 状态：已注释，需要可取消注释
-# ============================================================
-# - rule_set:
-#     match: loyalsoldier_geoip:cn
-#     policy: geoipcn
-
-# ============================================================
-# 🇨🇳 国内服务 ChinaMax（优先级 22）
-# 说明：ChinaMax 国内服务直连
-# 来源：blackmatrix7/ios_rule_script
+# 优先级 18：GEOIP CN（IP 层直连）
+# 来源: loyalsoldier_geoip:cn
+# 策略: DIRECT
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/ChinaMax/ChinaMax.list
-    policy: ChinaMax
+    match: loyalsoldier_geoip:cn
+    policy: DIRECT
 
 # ============================================================
-# 🛣️ CIDR 直连（优先级 23）
-# 说明：中国 IP 段直连（Rabbit-Spec + Loyalsoldier）
+# 优先级 19：国内服务（ChinaMax）
+# 来源: blackmatrix7:ChinaMax
+# 策略: DIRECT
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/Rabbit-Spec/Surge/refs/heads/Master/Rules/ChinaCIDR.list
-    policy: ChinaCIDR
-
-- rule_set:
-    match: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/cn.txt
-    policy: ChinaCIDR
+    match: blackmatrix7:ChinaMax
+    policy: DIRECT
 
 # ============================================================
-# 🐟 漏网之鱼（优先级 24 - 兜底）
-# 说明：未匹配到任何规则的流量，走 PROXY
+# 优先级 20：CIDR 直连
+# 来源: rabbitspec:ChinaCIDR
+# 策略: DIRECT
+# ============================================================
+- rule_set:
+    match: rabbitspec:ChinaCIDR
+    policy: DIRECT
+
+# ============================================================
+# 漏网之鱼（兜底）
+# 策略: PROXY
 # ============================================================
 - default:
     policy: PROXY
