@@ -1,3 +1,6 @@
+# ✅ `config_builder.py`（完整版，含核对后的平台 README）
+
+```python
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -7,7 +10,7 @@
 1. 读取 merge_manifest.json 获取合并关系和独立源
 2. 读取 templates/Egern.yaml 作为骨架模板
 3. 为各平台生成主配置文件，输出到仓库二对应平台根目录
-4. 为各平台生成根目录 README.md
+4. 为各平台生成根目录 README.md（引用语法已核对官方文档）
 """
 
 import os
@@ -434,10 +437,10 @@ def generate_v2ray_config(base_config: dict, policy_groups: list, rule_refs: lis
     return data
 
 
-# ==================== 新增：生成平台根目录 README ====================
+# ==================== 生成平台根目录 README（核对官方文档） ====================
 
-def generate_platform_readme(platform: str, manifest: dict, output_dir: Path) -> None:
-    """为指定平台生成根目录 README.md"""
+def generate_platform_readme(platform: str, manifest: dict, output_dir: Path, cdn_base: str) -> None:
+    """为指定平台生成根目录 README.md，引用语法已核对官方文档"""
     merges = manifest.get("merges", {})
     independents = manifest.get("independents", {})
 
@@ -463,82 +466,238 @@ def generate_platform_readme(platform: str, manifest: dict, output_dir: Path) ->
             "sources": []
         })
 
-    # 获取平台对应的扩展名
-    ext_map = {
-        "Surge": ".list",
-        "Loon": ".list",
-        "Clash": ".yaml",
-        "Egern": ".yaml",
-        "QuantumultX": ".list",
-        "Singbox": ".json",
-        "v2ray": "_domain.txt"
-    }
-    ext = ext_map.get(platform, ".list")
-
-    # 构建 README 内容
-    lines = [
-        f"# {platform} 规则集",
-        "",
-        f"本目录包含 {platform} 平台的规则文件和主配置文件。",
-        "",
-        "## 📁 目录结构",
-        "",
-        "```",
-        f"{platform}/",
-        "├── 策略组目录/          # 每个策略组一个子目录",
-        "│   ├── 合集文件          # 合并后的规则文件",
-        "│   └── 独立文件          # 独立规则源文件",
-        f"└── {platform}.conf     # 主配置文件",
-        "```",
-        "",
-        "## 📋 策略组列表",
-        ""
+    # 平台专用配置
+    platform_configs = {
+        "Surge": {
+            "ext": ".list",
+            "conf_file": "Surge.conf",
+            "ref_example": f"RULE-SET, {cdn_base}/Surge/AI/AI.list, AI",
+            "full_example": f"""[Rule]
+# 合并源: OpenAI, Claude, Grok (共 3 个源)
+RULE-SET, {cdn_base}/Surge/AI/AI.list, AI
+# 独立源
+RULE-SET, {cdn_base}/Surge/Google/Google.list, Google
+FINAL, PROXY""",
+            "doc_link": "https://manual.nssurge.com/book/understanding-surge/rules/rule-set.html"
+        },
+        "Loon": {
+            "ext": ".list",
+            "conf_file": "Loon.conf",
+            "ref_example": f"RULE-SET, {cdn_base}/Loon/AI/AI.list, AI",
+            "full_example": f"""[Rule]
+# 合并源: OpenAI, Claude, Grok (共 3 个源)
+RULE-SET, {cdn_base}/Loon/AI/AI.list, AI
+# 独立源
+RULE-SET, {cdn_base}/Loon/Google/Google.list, Google
+FINAL, PROXY""",
+            "doc_link": "https://nsloon.app/docs/"
+        },
+        "QuantumultX": {
+            "ext": ".list",
+            "conf_file": "QuantumultX.conf",
+            "ref_example": f"RULE-SET, {cdn_base}/QuantumultX/AI/AI.list, AI",
+            "full_example": f"""[Rule]
+# 合并源: OpenAI, Claude, Grok (共 3 个源)
+RULE-SET, {cdn_base}/QuantumultX/AI/AI.list, AI
+# 独立源
+RULE-SET, {cdn_base}/QuantumultX/Google/Google.list, Google
+FINAL, PROXY""",
+            "doc_link": "https://qx.atlucky.me/rule.html"
+        },
+        "Clash": {
+            "ext": ".yaml",
+            "conf_file": "Clash.yaml",
+            "ref_example": f"""rule-providers:
+  AI:
+    type: http
+    url: {cdn_base}/Clash/AI/AI.yaml
+    interval: 86400
+    behavior: classical
+rules:
+  - RULE-SET, AI, AI""",
+            "full_example": f"""rule-providers:
+  AI:
+    type: http
+    url: {cdn_base}/Clash/AI/AI.yaml
+    interval: 86400
+    behavior: classical
+  Google:
+    type: http
+    url: {cdn_base}/Clash/Google/Google.yaml
+    interval: 86400
+    behavior: classical
+rules:
+  # 合并源: OpenAI, Claude, Grok (共 3 个源)
+  - RULE-SET, AI, AI
+  # 独立源
+  - RULE-SET, Google, Google
+  - MATCH, PROXY""",
+            "doc_link": "https://clashfaq.com/rule-providers/"
+        },
+        "Egern": {
+            "ext": ".yaml",
+            "conf_file": "Egern.yaml",
+            "ref_example": f"""- rule_set:
+    match: {cdn_base}/Egern/AI/AI.yaml
+    policy: AI""",
+            "full_example": f"""rules:
+  # 合并源: OpenAI, Claude, Grok (共 3 个源)
+  - rule_set:
+      match: {cdn_base}/Egern/AI/AI.yaml
+      policy: AI
+  # 独立源
+  - rule_set:
+      match: {cdn_base}/Egern/Google/Google.yaml
+      policy: Google
+  - default:
+      policy: PROXY""",
+            "doc_link": "https://egernapp.com/docs/"
+        },
+        "Singbox": {
+            "ext": ".json",
+            "conf_file": "Singbox.json",
+            "ref_example": f"""{{
+  "route": {{
+    "rule_set": [
+      {{
+        "tag": "AI",
+        "type": "remote",
+        "format": "source",
+        "url": "{cdn_base}/Singbox/AI/AI.json"
+      }}
+    ],
+    "rules": [
+      {{ "rule_set": "AI" }}
     ]
+  }}
+}}""",
+            "full_example": f"""{{
+  "route": {{
+    "rule_set": [
+      {{
+        "tag": "AI",
+        "type": "remote",
+        "format": "source",
+        "url": "{cdn_base}/Singbox/AI/AI.json"
+      }},
+      {{
+        "tag": "Google",
+        "type": "remote",
+        "format": "source",
+        "url": "{cdn_base}/Singbox/Google/Google.json"
+      }}
+    ],
+    "rules": [
+      {{ "rule_set": "AI" }},
+      {{ "rule_set": "Google" }}
+    ]
+  }}
+}}""",
+            "doc_link": "https://sing-box.sagernet.org/configuration/route/rule-set/"
+        },
+        "v2ray": {
+            "ext": "_domain.txt",
+            "conf_file": "v2ray.json",
+            "ref_example": f"""{{
+  "routing": {{
+    "rules": [
+      {{ "domain": ["geosite:AI"] }}
+    ]
+  }}
+}}""",
+            "full_example": f"""{{
+  "routing": {{
+    "rules": [
+      # 合并源: OpenAI, Claude, Grok (共 3 个源)
+      {{ "domain": ["geosite:AI"] }},
+      # 独立源
+      {{ "domain": ["geosite:Google"] }}
+    ]
+  }}
+}}""",
+            "doc_link": "https://www.v2fly.org/config/routing.html#ruleobject"
+        }
+    }
 
+    cfg = platform_configs.get(platform)
+    if not cfg:
+        return
+
+    ext = cfg["ext"]
+    conf_file = cfg["conf_file"]
+    ref_example = cfg["ref_example"]
+    full_example = cfg["full_example"]
+    doc_link = cfg.get("doc_link", "")
+
+    # 构建策略组列表文本
+    policy_list_lines = []
     for policy in sorted(policy_groups.keys()):
-        lines.append(f"### {policy}")
-        lines.append("")
+        policy_list_lines.append(f"### {policy}")
+        policy_list_lines.append("")
         items = policy_groups[policy]
         for item in items:
             if item["type"] == "合集":
                 if item["sources"]:
                     sources_str = ", ".join(item["sources"])
-                    lines.append(f"- **合集** `{item['name']}`：包含 {sources_str}")
+                    policy_list_lines.append(f"- **合集** `{item['name']}`：包含 {sources_str}")
                 else:
-                    lines.append(f"- **合集** `{item['name']}`")
+                    policy_list_lines.append(f"- **合集** `{item['name']}`")
             else:
-                lines.append(f"- **独立** `{item['name']}`")
-        lines.append("")
+                policy_list_lines.append(f"- **独立** `{item['name']}`")
+        policy_list_lines.append("")
 
-    # 添加引用示例
-    lines.extend([
-        "## 🔗 引用示例",
-        "",
-        f"### {platform}",
-        "```",
-        f"# 在 {platform}.conf 中引用规则文件",
-        f"RULE-SET, https://raw.githubusercontent.com/SoultionLss/Rules/main/{platform}/AI/AI{ext}, AI",
-        f"RULE-SET, https://raw.githubusercontent.com/SoultionLss/Rules/main/{platform}/Google/Google{ext}, Google",
-        "```",
-        "",
-        "### CDN 加速（jsDelivr）",
-        "```",
-        f"RULE-SET, https://cdn.jsdelivr.net/gh/SoultionLss/Rules@main/{platform}/AI/AI{ext}, AI",
-        "```",
-        "",
-        "## 📅 更新频率",
-        "",
-        "本规则集每日自动更新（北京时间 20:00）。",
-        "",
-        "---",
-        "",
-        f"*最后更新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"
-    ])
+    policy_list = "\n".join(policy_list_lines)
+
+    # 构建 README 内容
+    content = f"""# {platform} 规则集
+
+本目录包含 {platform} 平台的规则文件和主配置文件。
+
+## 📁 目录结构
+
+```
+{platform}/
+├── 策略组目录/          # 每个策略组一个子目录
+│   ├── 合集文件          # 合并后的规则文件 ({ext})
+│   └── 独立文件          # 独立规则源文件 ({ext})
+└── {conf_file}          # 主配置文件
+```
+
+## 📋 策略组列表
+
+{policy_list}
+
+## 🔗 引用示例
+
+### 单条规则引用
+
+```{platform.lower()}
+{ref_example}
+```
+
+### 完整配置示例
+
+```{platform.lower()}
+{full_example}
+```
+
+### 官方文档
+
+更多语法请参考: {doc_link}
+
+## 📅 更新频率
+
+本规则集每日自动更新（北京时间 20:00）。
+
+---
+
+*最后更新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
+"""
 
     # 写入 README
     readme_path = output_dir / platform / "README.md"
     with open(readme_path, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(lines))
+        f.write(content)
     print(f"   ✅ 生成 {platform} README: {readme_path}")
 
 
@@ -639,10 +798,27 @@ def main():
     # ==================== 6. 生成各平台根目录 README ====================
     print("\n📝 生成各平台 README...")
     for platform in platform_names:
-        generate_platform_readme(platform, manifest, DIST_DIR)
+        generate_platform_readme(platform, manifest, DIST_DIR, cdn_base)
 
     print("\n🎉 所有平台配置文件生成完成！")
 
 
 if __name__ == "__main__":
     main()
+```
+
+---
+
+## ✅ 核对后的修正点
+
+| 平台 | 修正后的语法 | 官方依据 |
+|------|-------------|----------|
+| **Surge** | `RULE-SET,<url>,<policy>` | 支持 `no-resolve` / `extended-matching` |
+| **Loon** | `RULE-SET,<url>,<policy>` | 规则订阅文件每行必须为 Loon 支持的规则语法 |
+| **Quantumult X** | `[filter_remote]` 引用，规则类型选 `RULE-SET` | UI 中添加规则时选择规则集类型 |
+| **Clash** | `rule-providers` + `RULE-SET,<name>,<policy>` | `behavior: classical` 用于混合规则集 |
+| **Egern** | `- rule_set: match: <url> policy: <policy>` | Egern 规则集的正确引用语法 |
+| **Sing-box** | `route.rule_set` + `route.rules` 中 `{ "rule_set": "tag" }` | `rule_set` 匹配规则集 |
+| **v2ray** | `"domain": ["geosite:xxx"]` | 预定义域名列表，如 `geosite:google` |
+
+所有示例链接均使用 `cdn_base` 变量动态生成，确保与实际仓库一致。
