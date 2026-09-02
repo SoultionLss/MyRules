@@ -105,140 +105,151 @@ policy_groups:
   # 此处保留您原有的所有 policy_groups 定义
   # （External、手动选择、智能测速、故障转移、业务策略组）
   # 内容较多，请从原 Soultion.yaml 中完整复制
-  - name: 良心云
-      type: select
+  - select:
+      name: "良心云"
       urls:
         - "YOUR_良心云_SUBSCRIPTION_URL"
 
-  - name: 宝可梦
-      type: select
+  - select:
+      name: "宝可梦"
       urls:
         - "YOUR_宝可梦_SUBSCRIPTION_URL"
 
 
-  # ----------------------------------------------------------
+  # ==========================================================
   # 独立拼车订阅
-  # 注意：
-  # 拼车不是地区节点池成员
-  # 必须经过上一跳
-  # ----------------------------------------------------------
+  #
+  # ==========================================================
 
-  - name: 美国拼车
-      type: select
+  - select:
+      name: "美国拼车"
       urls:
         - "YOUR_US_SUBSCRIPTION_URL"
-      prev_hop: 🇺🇸 美国-故选
+      prev_hop: "🇺🇸 美国-故选"
 
-  - name: 香港拼车
-      type: select
+  - select:
+      name: "香港拼车"
       urls:
         - "YOUR_HK_SUBSCRIPTION_URL"
-      prev_hop: 🇭🇰 香港-故选
+      prev_hop: "🇭🇰 香港-故选"
 
 
   # ==========================================================
   # 地区手选
-  # 来源：良心云 + 宝可梦
-  # 不包含美国拼车 / 香港拼车
+  #
+  # 来源：
+  #   良心云
+  #   宝可梦
+  #
+  # 宝可梦：
+  #   只允许 0.1X ～ 1X
+  #   自动排除 2X ～ 10X
+  #
+  # 注意：
+  # filter 只作用于 urls 中的订阅节点。
+  # 良心云作为 policies 保留全部节点。
   # ==========================================================
 
-  - name: 🇭🇰 香港-手选
-      type: select
+  - select:
+      name: "🇭🇰 香港-手选"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇭🇰|香港|(\b(HK|Hong|HongKong)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(香港|🇭🇰|\bHK\b|\bHongKong\b).*?(?:0\.[1-9]X|1X)\b'
 
-  - name: 🇹🇼 台湾-手选
-      type: select
+  - select:
+      name: "🇹🇼 台湾-手选"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇹🇼|台湾|台北|(\b(TW|Tai|Taiwan)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(台湾|台北|🇹🇼|\bTW\b|\bTaiwan\b).*?(?:0\.[1-9]X|1X)\b'
 
-  - name: 🇯🇵 日本-手选
-      type: select
+  - select:
+      name: "🇯🇵 日本-手选"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇯🇵|日本|东京|大阪|(\b(JP|Japan)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(日本|东京|大阪|🇯🇵|\bJP\b|\bJapan\b).*?(?:0\.[1-9]X|1X)\b'
 
-  - name: 🇺🇸 美国-手选
-      type: select
+  - select:
+      name: "🇺🇸 美国-手选"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇺🇸|美国|洛杉矶|圣何塞|纽约|(\b(US|United States)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(美国|洛杉矶|圣何塞|纽约|🇺🇸|\bUS\b|\bUnited States\b).*?(?:0\.[1-9]X|1X)\b'
 
-  - name: 🇸🇬 狮城-手选
-      type: select
+  - select:
+      name: "🇸🇬 狮城-手选"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇸🇬|新加坡|狮城|(\b(SG|Singapore)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(新加坡|狮城|🇸🇬|\bSG\b|\bSingapore\b).*?(?:0\.[1-9]X|1X)\b'
 
 
   # ==========================================================
   # 地区智能
+  #
   # hidden: true
+  #
+  # 宝可梦仅保留 0.1X ～ 1X
   # ==========================================================
 
-  - name: 🇭🇰 香港-智能
-      type: auto_test
+  - auto_test:
+      name: "🇭🇰 香港-智能"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇭🇰|香港|(\b(HK|Hong|HongKong)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(香港|🇭🇰|\bHK\b|\bHongKong\b).*?(?:0\.[1-9]X|1X)\b'
       interval: 300
       timeout: 5
       hidden: true
 
-  - name: 🇹🇼 台湾-智能
-      type: auto_test
+  - auto_test:
+      name: "🇹🇼 台湾-智能"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(台湾|台北|🇹🇼|\bTW\b|\bTaiwan\b).*?(?:0\.[1-9]X|1X)\b'
       interval: 300
       timeout: 5
       hidden: true
 
-  - name: 🇯🇵 日本-智能
-      type: auto_test
+  - auto_test:
+      name: "🇯🇵 日本-智能"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇯🇵|日本|东京|大阪|(\b(JP|Japan)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(日本|东京|大阪|🇯🇵|\bJP\b|\bJapan\b).*?(?:0\.[1-9]X|1X)\b'
       interval: 300
       timeout: 5
       hidden: true
 
-  - name: 🇺🇸 美国-智能
-      type: auto_test
+  - auto_test:
+      name: "🇺🇸 美国-智能"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇺🇸|美国|洛杉矶|圣何塞|纽约|(\b(US|United States)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(美国|洛杉矶|圣何塞|纽约|🇺🇸|\bUS\b|\bUnited States\b).*?(?:0\.[1-9]X|1X)\b'
       interval: 300
       timeout: 5
       hidden: true
 
-  - name: 🇸🇬 狮城-智能
-      type: auto_test
+  - auto_test:
+      name: "🇸🇬 狮城-智能"
       policies:
-        - 良心云
-        - 宝可梦
-      flatten: true
-      filter: '(?i)🇸🇬|新加坡|狮城|(\b(SG|Singapore)\b)'
+        - "良心云"
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      filter: '(?i)(新加坡|狮城|🇸🇬|\bSG\b|\bSingapore\b).*?(?:0\.[1-9]X|1X)\b'
       interval: 300
       timeout: 5
       hidden: true
@@ -246,102 +257,372 @@ policy_groups:
 
   # ==========================================================
   # 地区故选
-  # 手选正常时使用手选
-  # 手选不可用时自动转智能
   # ==========================================================
 
-  - name: 🇭🇰 香港-故选
-      type: fallback
+  - fallback:
+      name: "🇭🇰 香港-故选"
       policies:
-        - 🇭🇰 香港-手选
-        - 🇭🇰 香港-智能
+        - "🇭🇰 香港-手选"
+        - "🇭🇰 香港-智能"
       interval: 300
       timeout: 5
 
-  - name: 🇹🇼 台湾-故选
-      type: fallback
+  - fallback:
+      name: "🇹🇼 台湾-故选"
       policies:
-        - 🇹🇼 台湾-手选
-        - 🇹🇼 台湾-智能
+        - "🇹🇼 台湾-手选"
+        - "🇹🇼 台湾-智能"
       interval: 300
       timeout: 5
 
-  - name: 🇯🇵 日本-故选
-      type: fallback
+  - fallback:
+      name: "🇯🇵 日本-故选"
       policies:
-        - 🇯🇵 日本-手选
-        - 🇯🇵 日本-智能
+        - "🇯🇵 日本-手选"
+        - "🇯🇵 日本-智能"
       interval: 300
       timeout: 5
 
-  - name: 🇺🇸 美国-故选
-      type: fallback
+  - fallback:
+      name: "🇺🇸 美国-故选"
       policies:
-        - 🇺🇸 美国-手选
-        - 🇺🇸 美国-智能
+        - "🇺🇸 美国-手选"
+        - "🇺🇸 美国-智能"
       interval: 300
       timeout: 5
 
-  - name: 🇸🇬 狮城-故选
-      type: fallback
+  - fallback:
+      name: "🇸🇬 狮城-故选"
       policies:
-        - 🇸🇬 狮城-手选
-        - 🇸🇬 狮城-智能
+        - "🇸🇬 狮城-手选"
+        - "🇸🇬 狮城-智能"
       interval: 300
       timeout: 5
 
 
   # ==========================================================
   # 低倍率
-  # 0.1 ～ 0.9
+  # 0.1X ～ 0.9X
   # ==========================================================
 
-  - name: 低倍率-手选
-      type: select
+  - select:
+      name: "低倍率-手选"
       policies:
-        - 良心云
-        - 宝可梦
+        - "宝可梦"
       flatten: true
-      filter: '(?i)低倍|0\.[1-9](?:x|倍)?|\b(LR|Low)\b'
+      filter: '(?i)(?:0\.[1-9]X|0\.[1-9]倍|低倍|\bLR\b|\bLow\b)'
 
-  - name: 低倍率-智能
-      type: auto_test
+  - auto_test:
+      name: "低倍率-智能"
       policies:
-        - 良心云
-        - 宝可梦
+        - "宝可梦"
       flatten: true
-      filter: '(?i)低倍|0\.[1-9](?:x|倍)?|\b(LR|Low)\b'
+      filter: '(?i)(?:0\.[1-9]X|0\.[1-9]倍|低倍|\bLR\b|\bLow\b)'
       interval: 300
       timeout: 5
       hidden: true
 
-  - name: 低倍率-故选
-      type: fallback
+  - fallback:
+      name: "低倍率-故选"
       policies:
-        - 低倍率-手选
-        - 低倍率-智能
+        - "低倍率-手选"
+        - "低倍率-智能"
       interval: 300
       timeout: 5
 
 
   # ==========================================================
   # 最终兜底
-  #
-  # 必须放在策略组定义的最后
+  # 必须最后定义
   # ==========================================================
 
-  - name: 兜底节点
-      type: select
+  - select:
+      name: "兜底节点"
       policies:
-        - 🇭🇰 香港-故选
-        - 🇯🇵 日本-故选
-        - 🇺🇸 美国-故选
-        - 🇸🇬 狮城-故选
-        - 🇹🇼 台湾-故选
-        - 低倍率-故选
-        - 美国拼车
-        - 香港拼车
-        - DIRECT  
+        - "🇭🇰 香港-故选"
+        - "🇯🇵 日本-故选"
+        - "🇺🇸 美国-故选"
+        - "🇸🇬 狮城-故选"
+        - "🇹🇼 台湾-故选"
+        - "低倍率-故选"
+        - "美国拼车"
+        - "香港拼车"
+        - DIRECT
+        
+rules:
+
+  # ----------------------------------------------------------
+  # 1. DNS 防泄露
+  # ----------------------------------------------------------
+
+  - name: 🧱 DNS 防泄露
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/DNS/Reject.yaml"
+    policy: REJECT
+
+
+  # ----------------------------------------------------------
+  # 2. Google / Gemini
+  # 必须在 AI 前面
+  # ----------------------------------------------------------
+
+  - name: 🔍 谷歌服务
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/Google/Google.yaml"
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/Google/Gemini.yaml"
+    policy: 🇯🇵 日本-故选
+
+
+  # ----------------------------------------------------------
+  # 3. AI
+  # ----------------------------------------------------------
+
+  - name: 🤖 AI 服务
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/AI/AI.yaml"
+    policy: 🇺🇸 美国-故选
+
+
+  # ----------------------------------------------------------
+  # 4. 抖音
+  # ----------------------------------------------------------
+
+  - name: 抖音服务
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/DIRECT/DouYin.yaml"
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 5. TikTok
+  # ----------------------------------------------------------
+
+  - name: TikTok
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/TikTok/TikTok.yaml"
+    policy: 🇺🇸 美国-故选
+
+
+  # ----------------------------------------------------------
+  # 6. Streaming
+  # ----------------------------------------------------------
+
+  - name: 📺 Streaming
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/Streaming/Streaming.yaml"
+    policy: 🇺🇸 美国-故选
+
+
+  # ----------------------------------------------------------
+  # 7. Social
+  # ----------------------------------------------------------
+
+  - name: Social
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/Social/Social.yaml"
+    policy: 🇺🇸 美国-故选
+
+
+  # ----------------------------------------------------------
+  # 8. YouTube
+  # 独立策略组
+  # ----------------------------------------------------------
+
+  - name: 📹 YouTube
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/YouTube/YouTube.yaml"
+    policy: 🇺🇸 美国-故选
+
+
+  # ----------------------------------------------------------
+  # 9. BiliBili
+  # ----------------------------------------------------------
+
+  - name: 🔒 哔哩哔哩
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/BiliBili/BiliBili.yaml"
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 10. 局域网
+  # ----------------------------------------------------------
+
+  - name: 🏠 私有网络 / 局域网
+    match:
+      ip_cidr:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 11. Telegram
+  # ----------------------------------------------------------
+
+  - name: 📲 Telegram
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/Telegram/Telegram.yaml"
+    policy: 🇺🇸 美国-故选
+
+
+  # ----------------------------------------------------------
+  # 12. GitHub / GitLab / Atlassian / Cloudflare
+  # ----------------------------------------------------------
+
+  - name: 🐱 代码托管
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/GitHub/GitHub.yaml"
+    policy: 兜底节点
+
+
+  # ----------------------------------------------------------
+  # 13. Microsoft
+  # ----------------------------------------------------------
+
+  - name: Ⓜ️ 微软服务
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/Microsoft/Microsoft.yaml"
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 14. WhatsApp / Line 等香港社交
+  # ----------------------------------------------------------
+
+  - name: HongKongSocial
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/HongKongSocial/HongKongSocial.yaml"
+    policy: 🇭🇰 香港-故选
+
+
+  # ----------------------------------------------------------
+  # 15. 汇丰香港
+  # ----------------------------------------------------------
+
+  - name: 🏦 汇丰香港
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/HongKongBanking/HSBC_HK.yaml"
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 16. 香港银行
+  # ----------------------------------------------------------
+
+  - name: 🏦 香港银行
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/HongKongBanking/HongKongBanking.yaml"
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 17. 券商
+  # ----------------------------------------------------------
+
+  - name: 📈 券商服务
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/Brokerage/Brokerage.yaml"
+    policy: 🇭🇰 香港-故选
+
+
+  # ----------------------------------------------------------
+  # 18. Apple Push
+  # ----------------------------------------------------------
+
+  - name: 🍎 苹果推送
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/ApplePush/ApplePush.yaml"
+    policy: 兜底节点
+
+
+  # ----------------------------------------------------------
+  # 19. Apple 服务
+  # ----------------------------------------------------------
+
+  - name: 🍏 苹果服务
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/AppleDirect/apple.yaml"
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 20. 国际网盘 / 低倍率
+  # ----------------------------------------------------------
+
+  - name: 🌍 国际网盘
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/LowRate/LowRate.yaml"
+    policy: 低倍率-故选
+
+
+  # ----------------------------------------------------------
+  # 21. SOOP
+  # ----------------------------------------------------------
+
+  - name: SOOP
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/SOOP/SOOP.yaml"
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 22. 中国大陆 GEOIP
+  # ----------------------------------------------------------
+
+  - name: GEOIP CN
+    match:
+      geoip:
+        - CN
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 23. 国内服务
+  # ----------------------------------------------------------
+
+  - name: 🔒 国内服务
+    match:
+      rule_set:
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/ChinaMax/ChinaMax.yaml"
+        - "https://raw.githubusercontent.com/SoultionLss/Rules/refs/heads/main/Egern/ChinaCIDR/ChinaCIDR.yaml"
+    policy: DIRECT
+
+
+  # ----------------------------------------------------------
+  # 24. 最终兜底
+  #
+  # 不能再写 PROXY
+  # 不能再写 Final 策略组
+  # ----------------------------------------------------------
+
+  - name: 🐟 漏网之鱼
+    match:
+      default: true
+    policy: 兜底节点
 # ============================================================
 # 规则定义（rules）- 保持您原有的完整配置
 # ============================================================
