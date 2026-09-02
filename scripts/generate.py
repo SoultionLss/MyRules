@@ -169,7 +169,74 @@ def is_valid_ip_cidr(cidr: str) -> bool:
         return True
     return False
 
+def parse_rules_line(line: str, domains: Set[str], ip_cidrs: Set[str]):
+    """
+    解析单行规则，支持：
+    1. 单条规则：DOMAIN-SUFFIX,google.com
+    2. 空格分隔的多条规则：.a1.mzstatic.com .a2.mzstatic.com
+    3. IP-CIDR 规则
+    """
+    line = line.strip()
+    if not line or line.startswith('#'):
+        return
+
+    # 尝试用空格分割（支持 apple.txt 的多域名在同一行）
+    parts = line.split()
+    if len(parts) > 1:
+        for part in parts:
+            parse_rules_line(part, domains, ip_cidrs)
+        return
+
+    # 单条规则处理
+    part = parts[0] if parts else line
+
+    # IP-CIDR
+    if part.startswith('IP-CIDR,'):
+        sub_parts = part.split(',', 2) if part.count(',') >= 2 else part.split(',', 1)
+        if len(sub_parts) >= 2:
+            cidr = sub_parts[1].strip()
+            if is_valid_ip_cidr(cidr):
+                ip_cidrs.add(cidr)
+        return
+
+    if part.startswith('IP-CIDR6,'):
+        sub_parts = part.split(',', 2) if part.count(',') >= 2 else part.split(',', 1)
+        if len(sub_parts) >= 2:
+            cidr = sub_parts[1].strip()
+            if is_valid_ip_cidr(cidr):
+                ip_cidrs.add(cidr)
+        return
+
+    # 域名规则（DOMAIN, DOMAIN-SUFFIX, 或纯域名）
+    if part.startswith('DOMAIN,') or part.startswith('DOMAIN-SUFFIX,'):
+        # 提取域名
+        domain = part.split(',', 1)[1].split(',')[0].strip("'").strip('"')
+        if is_valid_domain(domain):
+            domains.add(domain)
+        return
+
+    # 纯域名（如 .a1.mzstatic.com）
+    # 去除行尾可能残留的注释
+    if '#' in part:
+        part = part.split('#')[0].strip()
+    if not part:
+        return
+
+    # 去掉可能的前缀符号（如 .domain.com 中的 .）
+    if part.startswith('.'):
+        part = part[1:]
+
+    if is_valid_domain(part):
+        domains.add(part)
+
 def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
+    """
+    从 URL 下载规则，返回 (域名集合, IP-CIDR 集合, 是否成功)
+    支持：
+    1. YAML 格式（payload: 列表）
+    2. 每行一条规则的标准格式
+    3. 空格分隔的多域名格式（如 apple.txt）
+    """
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
     try:
         resp = requests.get(url, timeout=30, headers=headers)
@@ -182,84 +249,33 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
     domains = set()
     ip_cidrs = set()
 
+    # 1. 尝试 YAML 解析
     try:
         data = yaml.safe_load(text)
         if isinstance(data, dict) and 'payload' in data:
             items = data['payload']
+            for item in items:
+                if isinstance(item, str):
+                    parse_rules_line(item, domains, ip_cidrs)
+            if domains or ip_cidrs:
+                return domains, ip_cidrs, True
         elif isinstance(data, list):
-            items = data
-        else:
-            raise ValueError("Unsupported YAML structure")
-        for item in items:
-            if not isinstance(item, str):
-                continue
-            line = item.strip()
-            if not line or line.startswith('#'):
-                continue
-            if line.startswith('IP-CIDR,'):
-                parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
-                if len(parts) >= 2:
-                    cidr = parts[1].strip()
-                    ip_cidrs.add(cidr)
-                continue
-            if line.startswith('IP-CIDR6,'):
-                parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
-                if len(parts) >= 2:
-                    cidr = parts[1].strip()
-                    ip_cidrs.add(cidr)
-                continue
-            for prefix in ['DOMAIN,', 'DOMAIN-SUFFIX,']:
-                if line.startswith(prefix):
-                    domain = line[len(prefix):].split(',')[0].strip("'").strip('"')
-                    if is_valid_domain(domain):
-                        domains.add(domain)
-                    break
+            for item in data:
+                if isinstance(item, str):
+                    parse_rules_line(item, domains, ip_cidrs)
+            if domains or ip_cidrs:
+                return domains, ip_cidrs, True
     except Exception:
-        for line in text.splitlines():
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-        # 如果一行包含多个域名（用空格分隔），拆分成多个部分分别处理
-        parts = line.split()
-        for part in parts:
-            part = part.strip()
-            if not part:
-                continue
-            # 处理每个 part 作为独立规则
-            for prefix in ['DOMAIN-SUFFIX,', 'DOMAIN,']:
-                if part.startswith(prefix):
-                    domain = part[len(prefix):].split(',')[0].strip("'").strip('"')
-                    if is_valid_domain(domain):
-                        domains.add(domain)
-                    break
-            else:
-                # 没有前缀，直接作为域名处理
-                if is_valid_domain(part):
-                    domains.add(part)
-            if line.startswith('IP-CIDR,'):
-                parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
-                if len(parts) >= 2:
-                    cidr = parts[1].strip()
-                    if is_valid_ip_cidr(cidr):
-                        ip_cidrs.add(cidr)
-                continue
-            if line.startswith('IP-CIDR6,'):
-                parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
-                if len(parts) >= 2:
-                    cidr = parts[1].strip()
-                    if is_valid_ip_cidr(cidr):
-                        ip_cidrs.add(cidr)
-                continue
-            for prefix in ['DOMAIN-SUFFIX,', 'DOMAIN,']:
-                if line.startswith(prefix):
-                    domain = line[len(prefix):].split(',')[0].strip("'").strip('"')
-                    if is_valid_domain(domain):
-                        domains.add(domain)
-                    break
+        pass
+
+    # 2. 按行解析（支持空格分隔的多域名在同一行）
+    for line in text.splitlines():
+        parse_rules_line(line, domains, ip_cidrs)
 
     if not domains and not ip_cidrs:
         print(f"   ⚠️ 未能提取到有效规则: {url}")
         return set(), set(), False
+
     return domains, ip_cidrs, True
 
 def normalize_domains(domains: List[str]) -> List[str]:
@@ -495,7 +511,6 @@ def generate_platform_files(platform_name: str, serializer: Serializer,
 
     # 1. 生成独立文件
     for raw_name, src_data in separate_sources.items():
-        # 防御：如果 raw_name 看起来像 URL（包含 :// 或开头是 /），提取文件名
         if '://' in raw_name or raw_name.startswith('/'):
             import os
             base = os.path.basename(raw_name)
@@ -562,7 +577,6 @@ def write_platform_readme(platform_dir: Path, merged_groups: Dict[str, RuleSet],
         independent = []
         for name, src in separate_sources.items():
             if src.policy == policy:
-                # 如果 name 是 URL，提取纯文件名用于显示
                 if '://' in name or name.startswith('/'):
                     import os
                     base = os.path.basename(name)
@@ -638,18 +652,14 @@ def main():
         for url in success_urls:
             group_sources[policy].add(extract_source_path(url))
 
-        # ========== 关键修复：处理独立源 ==========
         if separate:
-            # 提取规则名称
             if ':' in match_str:
                 _, name = match_str.split(':', 1)
             else:
-                # 完整 URL：提取文件名（去掉扩展名）
                 import os
                 base = os.path.basename(match_str)
                 name = base.split('.')[0] if '.' in base else base
 
-            # 合并或创建独立源数据
             if name in separate_data:
                 separate_data[name].domains.update(normalized_domains)
                 separate_data[name].ip_cidrs.update(normalized_ip_cidrs)
@@ -663,7 +673,6 @@ def main():
                     sources=[extract_source_path(u) for u in success_urls],
                     url=match_str
                 )
-        # ========================================
 
     merged_groups = {}
     for policy in group_domains.keys():
