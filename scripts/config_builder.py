@@ -1,17 +1,11 @@
-# ✅ `config_builder.py`（完整版，含核对后的平台 README）
-
-```python
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-配置文件生成器
-功能：
-1. 读取 merge_manifest.json 获取合并关系和独立源
-2. 读取 templates/Egern.yaml 作为骨架模板
-3. 为各平台生成主配置文件，输出到仓库二对应平台根目录
-4. 为各平台生成根目录 README.md（引用语法已核对官方文档）
-"""
+# """
+# 配置文件生成器
+# 功能：
+# 1. 读取 merge_manifest.json 获取合并关系和独立源
+# 2. 读取 templates/Egern.yaml 作为骨架模板
+# 3. 为各平台生成主配置文件，输出到仓库二对应平台根目录
+# 4. 为各平台生成根目录 README.md（引用语法已核对官方文档）
+# """
 
 import os
 import json
@@ -445,12 +439,12 @@ def generate_platform_readme(platform: str, manifest: dict, output_dir: Path, cd
     independents = manifest.get("independents", {})
 
     # 构建策略组列表
-    policy_groups = {}
+    policy_groups_dict = {}
     for merge_name, merge_info in merges.items():
         policy = merge_info.get("policy", merge_name)
-        if policy not in policy_groups:
-            policy_groups[policy] = []
-        policy_groups[policy].append({
+        if policy not in policy_groups_dict:
+            policy_groups_dict[policy] = []
+        policy_groups_dict[policy].append({
             "name": merge_name,
             "type": "合集",
             "sources": merge_info.get("sources", [])
@@ -458,9 +452,9 @@ def generate_platform_readme(platform: str, manifest: dict, output_dir: Path, cd
 
     for src_name, src_info in independents.items():
         policy = src_info.get("policy", src_name)
-        if policy not in policy_groups:
-            policy_groups[policy] = []
-        policy_groups[policy].append({
+        if policy not in policy_groups_dict:
+            policy_groups_dict[policy] = []
+        policy_groups_dict[policy].append({
             "name": src_name,
             "type": "独立",
             "sources": []
@@ -631,10 +625,10 @@ rules:
 
     # 构建策略组列表文本
     policy_list_lines = []
-    for policy in sorted(policy_groups.keys()):
+    for policy in sorted(policy_groups_dict.keys()):
         policy_list_lines.append(f"### {policy}")
         policy_list_lines.append("")
-        items = policy_groups[policy]
+        items = policy_groups_dict[policy]
         for item in items:
             if item["type"] == "合集":
                 if item["sources"]:
@@ -806,19 +800,3 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-
----
-
-## ✅ 核对后的修正点
-
-| 平台 | 修正后的语法 | 官方依据 |
-|------|-------------|----------|
-| **Surge** | `RULE-SET,<url>,<policy>` | 支持 `no-resolve` / `extended-matching` |
-| **Loon** | `RULE-SET,<url>,<policy>` | 规则订阅文件每行必须为 Loon 支持的规则语法 |
-| **Quantumult X** | `[filter_remote]` 引用，规则类型选 `RULE-SET` | UI 中添加规则时选择规则集类型 |
-| **Clash** | `rule-providers` + `RULE-SET,<name>,<policy>` | `behavior: classical` 用于混合规则集 |
-| **Egern** | `- rule_set: match: <url> policy: <policy>` | Egern 规则集的正确引用语法 |
-| **Sing-box** | `route.rule_set` + `route.rules` 中 `{ "rule_set": "tag" }` | `rule_set` 匹配规则集 |
-| **v2ray** | `"domain": ["geosite:xxx"]` | 预定义域名列表，如 `geosite:google` |
-
-所有示例链接均使用 `cdn_base` 变量动态生成，确保与实际仓库一致。
