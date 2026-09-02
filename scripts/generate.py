@@ -595,9 +595,17 @@ def main():
         for url in success_urls:
             group_sources[policy].add(extract_source_path(url))
 
-        # 提取源名称（用于独立文件和 manifest）
+        # ============================================================
+        # 【修复点】提取源名称 - 正确处理完整 URL
+        # ============================================================
         if ':' in match_str:
-            _, source_name = match_str.split(':', 1)
+            # 判断是否是完整 URL（以 http:// 或 https:// 开头）
+            if match_str.startswith(('http://', 'https://')):
+                import os
+                base = os.path.basename(match_str)
+                source_name = base.split('.')[0] if '.' in base else base
+            else:
+                _, source_name = match_str.split(':', 1)
         else:
             import os
             base = os.path.basename(match_str)
