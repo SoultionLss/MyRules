@@ -22,6 +22,7 @@ CONFIG_PATH = BASE_DIR / "config" / "my_rules.yaml"
 SOURCES_PATH = BASE_DIR / "config" / "sources.yaml"
 TEMP_DIR = BASE_DIR / "temp_dist"
 FINAL_DIR = BASE_DIR / "dist"
+MANIFEST_PATH = BASE_DIR / "merge_manifest.json"
 
 # ==================== 目标仓库配置 ====================
 def get_target_repo_info():
@@ -170,24 +171,17 @@ def is_valid_ip_cidr(cidr: str) -> bool:
     return False
 
 def parse_rules_line(line: str, domains: Set[str], ip_cidrs: Set[str]):
-    """
-    解析单行规则，支持：
-    1. 单条规则：DOMAIN-SUFFIX,google.com
-    2. 空格分隔的多条规则：.a1.mzstatic.com .a2.mzstatic.com
-    3. IP-CIDR 规则
-    """
+    """解析单行规则，支持空格分隔的多域名"""
     line = line.strip()
     if not line or line.startswith('#'):
         return
 
-    # 尝试用空格分割（支持 apple.txt 的多域名在同一行）
     parts = line.split()
     if len(parts) > 1:
         for part in parts:
             parse_rules_line(part, domains, ip_cidrs)
         return
 
-    # 单条规则处理
     part = parts[0] if parts else line
 
     # IP-CIDR
@@ -207,22 +201,19 @@ def parse_rules_line(line: str, domains: Set[str], ip_cidrs: Set[str]):
                 ip_cidrs.add(cidr)
         return
 
-    # 域名规则（DOMAIN, DOMAIN-SUFFIX, 或纯域名）
+    # 域名规则
     if part.startswith('DOMAIN,') or part.startswith('DOMAIN-SUFFIX,'):
-        # 提取域名
         domain = part.split(',', 1)[1].split(',')[0].strip("'").strip('"')
         if is_valid_domain(domain):
             domains.add(domain)
         return
 
-    # 纯域名（如 .a1.mzstatic.com）
-    # 去除行尾可能残留的注释
+    # 纯域名
     if '#' in part:
         part = part.split('#')[0].strip()
     if not part:
         return
 
-    # 去掉可能的前缀符号（如 .domain.com 中的 .）
     if part.startswith('.'):
         part = part[1:]
 
@@ -230,13 +221,7 @@ def parse_rules_line(line: str, domains: Set[str], ip_cidrs: Set[str]):
         domains.add(part)
 
 def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
-    """
-    从 URL 下载规则，返回 (域名集合, IP-CIDR 集合, 是否成功)
-    支持：
-    1. YAML 格式（payload: 列表）
-    2. 每行一条规则的标准格式
-    3. 空格分隔的多域名格式（如 apple.txt）
-    """
+    """从 URL 下载规则，返回 (域名集合, IP-CIDR 集合, 是否成功)"""
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
     try:
         resp = requests.get(url, timeout=30, headers=headers)
@@ -249,7 +234,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
     domains = set()
     ip_cidrs = set()
 
-    # 1. 尝试 YAML 解析
     try:
         data = yaml.safe_load(text)
         if isinstance(data, dict) and 'payload' in data:
@@ -268,7 +252,6 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
     except Exception:
         pass
 
-    # 2. 按行解析（支持空格分隔的多域名在同一行）
     for line in text.splitlines():
         parse_rules_line(line, domains, ip_cidrs)
 
@@ -372,6 +355,7 @@ class SourceData:
     ip_cidrs: Set[str]
     sources: List[str]
     url: str
+    merge_group: Optional[str] = None  # 新增：所属合集名
 
 # ==================== 序列化器基类 ====================
 class Serializer(ABC):
@@ -506,21 +490,27 @@ def generate_platform_files(platform_name: str, serializer: Serializer,
                            merged_groups: Dict[str, RuleSet],
                            separate_sources: Dict[str, SourceData],
                            output_root: Path):
+    """生成平台规则文件 - 合集文件 + 独立文件都放在子目录下"""
     platform_dir = output_root / platform_name
     platform_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. 生成独立文件
-    for raw_name, src_data in separate_sources.items():
-        if '://' in raw_name or raw_name.startswith('/'):
-            import os
-            base = os.path.basename(raw_name)
-            source_name = base.split('.')[0] if '.' in base else base
-        else:
-            source_name = raw_name
+    # 1. 生成合集文件（子目录：{platform}/{policy}/{policy}.ext）
+    for policy, rule_set in merged_groups.items():
+        strategy_dir = platform_dir / policy
+        strategy_dir.mkdir(parents=True, exist_ok=True)
 
+        filename = f"{policy}{serializer.get_extension()}"
+        file_path = strategy_dir / filename
+        content = serializer.serialize(rule_set)
+        full_content = build_header(rule_set) + "\n" + content
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(full_content)
+
+    # 2. 生成独立文件（子目录：{platform}/{policy}/{source_name}.ext）
+    for source_name, src_data in separate_sources.items():
         policy = src_data.policy
         strategy_dir = platform_dir / policy
-        strategy_dir.mkdir(exist_ok=True)
+        strategy_dir.mkdir(parents=True, exist_ok=True)
 
         domain_list = sorted(src_data.domains)
         ip_cidr_list = sorted(src_data.ip_cidrs)
@@ -543,64 +533,11 @@ def generate_platform_files(platform_name: str, serializer: Serializer,
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(full_content)
 
-    # 2. 生成合并文件
-    for policy, rule_set in merged_groups.items():
-        strategy_dir = platform_dir / policy
-        strategy_dir.mkdir(parents=True, exist_ok=True)
-
-        filename = f"{policy}{serializer.get_extension()}"
-        file_path = strategy_dir / filename
-        content = serializer.serialize(rule_set)
-        full_content = build_header(rule_set) + "\n" + content
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(full_content)
-
     return platform_dir
-
-# ==================== 生成平台 README ====================
-def write_platform_readme(platform_dir: Path, merged_groups: Dict[str, RuleSet],
-                         separate_sources: Dict[str, SourceData], platform: str):
-    lines = [
-        f"# {platform} 规则集",
-        "",
-        "本目录包含以下策略组的规则文件。",
-        "",
-        "## 策略组列表",
-        ""
-    ]
-    for policy in sorted(merged_groups.keys()):
-        lines.append(f"### {policy}")
-        lines.append("")
-        ext = SERIALIZERS[platform].get_extension()
-        merged_file = f"{policy}{ext}"
-        lines.append(f"- 合并文件: `{merged_file}`")
-        independent = []
-        for name, src in separate_sources.items():
-            if src.policy == policy:
-                if '://' in name or name.startswith('/'):
-                    import os
-                    base = os.path.basename(name)
-                    display_name = base.split('.')[0] if '.' in base else base
-                else:
-                    display_name = name
-                independent.append(display_name)
-        if independent:
-            lines.append("- 独立文件:")
-            for name in sorted(independent):
-                lines.append(f"  - `{name}{ext}`")
-        lines.append("")
-    lines.append("## 使用方式")
-    lines.append("在客户端配置中按需引用对应文件，推荐顺序：独立文件优先，合并文件兜底。")
-    lines.append("")
-    lines.append("## 更新频率")
-    lines.append("本规则集每日自动更新（北京时间 20:00）。")
-
-    readme_path = platform_dir / "README.md"
-    with open(readme_path, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(lines))
 
 # ==================== 主程序 ====================
 def main():
+    # 清空临时目录
     if TEMP_DIR.exists():
         shutil.rmtree(TEMP_DIR)
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
@@ -608,17 +545,22 @@ def main():
     print("\n📖 解析规则配置文件...")
     rules = parse_rules_yaml(CONFIG_PATH)
 
-    group_domains = defaultdict(set)
-    group_ip_cidrs = defaultdict(set)
-    group_sources = defaultdict(set)
-    separate_data = {}
+    # 数据结构
+    group_domains = defaultdict(set)      # policy -> 域名集合
+    group_ip_cidrs = defaultdict(set)     # policy -> IP-CIDR 集合
+    group_sources = defaultdict(set)      # policy -> 来源列表
+    merge_groups = defaultdict(list)      # merge_group -> [源名称列表]
+    source_data = {}                      # 源名称 -> SourceData
+    all_policies = set()                  # 所有 policy
 
     for rule in rules:
         if rule.get('type') != 'rule_set' or 'match' not in rule:
             continue
         policy = rule['policy']
         match_str = rule['match']
-        separate = rule.get('separate', False)
+        merge_group = rule.get('merge_group', None)  # 正式字段，非注释
+
+        all_policies.add(policy)
 
         possible_urls = resolve_match(match_str)
         if not possible_urls:
@@ -647,39 +589,47 @@ def main():
             print(f"❌ 规则源 {match_str} 清洗后无有效规则，跳过")
             continue
 
+        # 更新合并组
         group_domains[policy].update(normalized_domains)
         group_ip_cidrs[policy].update(normalized_ip_cidrs)
         for url in success_urls:
             group_sources[policy].add(extract_source_path(url))
 
-        if separate:
-            if ':' in match_str:
-                _, name = match_str.split(':', 1)
-            else:
-                import os
-                base = os.path.basename(match_str)
-                name = base.split('.')[0] if '.' in base else base
+        # 提取源名称（用于独立文件和 manifest）
+        if ':' in match_str:
+            _, source_name = match_str.split(':', 1)
+        else:
+            import os
+            base = os.path.basename(match_str)
+            source_name = base.split('.')[0] if '.' in base else base
 
-            if name in separate_data:
-                separate_data[name].domains.update(normalized_domains)
-                separate_data[name].ip_cidrs.update(normalized_ip_cidrs)
-                separate_data[name].sources.extend([extract_source_path(u) for u in success_urls])
-            else:
-                separate_data[name] = SourceData(
-                    name=name,
-                    policy=policy,
-                    domains=set(normalized_domains),
-                    ip_cidrs=set(normalized_ip_cidrs),
-                    sources=[extract_source_path(u) for u in success_urls],
-                    url=match_str
-                )
+        # 如果源名称已存在，合并数据（同名源可能出现在多个 URL）
+        if source_name in source_data:
+            source_data[source_name].domains.update(normalized_domains)
+            source_data[source_name].ip_cidrs.update(normalized_ip_cidrs)
+            source_data[source_name].sources.extend([extract_source_path(u) for u in success_urls])
+        else:
+            source_data[source_name] = SourceData(
+                name=source_name,
+                policy=policy,
+                domains=set(normalized_domains),
+                ip_cidrs=set(normalized_ip_cidrs),
+                sources=[extract_source_path(u) for u in success_urls],
+                url=match_str,
+                merge_group=merge_group
+            )
 
-    merged_groups = {}
-    for policy in group_domains.keys():
-        domain_list = sorted(group_domains[policy])
-        ip_cidr_list = sorted(group_ip_cidrs[policy])
-        sources = sorted(group_sources[policy])
-        merged_groups[policy] = RuleSet(
+        # 记录合并关系
+        if merge_group:
+            merge_groups[merge_group].append(source_name)
+
+    # 构建合并 RuleSet
+    merged_rulesets = {}
+    for policy in all_policies:
+        domain_list = sorted(group_domains.get(policy, set()))
+        ip_cidr_list = sorted(group_ip_cidrs.get(policy, set()))
+        sources = sorted(group_sources.get(policy, set()))
+        merged_rulesets[policy] = RuleSet(
             policy=policy,
             domains=domain_list,
             ip_cidrs=ip_cidr_list,
@@ -691,13 +641,57 @@ def main():
             owner=OWNER
         )
 
+    # 构建独立源数据（非合并源的独立文件）
+    separate_data = {}
+    for src_name, src in source_data.items():
+        if src.merge_group is None:
+            separate_data[src_name] = src
+
+    # ==================== 生成 merge_manifest.json ====================
+    manifest = {
+        "version": "1.0",
+        "generated_at": datetime.now().isoformat(),
+        "platforms": list(SERIALIZERS.keys()),
+        "merges": {},
+        "independents": {}
+    }
+
+    # 记录合并信息
+    for group_name, src_list in merge_groups.items():
+        # 找到该合集对应的 policy（取第一个源的 policy）
+        policy = None
+        for src_name in src_list:
+            if src_name in source_data:
+                policy = source_data[src_name].policy
+                break
+        if policy is None:
+            continue
+        manifest["merges"][group_name] = {
+            "sources": sorted(set(src_list)),
+            "policy": policy
+        }
+
+    # 记录独立源信息
+    for src_name, src in separate_data.items():
+        manifest["independents"][src_name] = {
+            "policy": src.policy
+        }
+
+    # 写入 manifest
+    with open(MANIFEST_PATH, 'w', encoding='utf-8') as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+    print(f"✅ 生成 merge_manifest.json")
+
+    # ==================== 生成规则文件 ====================
     for platform_name, serializer in SERIALIZERS.items():
         print(f"\n📦 生成 {platform_name} 平台规则...")
-        platform_dir = TEMP_DIR / platform_name
-        generate_platform_files(platform_name, serializer, merged_groups, separate_data, TEMP_DIR)
-        write_platform_readme(platform_dir, merged_groups, separate_data, platform_name)
+        generate_platform_files(
+            platform_name, serializer,
+            merged_rulesets, separate_data, TEMP_DIR
+        )
         print(f"   ✅ {platform_name} 规则生成完成")
 
+    # 原子性替换
     if FINAL_DIR.exists():
         print(f"\n🗑️ 删除旧的 dist 目录: {FINAL_DIR}")
         shutil.rmtree(FINAL_DIR)
@@ -708,8 +702,9 @@ def main():
 
     print("\n🎉 所有规则生成完成！")
     print(f"📁 输出目录: {FINAL_DIR.absolute()}")
-    print(f"📊 策略组数量: {len(merged_groups)}")
+    print(f"📊 策略组数量: {len(merged_rulesets)}")
     print(f"📊 独立源数量: {len(separate_data)}")
+    print(f"📊 合并组数量: {len(merge_groups)}")
 
 if __name__ == "__main__":
     main()
