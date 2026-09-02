@@ -105,15 +105,15 @@ policy_groups:
   # 此处保留您原有的所有 policy_groups 定义
   # （External、手动选择、智能测速、故障转移、业务策略组）
   # 内容较多，请从原 Soultion.yaml 中完整复制
-    - name: 良心云
-    type: select
-    urls:
-      - "YOUR_良心云_SUBSCRIPTION_URL"
+  - name: 良心云
+      type: select
+      urls:
+        - "YOUR_良心云_SUBSCRIPTION_URL"
 
   - name: 宝可梦
-    type: select
-    urls:
-      - "YOUR_宝可梦_SUBSCRIPTION_URL"
+      type: select
+      urls:
+        - "YOUR_宝可梦_SUBSCRIPTION_URL"
 
 
   # ----------------------------------------------------------
@@ -124,16 +124,16 @@ policy_groups:
   # ----------------------------------------------------------
 
   - name: 美国拼车
-    type: select
-    urls:
-      - "YOUR_US_SUBSCRIPTION_URL"
-    prev_hop: 🇺🇸 美国-故选
+      type: select
+      urls:
+        - "YOUR_US_SUBSCRIPTION_URL"
+      prev_hop: 🇺🇸 美国-故选
 
   - name: 香港拼车
-    type: select
-    urls:
-      - "YOUR_HK_SUBSCRIPTION_URL"
-    prev_hop: 🇭🇰 香港-故选
+      type: select
+      urls:
+        - "YOUR_HK_SUBSCRIPTION_URL"
+      prev_hop: 🇭🇰 香港-故选
 
 
   # ==========================================================
@@ -143,44 +143,44 @@ policy_groups:
   # ==========================================================
 
   - name: 🇭🇰 香港-手选
-    type: select
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇭🇰|香港|(\b(HK|Hong|HongKong)\b)'
+      type: select
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇭🇰|香港|(\b(HK|Hong|HongKong)\b)'
 
   - name: 🇹🇼 台湾-手选
-    type: select
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇹🇼|台湾|台北|(\b(TW|Tai|Taiwan)\b)'
+      type: select
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇹🇼|台湾|台北|(\b(TW|Tai|Taiwan)\b)'
 
   - name: 🇯🇵 日本-手选
-    type: select
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇯🇵|日本|东京|大阪|(\b(JP|Japan)\b)'
+      type: select
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇯🇵|日本|东京|大阪|(\b(JP|Japan)\b)'
 
   - name: 🇺🇸 美国-手选
-    type: select
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇺🇸|美国|洛杉矶|圣何塞|纽约|(\b(US|United States)\b)'
+      type: select
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇺🇸|美国|洛杉矶|圣何塞|纽约|(\b(US|United States)\b)'
 
   - name: 🇸🇬 狮城-手选
-    type: select
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇸🇬|新加坡|狮城|(\b(SG|Singapore)\b)'
+      type: select
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇸🇬|新加坡|狮城|(\b(SG|Singapore)\b)'
 
 
   # ==========================================================
@@ -189,59 +189,59 @@ policy_groups:
   # ==========================================================
 
   - name: 🇭🇰 香港-智能
-    type: auto_test
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇭🇰|香港|(\b(HK|Hong|HongKong)\b)'
-    interval: 300
-    timeout: 5
-    hidden: true
+      type: auto_test
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇭🇰|香港|(\b(HK|Hong|HongKong)\b)'
+      interval: 300
+      timeout: 5
+      hidden: true
 
   - name: 🇹🇼 台湾-智能
-    type: auto_test
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)'
-    interval: 300
-    timeout: 5
-    hidden: true
+      type: auto_test
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)'
+      interval: 300
+      timeout: 5
+      hidden: true
 
   - name: 🇯🇵 日本-智能
-    type: auto_test
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇯🇵|日本|东京|大阪|(\b(JP|Japan)\b)'
-    interval: 300
-    timeout: 5
-    hidden: true
+      type: auto_test
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇯🇵|日本|东京|大阪|(\b(JP|Japan)\b)'
+      interval: 300
+      timeout: 5
+      hidden: true
 
   - name: 🇺🇸 美国-智能
-    type: auto_test
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇺🇸|美国|洛杉矶|圣何塞|纽约|(\b(US|United States)\b)'
-    interval: 300
-    timeout: 5
-    hidden: true
+      type: auto_test
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇺🇸|美国|洛杉矶|圣何塞|纽约|(\b(US|United States)\b)'
+      interval: 300
+      timeout: 5
+      hidden: true
 
   - name: 🇸🇬 狮城-智能
-    type: auto_test
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)🇸🇬|新加坡|狮城|(\b(SG|Singapore)\b)'
-    interval: 300
-    timeout: 5
-    hidden: true
+      type: auto_test
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)🇸🇬|新加坡|狮城|(\b(SG|Singapore)\b)'
+      interval: 300
+      timeout: 5
+      hidden: true
 
 
   # ==========================================================
@@ -251,44 +251,44 @@ policy_groups:
   # ==========================================================
 
   - name: 🇭🇰 香港-故选
-    type: fallback
-    policies:
-      - 🇭🇰 香港-手选
-      - 🇭🇰 香港-智能
-    interval: 300
-    timeout: 5
+      type: fallback
+      policies:
+        - 🇭🇰 香港-手选
+        - 🇭🇰 香港-智能
+      interval: 300
+      timeout: 5
 
   - name: 🇹🇼 台湾-故选
-    type: fallback
-    policies:
-      - 🇹🇼 台湾-手选
-      - 🇹🇼 台湾-智能
-    interval: 300
-    timeout: 5
+      type: fallback
+      policies:
+        - 🇹🇼 台湾-手选
+        - 🇹🇼 台湾-智能
+      interval: 300
+      timeout: 5
 
   - name: 🇯🇵 日本-故选
-    type: fallback
-    policies:
-      - 🇯🇵 日本-手选
-      - 🇯🇵 日本-智能
-    interval: 300
-    timeout: 5
+      type: fallback
+      policies:
+        - 🇯🇵 日本-手选
+        - 🇯🇵 日本-智能
+      interval: 300
+      timeout: 5
 
   - name: 🇺🇸 美国-故选
-    type: fallback
-    policies:
-      - 🇺🇸 美国-手选
-      - 🇺🇸 美国-智能
-    interval: 300
-    timeout: 5
+      type: fallback
+      policies:
+        - 🇺🇸 美国-手选
+        - 🇺🇸 美国-智能
+      interval: 300
+      timeout: 5
 
   - name: 🇸🇬 狮城-故选
-    type: fallback
-    policies:
-      - 🇸🇬 狮城-手选
-      - 🇸🇬 狮城-智能
-    interval: 300
-    timeout: 5
+      type: fallback
+      policies:
+        - 🇸🇬 狮城-手选
+        - 🇸🇬 狮城-智能
+      interval: 300
+      timeout: 5
 
 
   # ==========================================================
@@ -297,31 +297,31 @@ policy_groups:
   # ==========================================================
 
   - name: 低倍率-手选
-    type: select
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)低倍|0\.[1-9](?:x|倍)?|\b(LR|Low)\b'
+      type: select
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)低倍|0\.[1-9](?:x|倍)?|\b(LR|Low)\b'
 
   - name: 低倍率-智能
-    type: auto_test
-    policies:
-      - 良心云
-      - 宝可梦
-    flatten: true
-    filter: '(?i)低倍|0\.[1-9](?:x|倍)?|\b(LR|Low)\b'
-    interval: 300
-    timeout: 5
-    hidden: true
+      type: auto_test
+      policies:
+        - 良心云
+        - 宝可梦
+      flatten: true
+      filter: '(?i)低倍|0\.[1-9](?:x|倍)?|\b(LR|Low)\b'
+      interval: 300
+      timeout: 5
+      hidden: true
 
   - name: 低倍率-故选
-    type: fallback
-    policies:
-      - 低倍率-手选
-      - 低倍率-智能
-    interval: 300
-    timeout: 5
+      type: fallback
+      policies:
+        - 低倍率-手选
+        - 低倍率-智能
+      interval: 300
+      timeout: 5
 
 
   # ==========================================================
@@ -331,17 +331,17 @@ policy_groups:
   # ==========================================================
 
   - name: 兜底节点
-    type: select
-    policies:
-      - 🇭🇰 香港-故选
-      - 🇯🇵 日本-故选
-      - 🇺🇸 美国-故选
-      - 🇸🇬 狮城-故选
-      - 🇹🇼 台湾-故选
-      - 低倍率-故选
-      - 美国拼车
-      - 香港拼车
-      - DIRECT
+      type: select
+      policies:
+        - 🇭🇰 香港-故选
+        - 🇯🇵 日本-故选
+        - 🇺🇸 美国-故选
+        - 🇸🇬 狮城-故选
+        - 🇹🇼 台湾-故选
+        - 低倍率-故选
+        - 美国拼车
+        - 香港拼车
+        - DIRECT  
 # ============================================================
 # 规则定义（rules）- 保持您原有的完整配置
 # ============================================================
