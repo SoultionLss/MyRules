@@ -150,7 +150,10 @@ def generate_rule_refs_clash(platform: str, manifest: dict, cdn_base: str) -> tu
 
 
 def generate_rule_refs_egern(platform: str, manifest: dict, cdn_base: str) -> list:
-    """生成 Egern 格式的规则引用"""
+    """
+    生成 Egern 格式的规则引用
+    格式参考官方文档：rules 列表中的每个元素是字典，键为 rule_set
+    """
     refs = []
 
     # 1. 合集引用（带注释）
@@ -160,14 +163,16 @@ def generate_rule_refs_egern(platform: str, manifest: dict, cdn_base: str) -> li
         if not sources:
             continue
 
-        refs.append(f"  # 合并源: {', '.join(sources)} (共 {len(sources)} 个源)")
+        # 注释：显示合并源列表
+        sources_str = ", ".join(sources)
+        refs.append(f"# 合并源: {sources_str} (共 {len(sources)} 个源)")
         url = f"{cdn_base}/{platform}/{policy}/{policy}.yaml"
         refs.append(f"  - rule_set:")
         refs.append(f"      match: {url}")
         refs.append(f"      policy: {policy}")
         refs.append("")  # 空行
 
-    # 2. 独立源引用
+    # 2. 独立源引用（无注释）
     for source_name, src_info in manifest.get("independents", {}).items():
         policy = src_info.get("policy", source_name)
         url = f"{cdn_base}/{platform}/{policy}/{source_name}.yaml"
@@ -639,7 +644,7 @@ rules:
       # 独立源
       {{ "domain": ["geosite:Google"] }}
     ]
-  }}
+  }
 }}""",
             "doc_link": "https://www.v2fly.org/config/routing.html#ruleobject"
         }
