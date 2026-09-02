@@ -759,6 +759,12 @@ rules:
       match: https://cdn.jsdelivr.net/gh/Accademia/Additional_Rule_For_Clash@master/GeositeCN/ChinaMax_Domain.yaml
       policy: DIRECT
 
+  - geoip:
+    match: CN
+    policy: DIRECT
+    no_resolve: false
+    disabled: false
+
   # -------- 8.15 局域网 --------
   - rule_set:
       match: https://cdn.jsdelivr.net/gh/Repcz/Tool@X/Egern/Rules/Lan.yaml
