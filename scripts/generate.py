@@ -219,6 +219,23 @@ def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
+        # 如果一行包含多个域名（用空格分隔），拆分成多个部分分别处理
+        parts = line.split()
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+            # 处理每个 part 作为独立规则
+            for prefix in ['DOMAIN-SUFFIX,', 'DOMAIN,']:
+                if part.startswith(prefix):
+                    domain = part[len(prefix):].split(',')[0].strip("'").strip('"')
+                    if is_valid_domain(domain):
+                        domains.add(domain)
+                    break
+            else:
+                # 没有前缀，直接作为域名处理
+                if is_valid_domain(part):
+                    domains.add(part)
             if line.startswith('IP-CIDR,'):
                 parts = line.split(',', 2) if line.count(',') >= 2 else line.split(',', 1)
                 if len(parts) >= 2:
