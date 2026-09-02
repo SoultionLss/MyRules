@@ -6,6 +6,10 @@ on:
       - main
     paths:
       - 'config/my_rules.yaml'
+      - 'config/sources.yaml'
+      - 'templates/Egern.yaml'
+      - 'scripts/generate.py'
+      - 'scripts/config_builder.py'
   schedule:
     - cron: '0 12 * * *'
   workflow_dispatch:
@@ -21,7 +25,7 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source repo
+      - name: Checkout source repo (MyRules)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -35,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml requests
 
-      - name: Generate rules
+      - name: Generate rules (dist/)
         run: |
           cd scripts
           python generate.py
@@ -45,23 +49,33 @@ jobs:
           cd scripts
           python config_builder.py
 
-      - name: Push to target repository
+      - name: Push to target repository (Rules)
         env:
           TARGET_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
         run: |
+          # 克隆目标仓库
           git clone https://x-access-token:${TARGET_TOKEN}@github.com/${TARGET_REPO}.git target_repo
           cd target_repo
+          # 切换到目标分支（不存在则创建）
           git checkout ${TARGET_BRANCH} || git checkout -b ${TARGET_BRANCH}
-          # 保留旧文件，仅覆盖更新的文件（使用 rsync 或 cp -u）
-          # 这里我们直接覆盖整个平台目录，但保留未变更的文件
-          rm -rf Surge Clash Egern v2ray
+          
+          # 清空所有平台目录（支持 7 个平台）
+          rm -rf Surge Clash Egern Loon QuantumultX Singbox v2ray
+          
+          # 复制新生成的规则文件（dist/ 目录内容）
           cp -r ../dist/* .
+          
+          # 配置 Git 用户信息
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 添加所有变更
           git add .
+          
+          # 检查是否有变更，有则提交并推送
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Update rules from source repo workflow [skip ci]"
+            git commit -m "chore: auto-update rules and templates [skip ci]"
             git push origin ${TARGET_BRANCH}
           fi
