@@ -1,15 +1,95 @@
 # ============================================================
-# 规则来源模板文件
-# 格式: 简写名: "完整规则链接" 或 "URL模板（含 {name}）"
-# 使用完整链接时，脚本会自动推断 {name} 占位符位置
+#  规则来源模板文件（最终版）
+#  说明：
+#    1. 格式为 "简写名: URL模板"，{name} 会被替换为规则名称
+#    2. 各源同时提供 Raw（默认）和 CDN（备选）两种方式
+#    3. 使用完整链接时脚本会自动推断占位符位置
 # ============================================================
 
-# ---- 主流规则源（使用完整链接，自动推断） ----
+# ============================================================
+#  一、通用主流规则源
+# ============================================================
 
+# 1. blackmatrix7/ios_rule_script —— 最全面的规则集
+#    路径: /rule/Surge/{name}/{name}.list
+#    示例: blackmatrix7:Google
 blackmatrix7: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list"
-loyalsoldier: "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/{name}.txt"
-lingjingmaster: "https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/{name}.list"
-rabbitspec: "https://raw.githubusercontent.com/Rabbit-Spec/Surge/refs/heads/Master/Rules/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Surge/{name}/{name}.list"
 
-# ---- 手动指定模板（覆盖自动推断） ----
-# my_custom: "https://raw.githubusercontent.com/MyOrg/MyRules/main/{name}.list"
+# 2. Loyalsoldier/surge-rules —— 精简域名规则
+#    路径: /release/{name}.txt
+#    示例: loyalsoldier:apple
+loyalsoldier: "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/{name}.txt"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/{name}.txt"
+
+# 3. Loyalsoldier/geoip —— GeoIP 国家 IP 段
+#    路径: /release/surge/{name}.txt
+#    示例: loyalsoldier_geoip:cn
+loyalsoldier_geoip: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/{name}.txt"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/{name}.txt"
+
+# 4. Repcz/Tool —— Egern 多平台规则
+#    路径: /X/{name}.yaml  （{name} 可包含路径，如 Egern/Rules/Lan）
+#    示例: repcz:Egern/Rules/Lan
+repcz: "https://raw.githubusercontent.com/Repcz/Tool/X/{name}.yaml"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/Repcz/Tool@X/{name}.yaml"
+
+# 5. ACL4SSR/ACL4SSR —— 广告拦截碎片规则（使用 BanAD 等）
+#    路径: /master/Clash/{name}.list
+#    示例: acl4ssr:BanAD, acl4ssr:BanProgramAD, acl4ssr:LocalAreaNetwork, acl4ssr:UnBan
+acl4ssr: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/{name}.list"
+
+# 6. Accademia/Additional_Rule_For_Clash —— 香港银行、GeositeCN 等规则
+#    路径: /refs/heads/main/{name}.yaml  （{name} 可包含子目录路径）
+#    示例: accademia:Bank/BankHK, accademia:GeositeCN/ChinaMax
+#    特别注意：该仓库采用 {name}.yaml 直接存放，而非 {name}/{name}.yaml
+accademia: "https://raw.githubusercontent.com/Accademia/Additional_Rule_For_Clash/refs/heads/main/{name}.yaml"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/Accademia/Additional_Rule_For_Clash@main/{name}.yaml"
+
+# ============================================================
+#  二、第三方规则源
+# ============================================================
+
+# 7. forecho/broker-rules —— 券商分流规则
+#    路径: /master/rule/Surge/{name}.list
+#    示例: broker:Broker, broker:Topstep
+broker: "https://raw.githubusercontent.com/forecho/broker-rules/master/rule/Surge/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/forecho/broker-rules@master/rule/Surge/{name}.list"
+
+# 8. Rabbit-Spec/Surge —— ChinaCIDR 等
+#    路径: /refs/heads/Master/Rules/{name}.list
+#    示例: rabbitspec:ChinaCIDR
+rabbitspec: "https://raw.githubusercontent.com/Rabbit-Spec/Surge/refs/heads/Master/Rules/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/Rabbit-Spec/Surge@Master/Rules/{name}.list"
+
+# 9. LingJingMaster/Shadowrocket-Rules —— 香港银行、苹果推送等
+#    路径: /refs/heads/main/{name}.list
+#    示例: lingjingmaster:HSBC_HK, lingjingmaster:ApplePush
+lingjingmaster: "https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/LingJingMaster/Shadowrocket-Rules@main/{name}.list"
+
+# ============================================================
+#  三、MetaCubeX 规则源（GeoIP / GeoSite / ASN）
+#  注意：ASN 文件命名格式为 AS{数字}.list，引用时需写全名
+# ============================================================
+
+# 10. MetaCubeX GeoIP（国家 IP 段）
+metacubex_geoip: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/{name}.list"
+
+# 11. MetaCubeX GeoSite（域名分类）
+metacubex_geosite: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/{name}.list"
+
+# 12. MetaCubeX GeoIP Lite（精简版国家 IP）
+metacubex_geoip_lite: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo-lite/geoip/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo-lite/geoip/{name}.list"
+
+# 13. MetaCubeX GeoSite Lite（精简版域名分类）
+metacubex_geosite_lite: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo-lite/geosite/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo-lite/geosite/{name}.list"
+
+# 14. MetaCubeX ASN（自治系统号）- 文件名格式为 AS{数字}.list，引用时需写 AS13335
+metacubex_asn: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/asn/{name}.list"
+# CDN 备选: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/asn/{name}.list"
