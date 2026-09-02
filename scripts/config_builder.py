@@ -80,7 +80,7 @@ def load_json(filepath):
 # ==================== 各平台规则引用生成 ====================
 
 def generate_rule_refs_surge(platform: str, manifest: dict, cdn_base: str) -> list:
-    """生成 Surge / Loon / QuantumultX 格式的规则引用"""
+    """生成 Surge / Loon / QuantumultX 格式的规则引用（INI 格式，支持注释）"""
     refs = []
     ext = ".list"
 
@@ -109,20 +109,22 @@ def generate_rule_refs_surge(platform: str, manifest: dict, cdn_base: str) -> li
     return refs
 
 
-def generate_rule_refs_clash(platform: str, manifest: dict, cdn_base: str) -> tuple:
-    """生成 Clash 格式的规则引用 + rule-providers"""
-    refs = []
+def generate_rule_refs_clash_text(platform: str, manifest: dict, cdn_base: str) -> str:
+    """
+    生成 Clash 格式的规则引用（纯文本方式，保留注释）
+    返回格式化的 YAML 字符串片段
+    """
+    lines = []
     providers = {}
+    rules_lines = []
+    providers_lines = []
 
-    # 1. 合集引用
+    # 1. 收集所有 rule-providers
     for merge_name, merge_info in manifest.get("merges", {}).items():
         sources = merge_info.get("sources", [])
         policy = merge_info.get("policy", merge_name)
         if not sources:
             continue
-
-        refs.append(f"  # 合并源: {', '.join(sources)} (共 {len(sources)} 个源)")
-        refs.append(f"  - RULE-SET, {policy}, {policy}")
 
         providers[policy] = {
             "type": "http",
@@ -130,31 +132,48 @@ def generate_rule_refs_clash(platform: str, manifest: dict, cdn_base: str) -> tu
             "interval": 86400,
             "behavior": "classical"
         }
+        rules_lines.append(f"  # 合并源: {', '.join(sources)} (共 {len(sources)} 个源)")
+        rules_lines.append(f"  - RULE-SET, {policy}, {policy}")
 
-    # 2. 独立源引用
     for source_name, src_info in manifest.get("independents", {}).items():
         policy = src_info.get("policy", source_name)
-        refs.append(f"  - RULE-SET, {source_name}, {policy}")
-
         providers[source_name] = {
             "type": "http",
             "url": f"{cdn_base}/{platform}/{policy}/{source_name}.yaml",
             "interval": 86400,
             "behavior": "classical"
         }
+        rules_lines.append(f"  - RULE-SET, {source_name}, {policy}")
 
-    # 3. 兜底策略
-    refs.append("  - MATCH, PROXY")
+    # 2. 构建 rule-providers 部分（yaml.dump 可以直接输出）
+    providers_yaml = yaml.dump(providers, allow_unicode=True, sort_keys=False, indent=2)
 
-    return refs, providers
+    # 3. 构建完整的 YAML 字符串
+    lines.append("rule-providers:")
+    # 缩进 providers_yaml（每行加 2 空格）
+    for line in providers_yaml.splitlines():
+        if line.strip():
+            lines.append(f"  {line}")
+        else:
+            lines.append("")
+
+    lines.append("rules:")
+    for line in rules_lines:
+        lines.append(line)
+
+    # 4. 兜底策略
+    lines.append("  - MATCH, PROXY")
+
+    return "\n".join(lines)
 
 
-def generate_rule_refs_egern(platform: str, manifest: dict, cdn_base: str) -> list:
+def generate_rule_refs_egern_text(platform: str, manifest: dict, cdn_base: str) -> str:
     """
-    生成 Egern 格式的规则引用
-    格式参考官方文档：rules 列表中的每个元素是字典，键为 rule_set
+    生成 Egern 格式的规则引用（纯文本方式，保留注释）
+    返回格式化的 YAML 字符串片段
     """
-    refs = []
+    lines = []
+    lines.append("rules:")
 
     # 1. 合集引用（带注释）
     for merge_name, merge_info in manifest.get("merges", {}).items():
@@ -163,44 +182,42 @@ def generate_rule_refs_egern(platform: str, manifest: dict, cdn_base: str) -> li
         if not sources:
             continue
 
-        # 注释：显示合并源列表
         sources_str = ", ".join(sources)
-        refs.append(f"# 合并源: {sources_str} (共 {len(sources)} 个源)")
+        lines.append(f"  # 合并源: {sources_str} (共 {len(sources)} 个源)")
         url = f"{cdn_base}/{platform}/{policy}/{policy}.yaml"
-        refs.append(f"  - rule_set:")
-        refs.append(f"      match: {url}")
-        refs.append(f"      policy: {policy}")
-        refs.append("")  # 空行
+        lines.append(f"  - rule_set:")
+        lines.append(f"      match: {url}")
+        lines.append(f"      policy: {policy}")
+        lines.append("")  # 空行
 
     # 2. 独立源引用（无注释）
     for source_name, src_info in manifest.get("independents", {}).items():
         policy = src_info.get("policy", source_name)
         url = f"{cdn_base}/{platform}/{policy}/{source_name}.yaml"
-        refs.append(f"  - rule_set:")
-        refs.append(f"      match: {url}")
-        refs.append(f"      policy: {policy}")
-        refs.append("")
+        lines.append(f"  - rule_set:")
+        lines.append(f"      match: {url}")
+        lines.append(f"      policy: {policy}")
+        lines.append("")
 
     # 3. 兜底策略
-    refs.append("  - default:")
-    refs.append("      policy: PROXY")
+    lines.append("  - default:")
+    lines.append("      policy: PROXY")
 
-    return refs
+    return "\n".join(lines)
 
 
 def generate_rule_refs_singbox(platform: str, manifest: dict, cdn_base: str) -> tuple:
-    """生成 Sing-box 格式的规则引用 + rule_set 定义"""
+    """生成 Sing-box 格式的规则引用 + rule_set 定义（JSON 不支持注释，已移除）"""
     refs = []
     rule_sets = []
 
-    # 1. 合集引用
+    # 1. 合集引用（无注释，JSON 不支持）
     for merge_name, merge_info in manifest.get("merges", {}).items():
         sources = merge_info.get("sources", [])
         policy = merge_info.get("policy", merge_name)
         if not sources:
             continue
 
-        refs.append(f"    # 合并源: {', '.join(sources)} (共 {len(sources)} 个源)")
         refs.append(f'    {{ "rule_set": "{policy}" }},')
 
         rule_sets.append({
@@ -210,7 +227,7 @@ def generate_rule_refs_singbox(platform: str, manifest: dict, cdn_base: str) -> 
             "url": f"{cdn_base}/{platform}/{policy}/{policy}.json"
         })
 
-    # 2. 独立源引用
+    # 2. 独立源引用（无注释）
     for source_name, src_info in manifest.get("independents", {}).items():
         policy = src_info.get("policy", source_name)
         refs.append(f'    {{ "rule_set": "{source_name}" }},')
@@ -230,20 +247,19 @@ def generate_rule_refs_singbox(platform: str, manifest: dict, cdn_base: str) -> 
 
 
 def generate_rule_refs_v2ray(platform: str, manifest: dict, cdn_base: str) -> list:
-    """生成 v2ray 格式的规则引用"""
+    """生成 v2ray 格式的规则引用（JSON 不支持注释，已移除）"""
     refs = []
 
-    # 1. 合集引用
+    # 1. 合集引用（无注释）
     for merge_name, merge_info in manifest.get("merges", {}).items():
         sources = merge_info.get("sources", [])
         policy = merge_info.get("policy", merge_name)
         if not sources:
             continue
 
-        refs.append(f"    # 合并源: {', '.join(sources)} (共 {len(sources)} 个源)")
         refs.append(f'    {{ "domain": ["geosite:{policy}"] }},')
 
-    # 2. 独立源引用
+    # 2. 独立源引用（无注释）
     for source_name, src_info in manifest.get("independents", {}).items():
         policy = src_info.get("policy", source_name)
         refs.append(f'    {{ "domain": ["geosite:{source_name}"] }},')
@@ -275,13 +291,13 @@ def get_platform_config(platform: str, manifest: dict, cdn_base: str) -> dict:
         },
         "Clash": {
             "output_file": "Clash.yaml",
-            "format_type": "yaml",
-            "rule_refs": generate_rule_refs_clash("Clash", manifest, cdn_base)
+            "format_type": "text",
+            "rule_refs": generate_rule_refs_clash_text("Clash", manifest, cdn_base)
         },
         "Egern": {
             "output_file": "Egern.yaml",
-            "format_type": "yaml",
-            "rule_refs": generate_rule_refs_egern("Egern", manifest, cdn_base)
+            "format_type": "text",
+            "rule_refs": generate_rule_refs_egern_text("Egern", manifest, cdn_base)
         },
         "Singbox": {
             "output_file": "Singbox.json",
@@ -390,8 +406,12 @@ def generate_ini_config(platform: str, base_config: dict, policy_groups: list, r
     return '\n'.join(lines)
 
 
-def generate_clash_config(base_config: dict, policy_groups: list, rule_refs: list, providers: dict) -> dict:
-    """生成 Clash YAML 配置"""
+def generate_clash_config_text(base_config: dict, policy_groups: list, rule_refs_text: str) -> str:
+    """
+    生成 Clash YAML 配置（文本方式，保留注释）
+    将 base_config 和 policy_groups 序列化为 YAML，然后拼接待入的 rules 部分
+    """
+    # 1. 构建不含 rules 的基础配置
     data = {
         "mode": "rule",
         "log-level": "info",
@@ -399,11 +419,10 @@ def generate_clash_config(base_config: dict, policy_groups: list, rule_refs: lis
         "allow-lan": False,
         "external-controller": "127.0.0.1:9090",
         "proxies": [],
-        "proxy-groups": [],
-        "rule-providers": providers,
-        "rules": rule_refs
+        "proxy-groups": []
     }
 
+    # 转换 policy_groups
     for group in policy_groups:
         if 'select' in group:
             g = group['select']
@@ -430,19 +449,36 @@ def generate_clash_config(base_config: dict, policy_groups: list, rule_refs: lis
                 "interval": 600
             })
 
-    return data
+    # 序列化基础配置
+    base_yaml = yaml.dump(data, allow_unicode=True, sort_keys=False, indent=2)
+
+    # 拼接 rule_refs_text
+    lines = []
+    lines.append(base_yaml.rstrip())
+    lines.append("")
+    lines.append(rule_refs_text)
+
+    return "\n".join(lines)
 
 
-def generate_egern_config(base_config: dict, policy_groups: list, rule_refs: list) -> dict:
-    """生成 Egern YAML 配置"""
+def generate_egern_config_text(base_config: dict, policy_groups: list, rule_refs_text: str) -> str:
+    """生成 Egern YAML 配置（文本方式，保留注释）"""
     data = dict(base_config)
     data['policy_groups'] = policy_groups
-    data['rules'] = rule_refs
-    return data
+
+    base_yaml = yaml.dump(data, allow_unicode=True, sort_keys=False, indent=2)
+    base_yaml = base_yaml.rstrip()
+
+    lines = [base_yaml]
+    if not base_yaml.endswith('\n'):
+        lines.append('')
+    lines.append(rule_refs_text)
+
+    return '\n'.join(lines)
 
 
 def generate_singbox_config(base_config: dict, policy_groups: list, rule_refs: list, rule_sets: list) -> dict:
-    """生成 Sing-box JSON 配置"""
+    """生成 Sing-box JSON 配置（无注释）"""
     data = {
         "route": {
             "rules": rule_refs,
@@ -456,7 +492,7 @@ def generate_singbox_config(base_config: dict, policy_groups: list, rule_refs: l
 
 
 def generate_v2ray_config(base_config: dict, policy_groups: list, rule_refs: list) -> dict:
-    """生成 v2ray JSON 配置"""
+    """生成 v2ray JSON 配置（无注释）"""
     data = {
         "routing": {
             "rules": rule_refs
@@ -639,9 +675,7 @@ rules:
             "full_example": f"""{{
   "routing": {{
     "rules": [
-      # 合并源: OpenAI, Claude, Grok (共 3 个源)
       {{ "domain": ["geosite:AI"] }},
-      # 独立源
       {{ "domain": ["geosite:Google"] }}
     ]
   }}
@@ -679,7 +713,7 @@ rules:
 
     policy_list = "\n".join(policy_list_lines)
 
-    # 构建 README 内容（使用字符串拼接避免 f-string 花括号冲突）
+    # 构建 README 内容
     content = ""
     content += f"# {platform} 规则集\n\n"
     content += f"本目录包含 {platform} 平台的规则文件和主配置文件。\n\n"
@@ -762,40 +796,33 @@ def main():
             continue
 
         output_file = config["output_file"]
+        output_dir = DIST_DIR / platform
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / output_file
 
         if platform in ["Surge", "Loon", "QuantumultX"]:
             content = generate_ini_config(platform, base_config, policy_groups, config["rule_refs"])
-            output_dir = DIST_DIR / platform
-            output_dir.mkdir(parents=True, exist_ok=True)
-            output_path = output_dir / output_file
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             print(f"   ✅ 生成 {platform} 配置: {output_path}")
 
         elif platform == "Clash":
-            refs, providers = config["rule_refs"]
-            content = generate_clash_config(base_config, policy_groups, refs, providers)
-            output_dir = DIST_DIR / platform
-            output_dir.mkdir(parents=True, exist_ok=True)
-            output_path = output_dir / output_file
-            dump_yaml(content, output_path)
+            rule_refs_text = config["rule_refs"]
+            content = generate_clash_config_text(base_config, policy_groups, rule_refs_text)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(content)
             print(f"   ✅ 生成 {platform} 配置: {output_path}")
 
         elif platform == "Egern":
-            refs = config["rule_refs"]
-            content = generate_egern_config(base_config, policy_groups, refs)
-            output_dir = DIST_DIR / platform
-            output_dir.mkdir(parents=True, exist_ok=True)
-            output_path = output_dir / output_file
-            dump_yaml(content, output_path)
+            rule_refs_text = config["rule_refs"]
+            content = generate_egern_config_text(base_config, policy_groups, rule_refs_text)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(content)
             print(f"   ✅ 生成 {platform} 配置: {output_path}")
 
         elif platform == "Singbox":
             refs, rule_sets = config["rule_refs"]
             content = generate_singbox_config(base_config, policy_groups, refs, rule_sets)
-            output_dir = DIST_DIR / platform
-            output_dir.mkdir(parents=True, exist_ok=True)
-            output_path = output_dir / output_file
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(content, f, indent=2, ensure_ascii=False)
             print(f"   ✅ 生成 {platform} 配置: {output_path}")
@@ -803,9 +830,6 @@ def main():
         elif platform == "v2ray":
             refs = config["rule_refs"]
             content = generate_v2ray_config(base_config, policy_groups, refs)
-            output_dir = DIST_DIR / platform
-            output_dir.mkdir(parents=True, exist_ok=True)
-            output_path = output_dir / output_file
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(content, f, indent=2, ensure_ascii=False)
             print(f"   ✅ 生成 {platform} 配置: {output_path}")
