@@ -330,18 +330,10 @@ def generate_ini_config(platform: str, base_config: dict, policy_groups: list, r
     # Proxy Group 部分
     lines.append("[Proxy Group]")
     for group in policy_groups:
-        # ============================================================
-        # 修复：兼容 select 类型中的 urls 字段（订阅节点策略组）
-        # ============================================================
         if 'select' in group:
             g = group['select']
             name = g.get('name', '')
-
-            # 如果有 urls 字段，这是订阅节点类型，使用 urls 中的订阅链接
             if 'urls' in g:
-                urls = g.get('urls', [])
-                # Surge 的 external 策略组格式: 策略名 = select, 节点名列表
-                # 这里使用 select 类型，将 policies 中的节点作为备选
                 if 'policies' in g and g['policies']:
                     policies = g['policies']
                     if isinstance(policies, list):
@@ -350,7 +342,6 @@ def generate_ini_config(platform: str, base_config: dict, policy_groups: list, r
                         policies_str = str(policies)
                     lines.append(f"{name} = select, {policies_str}")
                 else:
-                    # 没有 policies 时，添加 DIRECT 作为占位
                     lines.append(f"{name} = select, DIRECT")
             elif 'policies' in g:
                 policies = g['policies']
@@ -360,9 +351,7 @@ def generate_ini_config(platform: str, base_config: dict, policy_groups: list, r
                     policies_str = str(policies)
                 lines.append(f"{name} = select, {policies_str}")
             else:
-                # 既没有 urls 也没有 policies，使用 DIRECT 作为默认
                 lines.append(f"{name} = select, DIRECT")
-
         elif 'auto_test' in group:
             g = group['auto_test']
             name = g.get('name', '')
@@ -375,7 +364,6 @@ def generate_ini_config(platform: str, base_config: dict, policy_groups: list, r
                 lines.append(f"{name} = url-test, {policies_str}, url = http://1.1.1.1/generate_204, interval = 600")
             else:
                 lines.append(f"{name} = url-test, DIRECT, url = http://1.1.1.1/generate_204, interval = 600")
-
         elif 'fallback' in group:
             g = group['fallback']
             name = g.get('name', '')
@@ -419,11 +407,6 @@ def generate_clash_config(base_config: dict, policy_groups: list, rule_refs: lis
                 "type": "select",
                 "proxies": g.get('policies', ['DIRECT'])
             }
-            # 如果有 urls 字段，添加到 proxies 中
-            if 'urls' in g:
-                # Clash 的 select 类型不支持直接订阅 URL，需要使用 proxy-providers
-                # 这里简化为将 policies 作为备选节点
-                pass
             data["proxy-groups"].append(proxy_group)
         elif 'fallback' in group:
             g = group['fallback']
@@ -692,8 +675,160 @@ rules:
     policy_list = "\n".join(policy_list_lines)
 
     # 构建 README 内容
-    content = f"""# {platform} 规则集
+    content_lines = []
+    content_lines.append(f"# {platform} 规则集")
+    content_lines.append("")
+    content_lines.append(f"本目录包含 {platform} 平台的规则文件和主配置文件。")
+    content_lines.append("")
+    content_lines.append("## 📁 目录结构")
+    content_lines.append("")
+    content_lines.append("```")
+    content_lines.append(f"{platform}/")
+    content_lines.append("├── 策略组目录/          # 每个策略组一个子目录")
+    content_lines.append("│   ├── 合集文件          # 合并后的规则文件 ({ext})")
+    content_lines.append("│   └── 独立文件          # 独立规则源文件 ({ext})")
+    content_lines.append(f"└── {conf_file}          # 主配置文件")
+    content_lines.append("```")
+    content_lines.append("")
+    content_lines.append("## 📋 策略组列表")
+    content_lines.append("")
+    content_lines.append(policy_list)
+    content_lines.append("## 🔗 引用示例")
+    content_lines.append("")
+    content_lines.append("### 单条规则引用")
+    content_lines.append("")
+    content_lines.append(f"```{platform.lower()}")
+    content_lines.append(ref_example)
+    content_lines.append("```")
+    content_lines.append("")
+    content_lines.append("### 完整配置示例")
+    content_lines.append("")
+    content_lines.append(f"```{platform.lower()}")
+    content_lines.append(full_example)
+    content_lines.append("```")
+    content_lines.append("")
+    content_lines.append("### 官方文档")
+    content_lines.append("")
+    content_lines.append(f"更多语法请参考: {doc_link}")
+    content_lines.append("")
+    content_lines.append("## 📅 更新频率")
+    content_lines.append("")
+    content_lines.append("本规则集每日自动更新（北京时间 20:00）。")
+    content_lines.append("")
+    content_lines.append("---")
+    content_lines.append("")
+    content_lines.append(f"*最后更新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
 
-本目录包含 {platform} 平台的规则文件和主配置文件。
+    content = "\n".join(content_lines)
 
-## 📁 目录结构
+    # 写入 README
+    readme_path = output_dir / platform / "README.md"
+    with open(readme_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print(f"   ✅ 生成 {platform} README: {readme_path}")
+
+
+# ==================== 主函数 ====================
+
+def main():
+    print("📖 读取配置文件...")
+
+    # 1. 检查必要文件
+    if not EGERN_TEMPLATE.exists():
+        print("❌ templates/Egern.yaml 不存在，请先创建")
+        return
+
+    if not MANIFEST_PATH.exists():
+        print("❌ merge_manifest.json 不存在，请先运行 generate.py")
+        return
+
+    # 2. 加载骨架模板和 manifest
+    egern_data = load_yaml(EGERN_TEMPLATE)
+    manifest = load_json(MANIFEST_PATH)
+
+    print(f"✅ 读取 manifest 成功")
+    print(f"   合并组: {len(manifest.get('merges', {}))} 个")
+    print(f"   独立源: {len(manifest.get('independents', {}))} 个")
+
+    # 3. 生成 CDN 基础 URL
+    cdn_base = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{TARGET_BRANCH}"
+
+    # 4. 提取 Egern 模板中的基础配置（不含规则部分）
+    base_config = {}
+    exclude_keys = ['rules', 'policy_groups']
+    for key, value in egern_data.items():
+        if key not in exclude_keys:
+            base_config[key] = value
+
+    # 提取策略组定义
+    policy_groups = egern_data.get('policy_groups', [])
+
+    # 5. 为每个平台生成配置文件
+    platform_names = ["Surge", "Loon", "QuantumultX", "Clash", "Egern", "Singbox", "v2ray"]
+
+    for platform in platform_names:
+        print(f"\n🔄 生成 {platform} 配置...")
+        config = get_platform_config(platform, manifest, cdn_base)
+        if not config:
+            print(f"   ⚠️ 跳过 {platform}（不支持）")
+            continue
+
+        output_file = config["output_file"]
+
+        if platform in ["Surge", "Loon", "QuantumultX"]:
+            content = generate_ini_config(platform, base_config, policy_groups, config["rule_refs"])
+            output_dir = DIST_DIR / platform
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = output_dir / output_file
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
+
+        elif platform == "Clash":
+            refs, providers = config["rule_refs"]
+            content = generate_clash_config(base_config, policy_groups, refs, providers)
+            output_dir = DIST_DIR / platform
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = output_dir / output_file
+            dump_yaml(content, output_path)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
+
+        elif platform == "Egern":
+            refs = config["rule_refs"]
+            content = generate_egern_config(base_config, policy_groups, refs)
+            output_dir = DIST_DIR / platform
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = output_dir / output_file
+            dump_yaml(content, output_path)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
+
+        elif platform == "Singbox":
+            refs, rule_sets = config["rule_refs"]
+            content = generate_singbox_config(base_config, policy_groups, refs, rule_sets)
+            output_dir = DIST_DIR / platform
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = output_dir / output_file
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(content, f, indent=2, ensure_ascii=False)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
+
+        elif platform == "v2ray":
+            refs = config["rule_refs"]
+            content = generate_v2ray_config(base_config, policy_groups, refs)
+            output_dir = DIST_DIR / platform
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = output_dir / output_file
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(content, f, indent=2, ensure_ascii=False)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
+
+    # ==================== 6. 生成各平台根目录 README ====================
+    print("\n📝 生成各平台 README...")
+    for platform in platform_names:
+        generate_platform_readme(platform, manifest, DIST_DIR, cdn_base)
+
+    print("\n🎉 所有平台配置文件生成完成！")
+
+
+if __name__ == "__main__":
+    main()
