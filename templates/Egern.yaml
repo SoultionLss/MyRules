@@ -105,345 +105,243 @@ policy_groups:
   # 此处保留您原有的所有 policy_groups 定义
   # （External、手动选择、智能测速、故障转移、业务策略组）
   # 内容较多，请从原 Soultion.yaml 中完整复制
-  - external:
-      name: Manual
-      type: select
-      urls:
-        - http://your-service-provider
-      hidden: false
-      icon: https://github.com/Repcz/Repcz.github.io/raw/main/docs/egern/Photo/Egern.png
+    - name: 良心云
+    type: select
+    urls:
+      - "YOUR_良心云_SUBSCRIPTION_URL"
 
-  # -------- 第三层 · 手动选择 (手选) --------
-  - select:
-      name: 全部节点-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+  - name: 宝可梦
+    type: select
+    urls:
+      - "YOUR_宝可梦_SUBSCRIPTION_URL"
 
-  - select:
-      name: 家宽-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)家宽|家庭|宽带|Home|Broadband
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
 
-  - select:
-      name: 香港-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇭🇰|香港|(\b(HK|Hong)\b)
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+  # ----------------------------------------------------------
+  # 独立拼车订阅
+  # 注意：
+  # 拼车不是地区节点池成员
+  # 必须经过上一跳
+  # ----------------------------------------------------------
 
-  - select:
-      name: 台湾-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇨🇳|🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+  - name: 美国拼车
+    type: select
+    urls:
+      - "YOUR_US_SUBSCRIPTION_URL"
+    prev_hop: 🇺🇸 美国-故选
 
-  - select:
-      name: 日本-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇯🇵|日本|东京|(\b(JP|Japan)\b)
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+  - name: 香港拼车
+    type: select
+    urls:
+      - "YOUR_HK_SUBSCRIPTION_URL"
+    prev_hop: 🇭🇰 香港-故选
 
-  - select:
-      name: 狮城-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇸🇬|新加坡|狮|(\b(SG|Singapore)\b)
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
 
-  - select:
-      name: 美国-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇺🇸|美国|洛杉矶|圣何塞|(\b(US|United States)\b)
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+  # ==========================================================
+  # 地区手选
+  # 来源：良心云 + 宝可梦
+  # 不包含美国拼车 / 香港拼车
+  # ==========================================================
 
-  - select:
-      name: 低倍率-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)低倍|0\.5|0.5|(\b(LR|Low)\b)
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+  - name: 🇭🇰 香港-手选
+    type: select
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇭🇰|香港|(\b(HK|Hong|HongKong)\b)'
 
-  - select:
-      name: 高倍率-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)高倍|2\.0|2.0|(\b(HR|High)\b)
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+  - name: 🇹🇼 台湾-手选
+    type: select
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇹🇼|台湾|台北|(\b(TW|Tai|Taiwan)\b)'
 
-  - select:
-      name: 冷门节点-手选
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)冷门|欧洲|(\b(EU|Europe)\b)
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+  - name: 🇯🇵 日本-手选
+    type: select
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇯🇵|日本|东京|大阪|(\b(JP|Japan)\b)'
 
-  # -------- 第二层 · 智能选择 (智能) --------
-  - auto_test:
-      name: 香港-智能
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇭🇰|香港|(\b(HK|Hong)\b)
-      tolerance: 0
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+  - name: 🇺🇸 美国-手选
+    type: select
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇺🇸|美国|洛杉矶|圣何塞|纽约|(\b(US|United States)\b)'
 
-  - auto_test:
-      name: 台湾-智能
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇨🇳|🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)
-      tolerance: 0
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+  - name: 🇸🇬 狮城-手选
+    type: select
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇸🇬|新加坡|狮城|(\b(SG|Singapore)\b)'
 
-  - auto_test:
-      name: 日本-智能
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇯🇵|日本|东京|(\b(JP|Japan)\b)
-      tolerance: 0
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
 
-  - auto_test:
-      name: 狮城-智能
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇸🇬|新加坡|狮|(\b(SG|Singapore)\b)
-      tolerance: 0
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+  # ==========================================================
+  # 地区智能
+  # hidden: true
+  # ==========================================================
 
-  - auto_test:
-      name: 美国-智能
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)🇺🇸|美国|洛杉矶|圣何塞|(\b(US|United States)\b)
-      tolerance: 0
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+  - name: 🇭🇰 香港-智能
+    type: auto_test
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇭🇰|香港|(\b(HK|Hong|HongKong)\b)'
+    interval: 300
+    timeout: 5
+    hidden: true
 
-  - auto_test:
-      name: 低倍率-智能
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)低倍|0\.5|0.5|(\b(LR|Low)\b)
-      tolerance: 10
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+  - name: 🇹🇼 台湾-智能
+    type: auto_test
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)'
+    interval: 300
+    timeout: 5
+    hidden: true
 
-  - auto_test:
-      name: 冷门节点-智能
-      policies:
-        - Manual
-      flatten: true
-      include-all: true
-      filter: (?i)冷门|欧洲|(\b(EU|Europe)\b)
-      tolerance: 0
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+  - name: 🇯🇵 日本-智能
+    type: auto_test
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇯🇵|日本|东京|大阪|(\b(JP|Japan)\b)'
+    interval: 300
+    timeout: 5
+    hidden: true
 
-  # -------- 第一层 · 故障转移 (故转) --------
-  - fallback:
-      name: 香港-故转
-      policies:
-        - 香港-手选
-        - 香港-智能
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+  - name: 🇺🇸 美国-智能
+    type: auto_test
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇺🇸|美国|洛杉矶|圣何塞|纽约|(\b(US|United States)\b)'
+    interval: 300
+    timeout: 5
+    hidden: true
 
-  - fallback:
-      name: 台湾-故转
-      policies:
-        - 台湾-手选
-        - 台湾-智能
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+  - name: 🇸🇬 狮城-智能
+    type: auto_test
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)🇸🇬|新加坡|狮城|(\b(SG|Singapore)\b)'
+    interval: 300
+    timeout: 5
+    hidden: true
 
-  - fallback:
-      name: 日本-故转
-      policies:
-        - 日本-手选
-        - 日本-智能
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
 
-  - fallback:
-      name: 狮城-故转
-      policies:
-        - 狮城-手选
-        - 狮城-智能
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+  # ==========================================================
+  # 地区故选
+  # 手选正常时使用手选
+  # 手选不可用时自动转智能
+  # ==========================================================
 
-  - fallback:
-      name: 美国-故转
-      policies:
-        - 美国-手选
-        - 美国-智能
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+  - name: 🇭🇰 香港-故选
+    type: fallback
+    policies:
+      - 🇭🇰 香港-手选
+      - 🇭🇰 香港-智能
+    interval: 300
+    timeout: 5
 
-  - fallback:
-      name: 低倍率-故转
-      policies:
-        - 低倍率-手选
-        - 低倍率-智能
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Round_Robin_1.png
+  - name: 🇹🇼 台湾-故选
+    type: fallback
+    policies:
+      - 🇹🇼 台湾-手选
+      - 🇹🇼 台湾-智能
+    interval: 300
+    timeout: 5
 
-  # -------- 业务策略组 --------
-  - select:
-      name: Global
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - 低倍率-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
+  - name: 🇯🇵 日本-故选
+    type: fallback
+    policies:
+      - 🇯🇵 日本-手选
+      - 🇯🇵 日本-智能
+    interval: 300
+    timeout: 5
 
-  - select:
-      name: Streaming
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+  - name: 🇺🇸 美国-故选
+    type: fallback
+    policies:
+      - 🇺🇸 美国-手选
+      - 🇺🇸 美国-智能
+    interval: 300
+    timeout: 5
 
-  - select:
-      name: YouTube
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+  - name: 🇸🇬 狮城-故选
+    type: fallback
+    policies:
+      - 🇸🇬 狮城-手选
+      - 🇸🇬 狮城-智能
+    interval: 300
+    timeout: 5
 
-  - select:
-      name: TikTok
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/TikTok.png
 
-  - select:
-      name: GitHub
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GitHub.png
+  # ==========================================================
+  # 低倍率
+  # 0.1 ～ 0.9
+  # ==========================================================
 
-  - select:
-      name: Microsoft
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
+  - name: 低倍率-手选
+    type: select
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)低倍|0\.[1-9](?:x|倍)?|\b(LR|Low)\b'
 
-  - select:
-      name: Google
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
+  - name: 低倍率-智能
+    type: auto_test
+    policies:
+      - 良心云
+      - 宝可梦
+    flatten: true
+    filter: '(?i)低倍|0\.[1-9](?:x|倍)?|\b(LR|Low)\b'
+    interval: 300
+    timeout: 5
+    hidden: true
 
-  - select:
-      name: AI
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/OpenAI.png
+  - name: 低倍率-故选
+    type: fallback
+    policies:
+      - 低倍率-手选
+      - 低倍率-智能
+    interval: 300
+    timeout: 5
 
-  - select:
-      name: Social
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
 
-  - select:
-      name: Telegram
-      policies:
-        - 美国-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
+  # ==========================================================
+  # 最终兜底
+  #
+  # 必须放在策略组定义的最后
+  # ==========================================================
 
-  - select:
-      name: HongKongSocial
-      policies:
-        - 香港-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/WhatsApp.png
-
-  - select:
-      name: Final
-      policies:
-        - 美国-故转
-        - 香港-故转
-        - 狮城-故转
-        - 日本-故转
-        - 台湾-故转
-        - 低倍率-故转
-        - Manual
-      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
-
+  - name: 兜底节点
+    type: select
+    policies:
+      - 🇭🇰 香港-故选
+      - 🇯🇵 日本-故选
+      - 🇺🇸 美国-故选
+      - 🇸🇬 狮城-故选
+      - 🇹🇼 台湾-故选
+      - 低倍率-故选
+      - 美国拼车
+      - 香港拼车
+      - DIRECT
 # ============================================================
 # 规则定义（rules）- 保持您原有的完整配置
 # ============================================================
