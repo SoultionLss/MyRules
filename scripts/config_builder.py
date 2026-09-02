@@ -644,7 +644,7 @@ rules:
       # 独立源
       {{ "domain": ["geosite:Google"] }}
     ]
-  }
+  }}
 }}""",
             "doc_link": "https://www.v2fly.org/config/routing.html#ruleobject"
         }
@@ -679,52 +679,35 @@ rules:
 
     policy_list = "\n".join(policy_list_lines)
 
-    # 构建 README 内容
-    content_lines = []
-    content_lines.append(f"# {platform} 规则集")
-    content_lines.append("")
-    content_lines.append(f"本目录包含 {platform} 平台的规则文件和主配置文件。")
-    content_lines.append("")
-    content_lines.append("## 📁 目录结构")
-    content_lines.append("")
-    content_lines.append("```")
-    content_lines.append(f"{platform}/")
-    content_lines.append("├── 策略组目录/          # 每个策略组一个子目录")
-    content_lines.append("│   ├── 合集文件          # 合并后的规则文件 ({ext})")
-    content_lines.append("│   └── 独立文件          # 独立规则源文件 ({ext})")
-    content_lines.append(f"└── {conf_file}          # 主配置文件")
-    content_lines.append("```")
-    content_lines.append("")
-    content_lines.append("## 📋 策略组列表")
-    content_lines.append("")
-    content_lines.append(policy_list)
-    content_lines.append("## 🔗 引用示例")
-    content_lines.append("")
-    content_lines.append("### 单条规则引用")
-    content_lines.append("")
-    content_lines.append(f"```{platform.lower()}")
-    content_lines.append(ref_example)
-    content_lines.append("```")
-    content_lines.append("")
-    content_lines.append("### 完整配置示例")
-    content_lines.append("")
-    content_lines.append(f"```{platform.lower()}")
-    content_lines.append(full_example)
-    content_lines.append("```")
-    content_lines.append("")
-    content_lines.append("### 官方文档")
-    content_lines.append("")
-    content_lines.append(f"更多语法请参考: {doc_link}")
-    content_lines.append("")
-    content_lines.append("## 📅 更新频率")
-    content_lines.append("")
-    content_lines.append("本规则集每日自动更新（北京时间 20:00）。")
-    content_lines.append("")
-    content_lines.append("---")
-    content_lines.append("")
-    content_lines.append(f"*最后更新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
-
-    content = "\n".join(content_lines)
+    # 构建 README 内容（使用字符串拼接避免 f-string 花括号冲突）
+    content = ""
+    content += f"# {platform} 规则集\n\n"
+    content += f"本目录包含 {platform} 平台的规则文件和主配置文件。\n\n"
+    content += "## 📁 目录结构\n\n"
+    content += "```\n"
+    content += f"{platform}/\n"
+    content += "├── 策略组目录/          # 每个策略组一个子目录\n"
+    content += f"│   ├── 合集文件          # 合并后的规则文件 ({ext})\n"
+    content += "│   └── 独立文件          # 独立规则源文件 ({ext})\n"
+    content += f"└── {conf_file}          # 主配置文件\n"
+    content += "```\n\n"
+    content += "## 📋 策略组列表\n\n"
+    content += policy_list
+    content += "## 🔗 引用示例\n\n"
+    content += "### 单条规则引用\n\n"
+    content += f"```{platform.lower()}\n"
+    content += ref_example
+    content += "\n```\n\n"
+    content += "### 完整配置示例\n\n"
+    content += f"```{platform.lower()}\n"
+    content += full_example
+    content += "\n```\n\n"
+    content += "### 官方文档\n\n"
+    content += f"更多语法请参考: {doc_link}\n\n"
+    content += "## 📅 更新频率\n\n"
+    content += "本规则集每日自动更新（北京时间 20:00）。\n\n"
+    content += "---\n\n"
+    content += f"*最后更新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"
 
     # 写入 README
     readme_path = output_dir / platform / "README.md"
