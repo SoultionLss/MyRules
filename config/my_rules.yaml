@@ -1,12 +1,29 @@
 # ============================================================
 # 分流规则配置文件
 # 规则从上到下依次匹配，优先级逐行递减
-# 格式：- rule_set: match: 来源名:规则名  policy: 策略组名  separate: true/false
+#
+# 【引用格式说明】
+#   1. 简写格式: 来源名:规则名
+#      示例: blackmatrix7:Google
+#      说明: 从 sources.yaml 中查找对应来源的 URL 模板，将 {name} 替换为规则名
+#      生成: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
+#
+#   2. 完整 URL 格式: https://...
+#      示例: https://raw.githubusercontent.com/.../xxx.list
+#      说明: 直接使用该 URL 下载规则，不经过 sources.yaml 模板转换
+#
+#   3. separate: true
+#      说明: 除了合并到策略组主文件外，额外生成独立的规则文件
+#      示例: separate: true 时，会生成 OpenAI.list 作为独立文件
+#
+#   4. 策略组名 (policy)
+#      说明: 规则匹配后使用的策略组名称，需在客户端配置中定义对应策略
 # ============================================================
 
 # ============================================================
 # 🧱 DNS 防泄露（优先级 1）
 # ============================================================
+# 已注释，如需启用请取消注释
 # - rule_set:
 #     match: blackmatrix7:HTTPDNS
 #     policy: REJECT
@@ -14,6 +31,8 @@
 
 # ============================================================
 # 🔍 谷歌服务（优先级 2）- 含 Gemini，优先于 AI
+# 来源: blackmatrix7/ios_rule_script
+# 模板: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list
 # ============================================================
 - rule_set:
     match: blackmatrix7:Google
@@ -27,6 +46,8 @@
 
 # ============================================================
 # 🤖 AI 服务（优先级 3）
+# 来源: blackmatrix7/ios_rule_script（OpenAI/Claude/Anthropic）
+#       完整 URL: funnyzak/network-rules（xAI）
 # ============================================================
 - rule_set:
     match: blackmatrix7:OpenAI
@@ -43,20 +64,25 @@
     policy: AI
     separate: true
 
+# xAI 规则（完整 URL，sources.yaml 中无对应来源）
+# 来源: funnyzak/network-rules
+# 注意: 请确认该文件是否存在，若 404 请改用 metacubex_geosite:openai
 - rule_set:
     match: https://raw.githubusercontent.com/funnyzak/network-rules/91d7339ab4e80883cf57dac518d4e92cd102003d/Surge/Rulesets/xAI.list
     policy: AI
     separate: true
 
 # ============================================================
-# 抖音（DIRECT）
+# 抖音（优先级 3.5 - DIRECT）
+# 来源: blackmatrix7/ios_rule_script
 # ============================================================
 - rule_set:
     match: blackmatrix7:DouYin
     policy: DIRECT
 
 # ============================================================
-# TikTok
+# TikTok（优先级 4）
+# 来源: blackmatrix7/ios_rule_script
 # ============================================================
 - rule_set:
     match: blackmatrix7:TikTok
@@ -64,7 +90,9 @@
     separate: true
 
 # ============================================================
-# 📺 流媒体（Netflix、Disney+、HBO、PrimeVideo、Hulu、Peacock、Crunchyroll）
+# 📺 流媒体（优先级 5）
+# Netflix、Disney+、HBO、PrimeVideo、Hulu、Peacock（来源: blackmatrix7）
+# Crunchyroll（完整 URL: HotKids/Rules）
 # ============================================================
 - rule_set:
     match: blackmatrix7:Netflix
@@ -96,13 +124,17 @@
     policy: Streaming
     separate: true
 
+# Crunchyroll（完整 URL，sources.yaml 中无对应来源）
+# 来源: HotKids/Rules
 - rule_set:
     match: https://raw.githubusercontent.com/HotKids/Rules/a06feb8eb0bfc42a406f738806a122a50e2b144f/Surge/RULE-SET/Crunchyroll.list
     policy: Streaming
     separate: true
 
 # ============================================================
-# Social（Twitter、Instagram、Threads、Reddit）
+# Social（优先级 6）
+# Twitter、Instagram、Threads、Reddit
+# 来源: blackmatrix7/ios_rule_script
 # ============================================================
 - rule_set:
     match: blackmatrix7:Twitter
@@ -125,7 +157,8 @@
     separate: true
 
 # ============================================================
-# 📹 YouTube（优先级 4）
+# 📹 YouTube（优先级 7）
+# 来源: blackmatrix7/ios_rule_script
 # ============================================================
 - rule_set:
     match: blackmatrix7:YouTube
@@ -133,21 +166,28 @@
     separate: true
 
 # ============================================================
-# 🔒 哔哩哔哩（优先级 5 - DIRECT）
+# 🔒 哔哩哔哩（优先级 8 - DIRECT）
+# 来源: blackmatrix7/ios_rule_script（完整 URL，已转换为简写格式）
+# 简写: blackmatrix7:BiliBili
+# 原 URL: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/BiliBili/BiliBili.list
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/BiliBili/BiliBili.list
-    policy: BiliBili
+    match: blackmatrix7:BiliBili
+    policy: DIRECT
 
 # ============================================================
-# 🏠 私有网络/局域网（优先级 6 - DIRECT）
-# # ============================================================
+# 🏠 私有网络/局域网（优先级 9 - DIRECT）
+# 来源: Repcz/Tool（已注释，如需启用请取消注释）
+# 模板: https://raw.githubusercontent.com/Repcz/Tool/X/{name}.yaml
+# 使用: repcz:Egern/Rules/Lan
+# ============================================================
 # - rule_set:
-#     match: repcz:Lan
+#     match: repcz:Egern/Rules/Lan
 #     policy: DIRECT
 
 # ============================================================
-# 📲 Telegram（优先级 7）
+# 📲 Telegram（优先级 10）
+# 来源: blackmatrix7/ios_rule_script
 # ============================================================
 - rule_set:
     match: blackmatrix7:Telegram
@@ -155,7 +195,9 @@
     separate: true
 
 # ============================================================
-# 🐱 代码托管（优先级 8）
+# 🐱 代码托管（优先级 11）
+# GitHub（独立文件）、GitLab、Atlassian、Cloudflare
+# 来源: blackmatrix7/ios_rule_script
 # ============================================================
 - rule_set:
     match: blackmatrix7:GitHub
@@ -175,7 +217,9 @@
     policy: GitHub
 
 # ============================================================
-# Ⓜ️ 微软服务（优先级 9）
+# Ⓜ️ 微软服务（优先级 12）
+# 来源: blackmatrix7/ios_rule_script
+# 特殊规则: cn.bing.com 及其子域名走 DIRECT
 # ============================================================
 - rule_set:
     match: blackmatrix7:Microsoft
@@ -191,7 +235,9 @@
     policy: DIRECT
 
 # ============================================================
-# HongKongSocial（WhatsApp、Line）
+# HongKongSocial（优先级 13）
+# WhatsApp、Line
+# 来源: blackmatrix7/ios_rule_script
 # ============================================================
 - rule_set:
     match: blackmatrix7:Whatsapp
@@ -204,7 +250,9 @@
     separate: true
 
 # ============================================================
-# 🏦 汇丰香港（优先级 10）- 含 Reward+
+# 🏦 汇丰香港（优先级 14）- 含 Reward+
+# 来源: LingJingMaster/Shadowrocket-Rules
+# 模板: https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/{name}.list
 # ============================================================
 - rule_set:
     match: lingjingmaster:HSBC_HK
@@ -212,39 +260,55 @@
     separate: true
 
 # ============================================================
-# 🏦 其他香港银行（优先级 11）
+# 🏦 其他香港银行（优先级 15）
+# 来源: lingjingmaster:HK_Banks_Direct（简写）
+#       完整 URL: Bwy999/Surge（固定 commit）
 # ============================================================
 - rule_set:
     match: lingjingmaster:HK_Banks_Direct
     policy: HongKongBanking
 
+# 备用香港银行规则（完整 URL，sources.yaml 中无对应来源）
+# 来源: Bwy999/Surge（固定 commit hash，建议替换为 accademia:Bank/BankHK）
 - rule_set:
     match: https://raw.githubusercontent.com/Bwy999/Surge/fe4d122f120932bb2a40e4c992871c4ec89eb788/Ruleset/HKBank.list
     policy: HongKongBanking
 
 # ============================================================
-# 📈 券商服务（优先级 12）
+# 📈 券商服务（优先级 16）
+# 来源: forecho/broker-rules
+# 模板: https://raw.githubusercontent.com/forecho/broker-rules/master/rule/Surge/{name}.list
+# 已从完整 URL 转换为简写格式: broker:Broker
+# 原 URL: https://raw.githubusercontent.com/forecho/broker-rules/refs/heads/main/rule/Surge/Broker.list
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/forecho/broker-rules/refs/heads/main/rule/Surge/Broker.list
+    match: broker:Broker
     policy: Brokerage
 
 # ============================================================
-# 🍎 苹果推送（优先级 13）
+# 🍎 苹果推送（优先级 17）
+# 来源: LingJingMaster/Shadowrocket-Rules
+# 已从完整 URL 转换为简写格式: lingjingmaster:ApplePush
+# 原 URL: https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/ApplePush.list
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/ApplePush.list
+    match: lingjingmaster:ApplePush
     policy: ApplePush
 
 # ============================================================
-# 🍏 苹果服务（优先级 14 - DIRECT）
+# 🍏 苹果服务（优先级 18 - DIRECT）
+# 来源: Loyalsoldier/surge-rules
+# 已从完整 URL 转换为简写格式: loyalsoldier:apple
+# 原 URL: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/refs/heads/release/apple.txt
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/refs/heads/release/apple.txt
-    policy: AppleDirect
+    match: loyalsoldier:apple
+    policy: DIRECT
 
 # ============================================================
-# 国际网盘（PikPak、Terabox）低倍率
+# 国际网盘（优先级 19 - 低倍率）
+# PikPak、Terabox
+# 来源: blackmatrix7/ios_rule_script
 # ============================================================
 - rule_set:
     match: blackmatrix7:PikPak
@@ -255,38 +319,57 @@
     policy: LowRate
 
 # ============================================================
-# SOOP（DIRECT）
+# SOOP（优先级 20 - DIRECT）
+# 完整 URL，sources.yaml 中无对应来源
+# 来源: KeterCo/ClashRules（固定 commit）
 # ============================================================
 - rule_set:
     match: https://raw.githubusercontent.com/KeterCo/ClashRules/a505e394fb0fad9405dac53d0fa8edaa3075f4c1/Soop.list
-    policy: SOOP
+    policy: DIRECT
 
 # ============================================================
-# GEOIP CN（优先级 15 - DIRECT）
+# GEOIP CN（优先级 21 - DIRECT）
+# 已注释，如需启用请取消注释
+# 来源: Loyalsoldier/geoip
+# 模板: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/{name}.txt
+# 使用: loyalsoldier_geoip:cn
 # ============================================================
 # - rule_set:
-#     match: loyalsoldier:geoip-cn
-#     policy: geoipcn
+#     match: loyalsoldier_geoip:cn
+#     policy: DIRECT
 
 # ============================================================
-# 国内服务（优先级 16 - DIRECT）
+# 国内服务（优先级 22 - DIRECT）
+# ChinaMax 规则（已从完整 URL 转换为简写格式）
+# 来源: blackmatrix7/ios_rule_script
+# 原 URL: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/ChinaMax/ChinaMax.list
+# 简写: blackmatrix7:ChinaMax
+# 备选清洗版本: accademia:GeositeCN/ChinaMax
 # ============================================================
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Surge/ChinaMax/ChinaMax.list
-    policy: ChinaMax
+    match: blackmatrix7:ChinaMax
+    policy: DIRECT
 
 # ============================================================
-# CIDR 直连（优先级 17 - DIRECT）
+# CIDR 直连（优先级 23 - DIRECT）
+# 来源: Rabbit-Spec/Surge（完整 URL）
+#        Loyalsoldier/geoip（完整 URL，已有简写 loyalsoldier_geoip:cn）
 # ============================================================
+# Rabbit-Spec ChinaCIDR（完整 URL，sources.yaml 中已定义 rabbitspec）
+# 建议改用简写: rabbitspec:ChinaCIDR
 - rule_set:
-    match: https://raw.githubusercontent.com/Rabbit-Spec/Surge/refs/heads/Master/Rules/ChinaCIDR.list
-    policy: ChinaCIDR
+    match: rabbitspec:ChinaCIDR
+    policy: DIRECT
 
+# Loyalsoldier GeoIP CN（完整 URL，已转换为简写格式）
+# 原 URL: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/cn.txt
+# 简写: loyalsoldier_geoip:cn
 - rule_set:
-    match: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/cn.txt
-    policy: ChinaCIDR
+    match: loyalsoldier_geoip:cn
+    policy: DIRECT
+
 # ============================================================
-# 🐟 漏网之鱼（优先级 18 - PROXY 兜底）
+# 🐟 漏网之鱼（优先级 24 - PROXY 兜底）
 # ============================================================
 - default:
     policy: PROXY
