@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+配置文件生成器
+功能：
+1. 读取 merge_manifest.json 获取合并关系和独立源
+2. 读取 templates/Egern.yaml 作为骨架模板
+3. 为各平台生成主配置文件，输出到仓库二对应平台根目录
+4. 为各平台生成根目录 README.md（引用语法已核对官方文档）
+"""
+
 import os
-import shutil
-import subprocess
-import requests
-import yaml
-import re
 import json
+import subprocess
+import yaml
 from pathlib import Path
-from collections import defaultdict
 from datetime import datetime
-from typing import Set, List, Dict, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from abc import ABC, abstractmethod
 
 # ==================== 路径配置 ====================
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
-CONFIG_PATH = BASE_DIR / "config" / "my_rules.yaml"
-SOURCES_PATH = BASE_DIR / "config" / "sources.yaml"
-TEMP_DIR = BASE_DIR / "temp_dist"
-FINAL_DIR = BASE_DIR / "dist"
+TEMPLATE_DIR = BASE_DIR / "templates"
+EGERN_TEMPLATE = TEMPLATE_DIR / "Egern.yaml"
 MANIFEST_PATH = BASE_DIR / "merge_manifest.json"
+DIST_DIR = BASE_DIR / "dist"
+
 
 # ==================== 目标仓库配置 ====================
 def get_target_repo_info():
@@ -55,664 +57,789 @@ def get_target_repo_info():
         print(f"⚠️ 无法获取仓库信息，使用默认值: {e}")
         return "SoultionLss/MyRules", "main"
 
+
 TARGET_REPO, TARGET_BRANCH = get_target_repo_info()
-OWNER = TARGET_REPO.split('/')[0]
+FULL_REPO = TARGET_REPO
 
-# ==================== 从 sources.yaml 加载来源模板 ====================
-def infer_name_pattern(url: str) -> str:
-    if '{name}' in url:
-        return url
-    patterns = [
-        r'/([A-Z][a-zA-Z0-9_-]+)/([A-Z][a-zA-Z0-9_-]+)\.([a-z]+)$',
-        r'/([A-Z][a-zA-Z0-9_-]+)\.([a-z]+)$',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, url)
-        if match:
-            name = match.group(1)
-            result = url.replace(f'/{name}/', '/{name}/')
-            result = result.replace(f'/{name}.', '/{name}.')
-            if result == url:
-                filename = match.group(0)
-                result = url.replace(filename, f'/{name}.{match.group(2)}' if '/' in filename else f'{name}.{match.group(2)}')
-                result = result.replace(name, '{name}')
-            return result
-    parts = url.split('/')
-    last_part = parts[-1]
-    if '.' in last_part:
-        name = last_part.split('.')[0]
-        if name in url:
-            result = url.replace(name, '{name}')
-            return result
-    print(f"⚠️ 无法从 URL 推断占位符: {url}，将使用原 URL")
-    return url
 
-def load_url_templates() -> Dict[str, str]:
-    if not SOURCES_PATH.exists():
-        print("⚠️ config/sources.yaml 不存在，使用内置默认模板")
-        return URL_TEMPLATES_DEFAULT
-    try:
-        with open(SOURCES_PATH, 'r', encoding='utf-8') as f:
-            data = yaml.safe_load(f)
-        if not isinstance(data, dict):
-            print("⚠️ sources.yaml 格式错误，应为字典格式，使用默认模板")
-            return URL_TEMPLATES_DEFAULT
-        templates = {}
-        for key, value in data.items():
-            if key.startswith('#'):
-                continue
-            if not isinstance(value, str):
-                continue
-            if '{name}' not in value:
-                inferred = infer_name_pattern(value)
-                templates[key] = inferred
-                if inferred != value:
-                    print(f"   🔄 自动推断: {key} -> {inferred}")
-            else:
-                templates[key] = value
-        if templates:
-            print(f"✅ 从 sources.yaml 加载了 {len(templates)} 个来源模板")
-            return templates
-        else:
-            print("⚠️ sources.yaml 为空，使用默认模板")
-            return URL_TEMPLATES_DEFAULT
-    except Exception as e:
-        print(f"⚠️ 加载 sources.yaml 失败: {e}，使用内置默认模板")
-        return URL_TEMPLATES_DEFAULT
-
-URL_TEMPLATES_DEFAULT = {
-    "blackmatrix7": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{name}/{name}.list",
-    "loyalsoldier": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/{name}.txt",
-    "acl4ssr": "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{name}.list",
-    "repcz": "https://cdn.jsdelivr.net/gh/Repcz/Tool@X/Egern/Rules/{name}.yaml",
-    "accademia": "https://cdn.jsdelivr.net/gh/Accademia/Additional_Rule_For_Clash@master/GeositeCN/{name}.yaml",
-    "repcz_egernrules": "https://raw.githubusercontent.com/Repcz/EgernRules/X/Rules/{name}/{name}.yaml",
-}
-
-print("📖 加载规则来源模板...")
-URL_TEMPLATES = load_url_templates()
-FALLBACK_ORDER = list(URL_TEMPLATES.keys())
-
-def resolve_match(match: str) -> List[str]:
-    if match.startswith(('http://', 'https://')):
-        return [match]
-    if ':' in match:
-        source, name = match.split(':', 1)
-        source = source.lower()
-        if source in URL_TEMPLATES:
-            return [URL_TEMPLATES[source].format(name=name)]
-        else:
-            print(f"⚠️ 未知规则源: {source}，尝试自动回退...")
-            return [URL_TEMPLATES[s].format(name=name) for s in FALLBACK_ORDER if s in URL_TEMPLATES]
-    else:
-        return [URL_TEMPLATES[s].format(name=match) for s in FALLBACK_ORDER if s in URL_TEMPLATES]
-
-def is_valid_domain(domain: str) -> bool:
-    if domain.startswith('.'):
-        domain = domain[1:]
-    if not domain:
-        return False
-    return bool(re.match(r'^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$', domain))
-
-def is_valid_ip_cidr(cidr: str) -> bool:
-    if '/' not in cidr:
-        return False
-    parts = cidr.split('/')
-    if len(parts) != 2:
-        return False
-    ip, mask = parts[0].strip(), parts[1].strip()
-    if re.match(r'^(\d{1,3}\.){3}\d{1,3}$', ip):
-        try:
-            return 0 <= int(mask) <= 32
-        except ValueError:
-            return False
-    if ':' in ip:
-        return True
-    return False
-
-def parse_rules_line(line: str, domains: Set[str], ip_cidrs: Set[str]):
-    """解析单行规则，支持空格分隔的多域名"""
-    line = line.strip()
-    if not line or line.startswith('#'):
-        return
-
-    parts = line.split()
-    if len(parts) > 1:
-        for part in parts:
-            parse_rules_line(part, domains, ip_cidrs)
-        return
-
-    part = parts[0] if parts else line
-
-    # IP-CIDR
-    if part.startswith('IP-CIDR,'):
-        sub_parts = part.split(',', 2) if part.count(',') >= 2 else part.split(',', 1)
-        if len(sub_parts) >= 2:
-            cidr = sub_parts[1].strip()
-            if is_valid_ip_cidr(cidr):
-                ip_cidrs.add(cidr)
-        return
-
-    if part.startswith('IP-CIDR6,'):
-        sub_parts = part.split(',', 2) if part.count(',') >= 2 else part.split(',', 1)
-        if len(sub_parts) >= 2:
-            cidr = sub_parts[1].strip()
-            if is_valid_ip_cidr(cidr):
-                ip_cidrs.add(cidr)
-        return
-
-    # 域名规则
-    if part.startswith('DOMAIN,') or part.startswith('DOMAIN-SUFFIX,'):
-        domain = part.split(',', 1)[1].split(',')[0].strip("'").strip('"')
-        if is_valid_domain(domain):
-            domains.add(domain)
-        return
-
-    # 纯域名
-    if '#' in part:
-        part = part.split('#')[0].strip()
-    if not part:
-        return
-
-    if part.startswith('.'):
-        part = part[1:]
-
-    if is_valid_domain(part):
-        domains.add(part)
-
-def fetch_rules_from_url(url: str) -> Tuple[Set[str], Set[str], bool]:
-    """从 URL 下载规则，返回 (域名集合, IP-CIDR 集合, 是否成功)"""
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-    try:
-        resp = requests.get(url, timeout=30, headers=headers)
-        resp.raise_for_status()
-        text = resp.text
-    except Exception as e:
-        print(f"   ❌ 下载失败: {url} - {e}")
-        return set(), set(), False
-
-    domains = set()
-    ip_cidrs = set()
-
-    try:
-        data = yaml.safe_load(text)
-        if isinstance(data, dict) and 'payload' in data:
-            items = data['payload']
-            for item in items:
-                if isinstance(item, str):
-                    parse_rules_line(item, domains, ip_cidrs)
-            if domains or ip_cidrs:
-                return domains, ip_cidrs, True
-        elif isinstance(data, list):
-            for item in data:
-                if isinstance(item, str):
-                    parse_rules_line(item, domains, ip_cidrs)
-            if domains or ip_cidrs:
-                return domains, ip_cidrs, True
-    except Exception:
-        pass
-
-    for line in text.splitlines():
-        parse_rules_line(line, domains, ip_cidrs)
-
-    if not domains and not ip_cidrs:
-        print(f"   ⚠️ 未能提取到有效规则: {url}")
-        return set(), set(), False
-
-    return domains, ip_cidrs, True
-
-def normalize_domains(domains: List[str]) -> List[str]:
-    cleaned = []
-    for d in domains:
-        d = d.strip()
-        if not d:
-            continue
-        if '#' in d:
-            d = d.split('#')[0].strip()
-        d = d.rstrip(',;')
-        d = d.lower()
-        for prefix in ['http://', 'https://']:
-            if d.startswith(prefix):
-                d = d[len(prefix):]
-        if '/' in d:
-            d = d.split('/')[0]
-        if d and is_valid_domain(d):
-            cleaned.append(d)
-    seen = set()
-    result = []
-    for d in cleaned:
-        if d not in seen:
-            seen.add(d)
-            result.append(d)
-    return result
-
-def normalize_ip_cidrs(ip_cidrs: List[str]) -> List[str]:
-    cleaned = []
-    for c in ip_cidrs:
-        c = c.strip()
-        if not c:
-            continue
-        if '#' in c:
-            c = c.split('#')[0].strip()
-        if is_valid_ip_cidr(c):
-            cleaned.append(c)
-    seen = set()
-    result = []
-    for c in cleaned:
-        if c not in seen:
-            seen.add(c)
-            result.append(c)
-    return result
-
-def extract_source_path(url: str) -> str:
-    if url.startswith('https://'):
-        url = url[8:]
-    if url.startswith('raw.githubusercontent.com/'):
-        parts = url.split('/', 3)
-        if len(parts) >= 4:
-            return f"{parts[1]}/{parts[2]}@{parts[3]}"
-    if url.startswith('cdn.jsdelivr.net/gh/'):
-        parts = url.split('/', 3)
-        if len(parts) >= 4:
-            return parts[3]
-    return url
-
-def parse_rules_yaml(filepath: Path) -> List[Dict]:
+def load_yaml(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
-        data = yaml.safe_load(f)
-    rules = []
-    for item in data:
-        if not isinstance(item, dict):
+        return yaml.safe_load(f)
+
+
+def dump_yaml(data, filepath):
+    with open(filepath, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, sort_keys=False, indent=2)
+
+
+def load_json(filepath):
+    with open(filepath, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+# ==================== 各平台规则引用生成 ====================
+
+def generate_rule_refs_surge(platform: str, manifest: dict, cdn_base: str) -> list:
+    """生成 Surge / Loon / QuantumultX 格式的规则引用（INI 格式，支持注释）"""
+    refs = []
+    ext = ".list"
+
+    # 1. 合集引用（带注释）
+    for merge_name, merge_info in manifest.get("merges", {}).items():
+        sources = merge_info.get("sources", [])
+        policy = merge_info.get("policy", merge_name)
+        if not sources:
             continue
-        if 'rule_set' in item:
-            entry = item['rule_set']
-            entry['type'] = 'rule_set'
-            rules.append(entry)
-    return rules
 
-# ==================== 中间数据结构 ====================
-@dataclass
-class RuleSet:
-    policy: str
-    domains: List[str]
-    ip_cidrs: List[str]
-    total_domains: int
-    total_ip_cidrs: int
-    source_count: int
-    sources: List[str]
-    updated_at: str
-    owner: str
+        refs.append(f"# 合并源: {', '.join(sources)} (共 {len(sources)} 个源)")
+        url = f"{cdn_base}/{platform}/{policy}/{policy}{ext}"
+        refs.append(f"RULE-SET, {url}, {policy}")
+        refs.append("")  # 空行
 
-    @property
-    def total(self) -> int:
-        return self.total_domains + self.total_ip_cidrs
+    # 2. 独立源引用
+    for source_name, src_info in manifest.get("independents", {}).items():
+        policy = src_info.get("policy", source_name)
+        url = f"{cdn_base}/{platform}/{policy}/{source_name}{ext}"
+        refs.append(f"RULE-SET, {url}, {policy}")
+        refs.append("")
 
-@dataclass
-class SourceData:
-    name: str
-    policy: str
-    domains: Set[str]
-    ip_cidrs: Set[str]
-    sources: List[str]
-    url: str
-    merge_group: Optional[str] = None  # 新增：所属合集名
+    # 3. 兜底策略
+    refs.append("FINAL, PROXY")
 
-# ==================== 序列化器基类 ====================
-class Serializer(ABC):
-    @abstractmethod
-    def get_extension(self) -> str:
-        pass
-    @abstractmethod
-    def serialize(self, rule_set: RuleSet) -> str:
-        pass
-    @abstractmethod
-    def get_import_example(self, policy: str, base_url: str) -> str:
-        pass
+    return refs
 
-# ==================== 各平台序列化器 ====================
-class SurgeSerializer(Serializer):
-    def get_extension(self) -> str:
-        return ".list"
-    def serialize(self, rule_set: RuleSet) -> str:
-        lines = []
-        for d in sorted(rule_set.domains):
-            if d.startswith('.'):
-                d = d[1:]
-            lines.append(f".{d}")
-        for cidr in sorted(rule_set.ip_cidrs):
-            lines.append(f"IP-CIDR,{cidr},{rule_set.policy}")
-        return "\n".join(lines)
-    def get_import_example(self, policy: str, base_url: str) -> str:
-        return f"RULE-SET, {base_url}/{policy}.list, {policy}"
 
-class LoonSerializer(Serializer):
-    def get_extension(self) -> str:
-        return ".list"
-    def serialize(self, rule_set: RuleSet) -> str:
-        lines = []
-        for d in sorted(rule_set.domains):
-            lines.append(f"DOMAIN-SUFFIX,{d},{rule_set.policy}")
-        for cidr in sorted(rule_set.ip_cidrs):
-            lines.append(f"IP-CIDR,{cidr},{rule_set.policy}")
-        return "\n".join(lines)
-    def get_import_example(self, policy: str, base_url: str) -> str:
-        return f"RULE-SET, {base_url}/{policy}.list, {policy}"
+def generate_rule_refs_clash_text(platform: str, manifest: dict, cdn_base: str) -> str:
+    """
+    生成 Clash 格式的规则引用（纯文本方式，保留注释）
+    返回格式化的 YAML 字符串片段
+    """
+    lines = []
+    providers = {}
+    rules_lines = []
+    providers_lines = []
 
-class ClashSerializer(Serializer):
-    def get_extension(self) -> str:
-        return ".yaml"
-    def serialize(self, rule_set: RuleSet) -> str:
-        lines = ["payload:"]
-        for d in sorted(rule_set.domains):
-            lines.append(f"  - DOMAIN-SUFFIX,{d},{rule_set.policy}")
-        for cidr in sorted(rule_set.ip_cidrs):
-            lines.append(f"  - IP-CIDR,{cidr},{rule_set.policy}")
-        return "\n".join(lines)
-    def get_import_example(self, policy: str, base_url: str) -> str:
-        return f"- RULE-SET, {base_url}/{policy}.yaml, {policy}"
+    # 1. 收集所有 rule-providers
+    for merge_name, merge_info in manifest.get("merges", {}).items():
+        sources = merge_info.get("sources", [])
+        policy = merge_info.get("policy", merge_name)
+        if not sources:
+            continue
 
-class EgernSerializer(Serializer):
-    def get_extension(self) -> str:
-        return ".yaml"
-    def serialize(self, rule_set: RuleSet) -> str:
-        lines = ["rules:"]
-        for d in sorted(rule_set.domains):
-            lines.append(f"  - domain_suffix: {d}")
-        for cidr in sorted(rule_set.ip_cidrs):
-            lines.append(f"  - ip_cidr: {cidr}")
-        return "\n".join(lines)
-    def get_import_example(self, policy: str, base_url: str) -> str:
-        return f"- rule_set:\n    match: {base_url}/{policy}.yaml\n    policy: {policy}"
+        providers[policy] = {
+            "type": "http",
+            "url": f"{cdn_base}/{platform}/{policy}/{policy}.yaml",
+            "interval": 86400,
+            "behavior": "classical"
+        }
+        rules_lines.append(f"  # 合并源: {', '.join(sources)} (共 {len(sources)} 个源)")
+        rules_lines.append(f"  - RULE-SET, {policy}, {policy}")
 
-class V2raySerializer(Serializer):
-    def get_extension(self) -> str:
-        return "_domain.txt"
-    def serialize(self, rule_set: RuleSet) -> str:
-        return "\n".join(sorted(rule_set.domains))
-    def get_import_example(self, policy: str, base_url: str) -> str:
-        return f"在配置文件的 'domain' 或 'domains' 字段引用 {base_url}/{policy}_domain.txt"
+    for source_name, src_info in manifest.get("independents", {}).items():
+        policy = src_info.get("policy", source_name)
+        providers[source_name] = {
+            "type": "http",
+            "url": f"{cdn_base}/{platform}/{policy}/{source_name}.yaml",
+            "interval": 86400,
+            "behavior": "classical"
+        }
+        rules_lines.append(f"  - RULE-SET, {source_name}, {policy}")
 
-class QuantumultXSerializer(Serializer):
-    def get_extension(self) -> str:
-        return ".list"
-    def serialize(self, rule_set: RuleSet) -> str:
-        lines = []
-        for d in sorted(rule_set.domains):
-            lines.append(f"HOST-SUFFIX,{d},{rule_set.policy}")
-        for cidr in sorted(rule_set.ip_cidrs):
-            lines.append(f"IP-CIDR,{cidr},{rule_set.policy}")
-        return "\n".join(lines)
-    def get_import_example(self, policy: str, base_url: str) -> str:
-        return f"RULE-SET, {base_url}/{policy}.list, {policy}"
+    # 2. 构建 rule-providers 部分（yaml.dump 可以直接输出）
+    providers_yaml = yaml.dump(providers, allow_unicode=True, sort_keys=False, indent=2)
 
-class SingboxSerializer(Serializer):
-    def get_extension(self) -> str:
-        return ".json"
-    def serialize(self, rule_set: RuleSet) -> str:
-        data = {"version": 1, "rules": []}
-        if rule_set.domains:
-            data["rules"].append({"domain_suffix": sorted(rule_set.domains)})
-        if rule_set.ip_cidrs:
-            data["rules"].append({"ip_cidr": sorted(rule_set.ip_cidrs)})
-        return json.dumps(data, indent=2, ensure_ascii=False)
-    def get_import_example(self, policy: str, base_url: str) -> str:
-        return f"在 route.rules 中引用: {{ 'rule_set': '{base_url}/{policy}.json' }}"
+    # 3. 构建完整的 YAML 字符串
+    lines.append("rule-providers:")
+    # 缩进 providers_yaml（每行加 2 空格）
+    for line in providers_yaml.splitlines():
+        if line.strip():
+            lines.append(f"  {line}")
+        else:
+            lines.append("")
 
-SERIALIZERS = {
-    "Surge": SurgeSerializer(),
-    "Loon": LoonSerializer(),
-    "Clash": ClashSerializer(),
-    "Egern": EgernSerializer(),
-    "v2ray": V2raySerializer(),
-    "QuantumultX": QuantumultXSerializer(),
-    "Singbox": SingboxSerializer(),
-}
+    lines.append("rules:")
+    for line in rules_lines:
+        lines.append(line)
 
-# ==================== 头部注释生成 ====================
-def build_header(rule_set: RuleSet) -> str:
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # 4. 兜底策略
+    lines.append("  - MATCH, PROXY")
+
+    return "\n".join(lines)
+
+
+def generate_rule_refs_egern_text(platform: str, manifest: dict, cdn_base: str) -> str:
+    """
+    生成 Egern 格式的规则引用（纯文本方式，保留注释）
+    返回格式化的 YAML 字符串片段
+    """
+    lines = []
+    lines.append("rules:")
+
+    # 1. 合集引用（带注释）
+    for merge_name, merge_info in manifest.get("merges", {}).items():
+        sources = merge_info.get("sources", [])
+        policy = merge_info.get("policy", merge_name)
+        if not sources:
+            continue
+
+        sources_str = ", ".join(sources)
+        lines.append(f"  # 合并源: {sources_str} (共 {len(sources)} 个源)")
+        url = f"{cdn_base}/{platform}/{policy}/{policy}.yaml"
+        lines.append(f"  - rule_set:")
+        lines.append(f"      match: {url}")
+        lines.append(f"      policy: {policy}")
+        lines.append("")  # 空行
+
+    # 2. 独立源引用（无注释）
+    for source_name, src_info in manifest.get("independents", {}).items():
+        policy = src_info.get("policy", source_name)
+        url = f"{cdn_base}/{platform}/{policy}/{source_name}.yaml"
+        lines.append(f"  - rule_set:")
+        lines.append(f"      match: {url}")
+        lines.append(f"      policy: {policy}")
+        lines.append("")
+
+    # 3. 兜底策略
+    lines.append("  - default:")
+    lines.append("      policy: PROXY")
+
+    return "\n".join(lines)
+
+
+def generate_rule_refs_singbox(platform: str, manifest: dict, cdn_base: str) -> tuple:
+    """生成 Sing-box 格式的规则引用 + rule_set 定义（JSON 不支持注释，已移除）"""
+    refs = []
+    rule_sets = []
+
+    # 1. 合集引用（无注释）
+    for merge_name, merge_info in manifest.get("merges", {}).items():
+        sources = merge_info.get("sources", [])
+        policy = merge_info.get("policy", merge_name)
+        if not sources:
+            continue
+
+        refs.append(f'    {{ "rule_set": "{policy}" }},')
+
+        rule_sets.append({
+            "tag": policy,
+            "type": "remote",
+            "format": "source",
+            "url": f"{cdn_base}/{platform}/{policy}/{policy}.json"
+        })
+
+    # 2. 独立源引用（无注释）
+    for source_name, src_info in manifest.get("independents", {}).items():
+        policy = src_info.get("policy", source_name)
+        refs.append(f'    {{ "rule_set": "{source_name}" }},')
+
+        rule_sets.append({
+            "tag": source_name,
+            "type": "remote",
+            "format": "source",
+            "url": f"{cdn_base}/{platform}/{policy}/{source_name}.json"
+        })
+
+    # 3. 兜底策略（将最后一个逗号移除）
+    if refs:
+        refs[-1] = refs[-1].rstrip(',')
+
+    return refs, rule_sets
+
+
+def generate_rule_refs_v2ray(platform: str, manifest: dict, cdn_base: str) -> list:
+    """生成 v2ray 格式的规则引用（JSON 不支持注释，已移除）"""
+    refs = []
+
+    # 1. 合集引用（无注释）
+    for merge_name, merge_info in manifest.get("merges", {}).items():
+        sources = merge_info.get("sources", [])
+        policy = merge_info.get("policy", merge_name)
+        if not sources:
+            continue
+
+        refs.append(f'    {{ "domain": ["geosite:{policy}"] }},')
+
+    # 2. 独立源引用（无注释）
+    for source_name, src_info in manifest.get("independents", {}).items():
+        policy = src_info.get("policy", source_name)
+        refs.append(f'    {{ "domain": ["geosite:{source_name}"] }},')
+
+    # 3. 兜底策略
+    if refs:
+        refs[-1] = refs[-1].rstrip(',')
+
+    return refs
+
+
+def get_platform_config(platform: str, manifest: dict, cdn_base: str) -> dict:
+    """根据平台生成对应的配置内容"""
+    configs = {
+        "Surge": {
+            "output_file": "Surge.conf",
+            "format_type": "ini",
+            "rule_refs": generate_rule_refs_surge("Surge", manifest, cdn_base)
+        },
+        "Loon": {
+            "output_file": "Loon.conf",
+            "format_type": "ini",
+            "rule_refs": generate_rule_refs_surge("Loon", manifest, cdn_base)
+        },
+        "QuantumultX": {
+            "output_file": "QuantumultX.conf",
+            "format_type": "ini",
+            "rule_refs": generate_rule_refs_surge("QuantumultX", manifest, cdn_base)
+        },
+        "Clash": {
+            "output_file": "Clash.yaml",
+            "format_type": "text",
+            "rule_refs": generate_rule_refs_clash_text("Clash", manifest, cdn_base)
+        },
+        "Egern": {
+            "output_file": "Egern.yaml",
+            "format_type": "text",
+            "rule_refs": generate_rule_refs_egern_text("Egern", manifest, cdn_base)
+        },
+        "Singbox": {
+            "output_file": "Singbox.json",
+            "format_type": "json",
+            "rule_refs": generate_rule_refs_singbox("Singbox", manifest, cdn_base)
+        },
+        "v2ray": {
+            "output_file": "v2ray.json",
+            "format_type": "json",
+            "rule_refs": generate_rule_refs_v2ray("v2ray", manifest, cdn_base)
+        }
+    }
+    return configs.get(platform)
+
+
+# ==================== 各平台配置生成函数 ====================
+
+def generate_ini_config(platform: str, base_config: dict, policy_groups: list, rule_refs: list) -> str:
+    """
+    生成 INI 格式配置（Surge / Loon / QuantumultX）
+    兼容 policy_groups 中的 urls 字段（订阅节点类型）
+    """
     lines = [
-        "# ============================================================",
-        f"# 规则策略: {rule_set.policy}",
-        f"# 域名规则总数: {rule_set.total_domains} 条",
-        f"# IP-CIDR 规则总数: {rule_set.total_ip_cidrs} 条",
-        f"# 规则来源条目总数: {rule_set.source_count} 条",
-        f"# 规则来源: {', '.join(rule_set.sources)}",
-        f"# 作者: {rule_set.owner}",
-        f"# 最后更新: {now}",
+        f"# ============================================================",
+        f"# {platform} 主配置文件（由 config_builder 生成）",
+        f"# 仓库: https://github.com/{FULL_REPO}",
+        f"# 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         "# ============================================================",
         ""
     ]
+
+    # General 部分
+    lines.append("[General]")
+    general = base_config.get('http_port') or base_config.get('general')
+    if isinstance(general, dict):
+        for key, value in general.items():
+            lines.append(f"{key} = {value}")
+    elif general:
+        lines.append(str(general))
+    else:
+        lines.append("skip-proxy = 127.0.0.1, 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 100.64.0.0/10, localhost, *.local")
+        lines.append("bypass-tun = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12")
+        lines.append("dns-server = 223.5.5.5, 119.29.29.29")
+    lines.append("")
+
+    # Proxy 部分
+    lines.append("[Proxy]")
+    lines.append("# 在此填写您的代理节点")
+    lines.append("")
+
+    # Proxy Group 部分
+    lines.append("[Proxy Group]")
+    for group in policy_groups:
+        if 'select' in group:
+            g = group['select']
+            name = g.get('name', '')
+            if 'urls' in g:
+                if 'policies' in g and g['policies']:
+                    policies = g['policies']
+                    if isinstance(policies, list):
+                        policies_str = ', '.join(policies)
+                    else:
+                        policies_str = str(policies)
+                    lines.append(f"{name} = select, {policies_str}")
+                else:
+                    lines.append(f"{name} = select, DIRECT")
+            elif 'policies' in g:
+                policies = g['policies']
+                if isinstance(policies, list):
+                    policies_str = ', '.join(policies)
+                else:
+                    policies_str = str(policies)
+                lines.append(f"{name} = select, {policies_str}")
+            else:
+                lines.append(f"{name} = select, DIRECT")
+        elif 'auto_test' in group:
+            g = group['auto_test']
+            name = g.get('name', '')
+            if 'policies' in g:
+                policies = g['policies']
+                if isinstance(policies, list):
+                    policies_str = ', '.join(policies)
+                else:
+                    policies_str = str(policies)
+                lines.append(f"{name} = url-test, {policies_str}, url = http://1.1.1.1/generate_204, interval = 600")
+            else:
+                lines.append(f"{name} = url-test, DIRECT, url = http://1.1.1.1/generate_204, interval = 600")
+        elif 'fallback' in group:
+            g = group['fallback']
+            name = g.get('name', '')
+            if 'policies' in g:
+                policies = g['policies']
+                if isinstance(policies, list):
+                    policies_str = ', '.join(policies)
+                else:
+                    policies_str = str(policies)
+                lines.append(f"{name} = fallback, {policies_str}")
+            else:
+                lines.append(f"{name} = fallback, DIRECT, DIRECT")
+    lines.append("")
+
+    # Rule 部分
+    lines.append("[Rule]")
+    lines.extend(rule_refs)
+
     return '\n'.join(lines)
 
-# ==================== 生成单个平台的规则文件 ====================
-def generate_platform_files(platform_name: str, serializer: Serializer,
-                           merged_groups: Dict[str, RuleSet],
-                           separate_sources: Dict[str, SourceData],
-                           output_root: Path):
-    """生成平台规则文件 - 合集文件 + 独立文件都放在子目录下"""
-    platform_dir = output_root / platform_name
-    platform_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. 生成合集文件（子目录：{platform}/{policy}/{policy}.ext）
-    for policy, rule_set in merged_groups.items():
-        strategy_dir = platform_dir / policy
-        strategy_dir.mkdir(parents=True, exist_ok=True)
-
-        filename = f"{policy}{serializer.get_extension()}"
-        file_path = strategy_dir / filename
-        content = serializer.serialize(rule_set)
-        full_content = build_header(rule_set) + "\n" + content
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(full_content)
-
-    # 2. 生成独立文件（子目录：{platform}/{policy}/{source_name}.ext）
-    for source_name, src_data in separate_sources.items():
-        policy = src_data.policy
-        strategy_dir = platform_dir / policy
-        strategy_dir.mkdir(parents=True, exist_ok=True)
-
-        domain_list = sorted(src_data.domains)
-        ip_cidr_list = sorted(src_data.ip_cidrs)
-        rule_set = RuleSet(
-            policy=policy,
-            domains=domain_list,
-            ip_cidrs=ip_cidr_list,
-            total_domains=len(domain_list),
-            total_ip_cidrs=len(ip_cidr_list),
-            source_count=len(src_data.sources),
-            sources=src_data.sources,
-            updated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            owner=OWNER
-        )
-
-        filename = f"{source_name}{serializer.get_extension()}"
-        file_path = strategy_dir / filename
-        content = serializer.serialize(rule_set)
-        full_content = build_header(rule_set) + "\n" + content
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(full_content)
-
-    return platform_dir
-
-# ==================== 主程序 ====================
-def main():
-    # 清空临时目录
-    if TEMP_DIR.exists():
-        shutil.rmtree(TEMP_DIR)
-    TEMP_DIR.mkdir(parents=True, exist_ok=True)
-
-    print("\n📖 解析规则配置文件...")
-    rules = parse_rules_yaml(CONFIG_PATH)
-
-    # 数据结构
-    group_domains = defaultdict(set)      # policy -> 域名集合
-    group_ip_cidrs = defaultdict(set)     # policy -> IP-CIDR 集合
-    group_sources = defaultdict(set)      # policy -> 来源列表
-    merge_groups = defaultdict(list)      # merge_group -> [源名称列表]
-    source_data = {}                      # 源名称 -> SourceData
-    all_policies = set()                  # 所有 policy
-
-    for rule in rules:
-        if rule.get('type') != 'rule_set' or 'match' not in rule:
-            continue
-        policy = rule['policy']
-        match_str = rule['match']
-        merge_group = rule.get('merge_group', None)  # 正式字段，非注释
-
-        all_policies.add(policy)
-
-        possible_urls = resolve_match(match_str)
-        if not possible_urls:
-            print(f"⚠️ 无法解析: {match_str}，跳过")
-            continue
-
-        domains = set()
-        ip_cidrs = set()
-        success_urls = []
-        for url in possible_urls:
-            d, c, ok = fetch_rules_from_url(url)
-            if ok:
-                domains.update(d)
-                ip_cidrs.update(c)
-                success_urls.append(url)
-                break
-
-        if not domains and not ip_cidrs:
-            print(f"❌ 规则源 {match_str} 完全失败，跳过")
-            continue
-
-        normalized_domains = normalize_domains(list(domains))
-        normalized_ip_cidrs = normalize_ip_cidrs(list(ip_cidrs))
-
-        if not normalized_domains and not normalized_ip_cidrs:
-            print(f"❌ 规则源 {match_str} 清洗后无有效规则，跳过")
-            continue
-
-        # 更新合并组
-        group_domains[policy].update(normalized_domains)
-        group_ip_cidrs[policy].update(normalized_ip_cidrs)
-        for url in success_urls:
-            group_sources[policy].add(extract_source_path(url))
-
-        # ============================================================
-        # 【修复点】提取源名称 - 正确处理完整 URL
-        # ============================================================
-        if ':' in match_str:
-            # 判断是否是完整 URL（以 http:// 或 https:// 开头）
-            if match_str.startswith(('http://', 'https://')):
-                import os
-                base = os.path.basename(match_str)
-                source_name = base.split('.')[0] if '.' in base else base
-            else:
-                _, source_name = match_str.split(':', 1)
-        else:
-            import os
-            base = os.path.basename(match_str)
-            source_name = base.split('.')[0] if '.' in base else base
-
-        # 如果源名称已存在，合并数据（同名源可能出现在多个 URL）
-        if source_name in source_data:
-            source_data[source_name].domains.update(normalized_domains)
-            source_data[source_name].ip_cidrs.update(normalized_ip_cidrs)
-            source_data[source_name].sources.extend([extract_source_path(u) for u in success_urls])
-        else:
-            source_data[source_name] = SourceData(
-                name=source_name,
-                policy=policy,
-                domains=set(normalized_domains),
-                ip_cidrs=set(normalized_ip_cidrs),
-                sources=[extract_source_path(u) for u in success_urls],
-                url=match_str,
-                merge_group=merge_group
-            )
-
-        # 记录合并关系
-        if merge_group:
-            merge_groups[merge_group].append(source_name)
-
-    # 构建合并 RuleSet
-    merged_rulesets = {}
-    for policy in all_policies:
-        domain_list = sorted(group_domains.get(policy, set()))
-        ip_cidr_list = sorted(group_ip_cidrs.get(policy, set()))
-        sources = sorted(group_sources.get(policy, set()))
-        merged_rulesets[policy] = RuleSet(
-            policy=policy,
-            domains=domain_list,
-            ip_cidrs=ip_cidr_list,
-            total_domains=len(domain_list),
-            total_ip_cidrs=len(ip_cidr_list),
-            source_count=len(sources),
-            sources=sources,
-            updated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            owner=OWNER
-        )
-
-    # 构建独立源数据（非合并源的独立文件）
-    separate_data = {}
-    for src_name, src in source_data.items():
-        if src.merge_group is None:
-            separate_data[src_name] = src
-
-    # ==================== 生成 merge_manifest.json ====================
-    manifest = {
-        "version": "1.0",
-        "generated_at": datetime.now().isoformat(),
-        "platforms": list(SERIALIZERS.keys()),
-        "merges": {},
-        "independents": {}
+def generate_clash_config_text(base_config: dict, policy_groups: list, rule_refs_text: str) -> str:
+    """
+    生成 Clash YAML 配置（文本方式，保留注释）
+    将 base_config 和 policy_groups 序列化为 YAML，然后拼接待入的 rules 部分
+    """
+    data = {
+        "mode": "rule",
+        "log-level": "info",
+        "ipv6": False,
+        "allow-lan": False,
+        "external-controller": "127.0.0.1:9090",
+        "proxies": [],
+        "proxy-groups": []
     }
 
-    # 记录合并信息
-    for group_name, src_list in merge_groups.items():
-        # 找到该合集对应的 policy（取第一个源的 policy）
-        policy = None
-        for src_name in src_list:
-            if src_name in source_data:
-                policy = source_data[src_name].policy
-                break
-        if policy is None:
+    # 转换 policy_groups
+    for group in policy_groups:
+        if 'select' in group:
+            g = group['select']
+            proxy_group = {
+                "name": g['name'],
+                "type": "select",
+                "proxies": g.get('policies', ['DIRECT'])
+            }
+            data["proxy-groups"].append(proxy_group)
+        elif 'fallback' in group:
+            g = group['fallback']
+            data["proxy-groups"].append({
+                "name": g['name'],
+                "type": "fallback",
+                "proxies": g.get('policies', ['DIRECT', 'DIRECT'])
+            })
+        elif 'auto_test' in group:
+            g = group['auto_test']
+            data["proxy-groups"].append({
+                "name": g['name'],
+                "type": "url-test",
+                "proxies": g.get('policies', ['DIRECT']),
+                "url": "http://1.1.1.1/generate_204",
+                "interval": 600
+            })
+
+    # 序列化基础配置
+    base_yaml = yaml.dump(data, allow_unicode=True, sort_keys=False, indent=2)
+
+    # 拼接 rule_refs_text
+    lines = []
+    lines.append(base_yaml.rstrip())
+    lines.append("")
+    lines.append(rule_refs_text)
+
+    return "\n".join(lines)
+
+
+def generate_egern_config_text(base_config: dict, policy_groups: list, rule_refs_text: str) -> str:
+    """生成 Egern YAML 配置（文本方式，保留注释）"""
+    data = dict(base_config)
+    data['policy_groups'] = policy_groups
+
+    base_yaml = yaml.dump(data, allow_unicode=True, sort_keys=False, indent=2)
+    base_yaml = base_yaml.rstrip()
+
+    lines = [base_yaml]
+    if not base_yaml.endswith('\n'):
+        lines.append('')
+    lines.append(rule_refs_text)
+
+    return '\n'.join(lines)
+
+
+def generate_singbox_config(base_config: dict, policy_groups: list, rule_refs: list, rule_sets: list) -> dict:
+    """生成 Sing-box JSON 配置（无注释）"""
+    data = {
+        "route": {
+            "rules": rule_refs,
+            "rule_set": rule_sets
+        }
+    }
+    for key, value in base_config.items():
+        if key not in ['rules', 'policy_groups']:
+            data[key] = value
+    return data
+
+
+def generate_v2ray_config(base_config: dict, policy_groups: list, rule_refs: list) -> dict:
+    """生成 v2ray JSON 配置（无注释）"""
+    data = {
+        "routing": {
+            "rules": rule_refs
+        }
+    }
+    for key, value in base_config.items():
+        if key not in ['rules', 'policy_groups']:
+            data[key] = value
+    return data
+
+
+# ==================== 生成平台根目录 README ====================
+
+def generate_platform_readme(platform: str, manifest: dict, output_dir: Path, cdn_base: str) -> None:
+    """为指定平台生成根目录 README.md，引用语法已核对官方文档"""
+    merges = manifest.get("merges", {})
+    independents = manifest.get("independents", {})
+
+    # 构建策略组列表
+    policy_groups_dict = {}
+    for merge_name, merge_info in merges.items():
+        policy = merge_info.get("policy", merge_name)
+        if policy not in policy_groups_dict:
+            policy_groups_dict[policy] = []
+        policy_groups_dict[policy].append({
+            "name": merge_name,
+            "type": "合集",
+            "sources": merge_info.get("sources", [])
+        })
+
+    for src_name, src_info in independents.items():
+        policy = src_info.get("policy", src_name)
+        if policy not in policy_groups_dict:
+            policy_groups_dict[policy] = []
+        policy_groups_dict[policy].append({
+            "name": src_name,
+            "type": "独立",
+            "sources": []
+        })
+
+    # 平台专用配置
+    platform_configs = {
+        "Surge": {
+            "ext": ".list",
+            "conf_file": "Surge.conf",
+            "ref_example": f"RULE-SET, {cdn_base}/Surge/AI/AI.list, AI",
+            "full_example": f"""[Rule]
+# 合并源: OpenAI, Claude, Grok (共 3 个源)
+RULE-SET, {cdn_base}/Surge/AI/AI.list, AI
+# 独立源
+RULE-SET, {cdn_base}/Surge/Google/Google.list, Google
+FINAL, PROXY""",
+            "doc_link": "https://manual.nssurge.com/book/understanding-surge/rules/rule-set.html"
+        },
+        "Loon": {
+            "ext": ".list",
+            "conf_file": "Loon.conf",
+            "ref_example": f"RULE-SET, {cdn_base}/Loon/AI/AI.list, AI",
+            "full_example": f"""[Rule]
+# 合并源: OpenAI, Claude, Grok (共 3 个源)
+RULE-SET, {cdn_base}/Loon/AI/AI.list, AI
+# 独立源
+RULE-SET, {cdn_base}/Loon/Google/Google.list, Google
+FINAL, PROXY""",
+            "doc_link": "https://nsloon.app/docs/"
+        },
+        "QuantumultX": {
+            "ext": ".list",
+            "conf_file": "QuantumultX.conf",
+            "ref_example": f"RULE-SET, {cdn_base}/QuantumultX/AI/AI.list, AI",
+            "full_example": f"""[Rule]
+# 合并源: OpenAI, Claude, Grok (共 3 个源)
+RULE-SET, {cdn_base}/QuantumultX/AI/AI.list, AI
+# 独立源
+RULE-SET, {cdn_base}/QuantumultX/Google/Google.list, Google
+FINAL, PROXY""",
+            "doc_link": "https://qx.atlucky.me/rule.html"
+        },
+        "Clash": {
+            "ext": ".yaml",
+            "conf_file": "Clash.yaml",
+            "ref_example": f"""rule-providers:
+  AI:
+    type: http
+    url: {cdn_base}/Clash/AI/AI.yaml
+    interval: 86400
+    behavior: classical
+rules:
+  - RULE-SET, AI, AI""",
+            "full_example": f"""rule-providers:
+  AI:
+    type: http
+    url: {cdn_base}/Clash/AI/AI.yaml
+    interval: 86400
+    behavior: classical
+  Google:
+    type: http
+    url: {cdn_base}/Clash/Google/Google.yaml
+    interval: 86400
+    behavior: classical
+rules:
+  # 合并源: OpenAI, Claude, Grok (共 3 个源)
+  - RULE-SET, AI, AI
+  # 独立源
+  - RULE-SET, Google, Google
+  - MATCH, PROXY""",
+            "doc_link": "https://clashfaq.com/rule-providers/"
+        },
+        "Egern": {
+            "ext": ".yaml",
+            "conf_file": "Egern.yaml",
+            "ref_example": f"""- rule_set:
+    match: {cdn_base}/Egern/AI/AI.yaml
+    policy: AI""",
+            "full_example": f"""rules:
+  # 合并源: OpenAI, Claude, Grok (共 3 个源)
+  - rule_set:
+      match: {cdn_base}/Egern/AI/AI.yaml
+      policy: AI
+  # 独立源
+  - rule_set:
+      match: {cdn_base}/Egern/Google/Google.yaml
+      policy: Google
+  - default:
+      policy: PROXY""",
+            "doc_link": "https://egernapp.com/docs/"
+        },
+        "Singbox": {
+            "ext": ".json",
+            "conf_file": "Singbox.json",
+            "ref_example": f"""{{
+  "route": {{
+    "rule_set": [
+      {{
+        "tag": "AI",
+        "type": "remote",
+        "format": "source",
+        "url": "{cdn_base}/Singbox/AI/AI.json"
+      }}
+    ],
+    "rules": [
+      {{ "rule_set": "AI" }}
+    ]
+  }}
+}}""",
+            "full_example": f"""{{
+  "route": {{
+    "rule_set": [
+      {{
+        "tag": "AI",
+        "type": "remote",
+        "format": "source",
+        "url": "{cdn_base}/Singbox/AI/AI.json"
+      }},
+      {{
+        "tag": "Google",
+        "type": "remote",
+        "format": "source",
+        "url": "{cdn_base}/Singbox/Google/Google.json"
+      }}
+    ],
+    "rules": [
+      {{ "rule_set": "AI" }},
+      {{ "rule_set": "Google" }}
+    ]
+  }}
+}}""",
+            "doc_link": "https://sing-box.sagernet.org/configuration/route/rule-set/"
+        },
+        "v2ray": {
+            "ext": "_domain.txt",
+            "conf_file": "v2ray.json",
+            "ref_example": f"""{{
+  "routing": {{
+    "rules": [
+      {{ "domain": ["geosite:AI"] }}
+    ]
+  }}
+}}""",
+            "full_example": f"""{{
+  "routing": {{
+    "rules": [
+      {{ "domain": ["geosite:AI"] }},
+      {{ "domain": ["geosite:Google"] }}
+    ]
+  }}
+}}""",
+            "doc_link": "https://www.v2fly.org/config/routing.html#ruleobject"
+        }
+    }
+
+    cfg = platform_configs.get(platform)
+    if not cfg:
+        return
+
+    ext = cfg["ext"]
+    conf_file = cfg["conf_file"]
+    ref_example = cfg["ref_example"]
+    full_example = cfg["full_example"]
+    doc_link = cfg.get("doc_link", "")
+
+    # 构建策略组列表文本
+    policy_list_lines = []
+    for policy in sorted(policy_groups_dict.keys()):
+        policy_list_lines.append(f"### {policy}")
+        policy_list_lines.append("")
+        items = policy_groups_dict[policy]
+        for item in items:
+            if item["type"] == "合集":
+                if item["sources"]:
+                    sources_str = ", ".join(item["sources"])
+                    policy_list_lines.append(f"- **合集** `{item['name']}`：包含 {sources_str}")
+                else:
+                    policy_list_lines.append(f"- **合集** `{item['name']}`")
+            else:
+                policy_list_lines.append(f"- **独立** `{item['name']}`")
+        policy_list_lines.append("")
+
+    policy_list = "\n".join(policy_list_lines)
+
+    # 构建 README 内容
+    content = ""
+    content += f"# {platform} 规则集\n\n"
+    content += f"本目录包含 {platform} 平台的规则文件和主配置文件。\n\n"
+    content += "## 📁 目录结构\n\n"
+    content += "```\n"
+    content += f"{platform}/\n"
+    content += "├── 策略组目录/          # 每个策略组一个子目录\n"
+    content += f"│   ├── 合集文件          # 合并后的规则文件 ({ext})\n"
+    content += "│   └── 独立文件          # 独立规则源文件 ({ext})\n"
+    content += f"└── {conf_file}          # 主配置文件\n"
+    content += "```\n\n"
+    content += "## 📋 策略组列表\n\n"
+    content += policy_list
+    content += "## 🔗 引用示例\n\n"
+    content += "### 单条规则引用\n\n"
+    content += f"```{platform.lower()}\n"
+    content += ref_example
+    content += "\n```\n\n"
+    content += "### 完整配置示例\n\n"
+    content += f"```{platform.lower()}\n"
+    content += full_example
+    content += "\n```\n\n"
+    content += "### 官方文档\n\n"
+    content += f"更多语法请参考: {doc_link}\n\n"
+    content += "## 📅 更新频率\n\n"
+    content += "本规则集每日自动更新（北京时间 20:00）。\n\n"
+    content += "---\n\n"
+    content += f"*最后更新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"
+
+    # 写入 README
+    readme_path = output_dir / platform / "README.md"
+    with open(readme_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print(f"   ✅ 生成 {platform} README: {readme_path}")
+
+
+# ==================== 主函数 ====================
+
+def main():
+    print("📖 读取配置文件...")
+
+    # 1. 检查必要文件
+    if not EGERN_TEMPLATE.exists():
+        print("❌ templates/Egern.yaml 不存在，请先创建")
+        return
+
+    if not MANIFEST_PATH.exists():
+        print("❌ merge_manifest.json 不存在，请先运行 generate.py")
+        return
+
+    # 2. 加载骨架模板和 manifest
+    egern_data = load_yaml(EGERN_TEMPLATE)
+    manifest = load_json(MANIFEST_PATH)
+
+    print(f"✅ 读取 manifest 成功")
+    print(f"   合并组: {len(manifest.get('merges', {}))} 个")
+    print(f"   独立源: {len(manifest.get('independents', {}))} 个")
+
+    # 3. 生成 CDN 基础 URL
+    cdn_base = f"https://cdn.jsdelivr.net/gh/{FULL_REPO}@{TARGET_BRANCH}"
+
+    # 4. 提取 Egern 模板中的基础配置（不含规则部分）
+    base_config = {}
+    exclude_keys = ['rules', 'policy_groups']
+    for key, value in egern_data.items():
+        if key not in exclude_keys:
+            base_config[key] = value
+
+    # 提取策略组定义
+    policy_groups = egern_data.get('policy_groups', [])
+
+    # 5. 为每个平台生成配置文件
+    platform_names = ["Surge", "Loon", "QuantumultX", "Clash", "Egern", "Singbox", "v2ray"]
+
+    for platform in platform_names:
+        print(f"\n🔄 生成 {platform} 配置...")
+        config = get_platform_config(platform, manifest, cdn_base)
+        if not config:
+            print(f"   ⚠️ 跳过 {platform}（不支持）")
             continue
-        manifest["merges"][group_name] = {
-            "sources": sorted(set(src_list)),
-            "policy": policy
-        }
 
-    # 记录独立源信息
-    for src_name, src in separate_data.items():
-        manifest["independents"][src_name] = {
-            "policy": src.policy
-        }
+        output_file = config["output_file"]
+        output_dir = DIST_DIR / platform
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / output_file
 
-    # 写入 manifest
-    with open(MANIFEST_PATH, 'w', encoding='utf-8') as f:
-        json.dump(manifest, f, indent=2, ensure_ascii=False)
-    print(f"✅ 生成 merge_manifest.json")
+        if platform in ["Surge", "Loon", "QuantumultX"]:
+            content = generate_ini_config(platform, base_config, policy_groups, config["rule_refs"])
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
 
-    # ==================== 生成规则文件 ====================
-    for platform_name, serializer in SERIALIZERS.items():
-        print(f"\n📦 生成 {platform_name} 平台规则...")
-        generate_platform_files(
-            platform_name, serializer,
-            merged_rulesets, separate_data, TEMP_DIR
-        )
-        print(f"   ✅ {platform_name} 规则生成完成")
+        elif platform == "Clash":
+            rule_refs_text = config["rule_refs"]
+            content = generate_clash_config_text(base_config, policy_groups, rule_refs_text)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
 
-    # 原子性替换
-    if FINAL_DIR.exists():
-        print(f"\n🗑️ 删除旧的 dist 目录: {FINAL_DIR}")
-        shutil.rmtree(FINAL_DIR)
-    shutil.copytree(TEMP_DIR, FINAL_DIR)
-    print(f"✅ 原子性替换完成: {TEMP_DIR} -> {FINAL_DIR}")
+        elif platform == "Egern":
+            rule_refs_text = config["rule_refs"]
+            content = generate_egern_config_text(base_config, policy_groups, rule_refs_text)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
 
-    shutil.rmtree(TEMP_DIR)
+        elif platform == "Singbox":
+            refs, rule_sets = config["rule_refs"]
+            content = generate_singbox_config(base_config, policy_groups, refs, rule_sets)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(content, f, indent=2, ensure_ascii=False)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
 
-    print("\n🎉 所有规则生成完成！")
-    print(f"📁 输出目录: {FINAL_DIR.absolute()}")
-    print(f"📊 策略组数量: {len(merged_rulesets)}")
-    print(f"📊 独立源数量: {len(separate_data)}")
-    print(f"📊 合并组数量: {len(merge_groups)}")
+        elif platform == "v2ray":
+            refs = config["rule_refs"]
+            content = generate_v2ray_config(base_config, policy_groups, refs)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(content, f, indent=2, ensure_ascii=False)
+            print(f"   ✅ 生成 {platform} 配置: {output_path}")
+
+    # ==================== 6. 生成各平台根目录 README ====================
+    print("\n📝 生成各平台 README...")
+    for platform in platform_names:
+        generate_platform_readme(platform, manifest, DIST_DIR, cdn_base)
+
+    print("\n🎉 所有平台配置文件生成完成！")
+
 
 if __name__ == "__main__":
     main()
