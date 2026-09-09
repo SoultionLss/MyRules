@@ -33,7 +33,7 @@
 - rule_set:
     match: blackmatrix7:Gemini
     policy: Google
-    merge_group: Gemini
+    merge_group: Google
 
 # ============================================================
 # 优先级 3：AI 服务
@@ -43,12 +43,12 @@
 - rule_set:
     match: blackmatrix7:OpenAI
     policy: AI
-    merge_group: OpenAI
+    merge_group: AI
 
 - rule_set:
     match: blackmatrix7:Claude
     policy: AI
-    merge_group: Claude
+    merge_group: AI
 
 - rule_set:
     match: blackmatrix7:xAI
@@ -58,7 +58,7 @@
 - rule_set:
     match: blackmatrix7:Anthropic
     policy: AI
-    merge_group: Anthropic
+    merge_group: AI
 
 # ============================================================
 # 抖音服务
@@ -87,37 +87,37 @@
 - rule_set:
     match: blackmatrix7:Netflix
     policy: Streaming
-    merge_group: Netflix
+    merge_group: Streaming
 
 - rule_set:
     match: blackmatrix7:Disney
     policy: Streaming
-    merge_group: Disney
+    merge_group: Streaming
 
 - rule_set:
     match: blackmatrix7:HBO
     policy: Streaming
-    merge_group: HBO
+    merge_group: Streaming
 
 - rule_set:
     match: blackmatrix7:PrimeVideo
     policy: Streaming
-    merge_group: PrimeVideo
+    merge_group: Streaming
 
 - rule_set:
     match: blackmatrix7:Hulu
     policy: Streaming
-    merge_group: Hulu
+    merge_group: Streaming
 
 - rule_set:
     match: blackmatrix7:Peacock
     policy: Streaming
-    merge_group: Peacock
+    merge_group: Streaming
 
 - rule_set:
     match: https://raw.githubusercontent.com/HotKids/Rules/a06feb8eb0bfc42a406f738806a122a50e2b144f/Surge/RULE-SET/Crunchyroll.list
     policy: Streaming
-    merge_group: Crunchyroll
+    merge_group: Streaming
 
 # ============================================================
 # Social 社交媒体
@@ -127,22 +127,22 @@
 - rule_set:
     match: blackmatrix7:Twitter
     policy: Social
-    merge_group: Twitter
+    merge_group: Social
 
 - rule_set:
     match: blackmatrix7:Instagram
     policy: Social
-    merge_group: Instagram
+    merge_group: Social
 
 - rule_set:
     match: blackmatrix7:Threads
     policy: Social
-    merge_group: Threads
+    merge_group: Social
 
 - rule_set:
     match: blackmatrix7:Reddit
     policy: Social
-    merge_group: Reddit
+    merge_group: Social
 
 # ============================================================
 # 优先级 4：YouTube（含翻译 API）
@@ -210,7 +210,6 @@
 - rule_set:
     match: blackmatrix7:Cloudflare
     policy: GitHub
-    merge_group: Cloudflare
 
 # ============================================================
 # 优先级 9：微软服务（bing.cn 直连）
@@ -239,12 +238,12 @@
 - rule_set:
     match: blackmatrix7:Whatsapp
     policy: HongKongSocial
-    merge_group: Whatsapp
+    merge_group: HongKongSocial
 
 - rule_set:
     match: blackmatrix7:Line
     policy: HongKongSocial
-    merge_group: Line
+    merge_group: HongKongSocial
 
 # ============================================================
 # 优先级 11：汇丰香港（含 Reward+）
@@ -254,7 +253,7 @@
 - rule_set:
     match: lingjingmaster:HSBC_HK
     policy: HongKongBanking
-    merge_group: HSBC_HK
+    merge_group: HongKongBanking
 
 # ============================================================
 # 优先级 12：其他香港银行
@@ -264,12 +263,12 @@
 - rule_set:
     match: lingjingmaster:HK_Banks_Direct
     policy: HongKongBanking
-    merge_group: HK_Banks_Direct
+    merge_group: HongKongBanking
 
 - rule_set:
     match: https://raw.githubusercontent.com/Bwy999/Surge/fe4d122f120932bb2a40e4c992871c4ec89eb788/Ruleset/HKBank.list
     policy: HongKongBanking
-    merge_group: HKBank
+    merge_group: HongKongBanking
 
 # ============================================================
 # 优先级 13：券商服务
@@ -279,7 +278,7 @@
 - rule_set:
     match: broker:Broker
     policy: Brokerage
-    merge_group: HKBrokerage
+    merge_group: Brokerage
 
 # ============================================================
 # 优先级 14：苹果推送
@@ -307,12 +306,12 @@
 - rule_set:
     match: blackmatrix7:PikPak
     policy: LowRate
-    merge_group: PikPak
+    merge_group: LowRate
 
 - rule_set:
     match: blackmatrix7:TeraBox
     policy: LowRate
-    merge_group: TeraBox
+    merge_group: LowRate
 
 # ============================================================
 # 优先级 17：SOOP
@@ -322,7 +321,6 @@
 - rule_set:
     match: https://raw.githubusercontent.com/KeterCo/ClashRules/a505e394fb0fad9405dac53d0fa8edaa3075f4c1/Soop.list
     policy: DIRECT
-    merge_group: Soop
 
 # ============================================================
 # 优先级 18：GEOIP CN（IP 层直连）
