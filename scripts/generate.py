@@ -429,7 +429,7 @@ class ClashSerializer(Serializer):
     def get_import_example(self, policy: str, base_url: str) -> str:
         return f"- RULE-SET, {base_url}/{policy}.yaml, {policy}"
 
-# ==================== 修改：EgernSerializer 使用原生格式 ====================
+# ==================== 修改1：EgernSerializer 使用原生格式 ====================
 class EgernSerializer(Serializer):
     def get_extension(self) -> str:
         return ".yaml"
@@ -734,13 +734,12 @@ def main():
             owner=OWNER
         )
 
-    # 构建独立源数据（非合并源的独立文件）
+    # ==================== 修改2：所有源都生成独立文件（修复独立源未生成问题） ====================
     separate_data = {}
     for src_name, src in source_data.items():
-        if src.merge_group is None:
-            separate_data[src_name] = src
+        separate_data[src_name] = src
 
-    # ==================== 新增：生成 merge_manifest.json ====================
+    # ==================== 修改3：生成 merge_manifest.json ====================
     manifest = {
         "version": "1.0",
         "generated_at": datetime.now().isoformat(),
