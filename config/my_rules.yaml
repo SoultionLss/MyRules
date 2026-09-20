@@ -280,6 +280,11 @@
     policy: Brokerage
     merge_group: Brokerage
 
+- rule_set:
+    match: https://raw.githubusercontent.com/LingJingMaster/Shadowrocket-Rules/refs/heads/main/HK_Broker.list
+    policy: Brokerage
+    merge_group: Brokerage
+
 # ============================================================
 # 优先级 14：苹果推送
 # 来源: lingjingmaster:ApplePush
